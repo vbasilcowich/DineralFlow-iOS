@@ -1,7 +1,7 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
-import { shellPalette } from '@/constants/shell';
+import { shellPalette } from '../constants/shell';
 import type { DashboardPreviewState } from '@/hooks/use-dashboard-preview';
 import { getApiBaseUrlNote } from '@/lib/api-config';
 import {
