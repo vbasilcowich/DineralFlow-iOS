@@ -3,7 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '../constants/shell';
 import type { DashboardPreviewState } from '@/hooks/use-dashboard-preview';
-import type { AccessTier } from '@/lib/monetization';
+import type { AccessTier, EntitlementFeature } from '@/lib/monetization';
 import { getApiBaseUrlNote } from '@/lib/api-config';
 import {
   formatBucketLabel,
@@ -20,12 +20,23 @@ type LiveSnapshotPanelProps = {
   state: DashboardPreviewState;
   onRefresh: () => void;
   accessTier: AccessTier;
+  onOpenPaywall?: (feature: EntitlementFeature) => void;
 };
 
-export function LiveSnapshotPanel({ state, onRefresh, accessTier }: LiveSnapshotPanelProps) {
+export function LiveSnapshotPanel({
+  state,
+  onRefresh,
+  accessTier,
+  onOpenPaywall,
+}: LiveSnapshotPanelProps) {
   const { snapshot, health } = state;
   const showingCachedSnapshot = state.snapshotOrigin === 'cached';
+  const isPremium = accessTier === 'premium';
   const topFlowLimit = accessTier === 'premium' ? 3 : 1;
+  const visibleRisks = snapshot ? snapshot.risks.slice(0, isPremium ? snapshot.risks.length : 1) : [];
+  const visibleProviderIssues = snapshot
+    ? snapshot.provider_issues.slice(0, isPremium ? snapshot.provider_issues.length : 1)
+    : [];
 
   return (
     <SectionCard
@@ -174,32 +185,66 @@ export function LiveSnapshotPanel({ state, onRefresh, accessTier }: LiveSnapshot
               <Text style={styles.blockBody}>No top-flow rows were returned by the backend.</Text>
             )}
             {accessTier === 'free' && snapshot.top_flows.length > topFlowLimit ? (
-              <Text style={styles.blockBody}>
-                Premium unlocks a wider flow list and the deeper drilldowns planned for phase 1.
-              </Text>
+              <View style={styles.upsellBlock}>
+                <Text style={styles.blockBody}>
+                  Free stays concise and shows the strongest published flow first. Premium unlocks
+                  a wider flow list and the deeper basket drilldowns planned for phase 1.
+                </Text>
+                {onOpenPaywall ? (
+                  <ActionButton
+                    label="Unlock drilldowns"
+                    icon="arrow.right"
+                    variant="primary"
+                    onPress={() => onOpenPaywall('deeper_drilldowns')}
+                  />
+                ) : null}
+              </View>
             ) : null}
           </View>
 
           {snapshot.risks.length > 0 ? (
             <View style={styles.block}>
               <Text style={styles.blockLabel}>Risks reported by the backend</Text>
-              {snapshot.risks.map((risk) => (
+              {visibleRisks.map((risk) => (
                 <Text key={risk} style={styles.bulletRow}>
                   - {risk}
                 </Text>
               ))}
+              {!isPremium && snapshot.risks.length > visibleRisks.length ? (
+                <Text style={styles.blockBody}>
+                  Premium keeps the rest of the published risk list visible around the same
+                  snapshot.
+                </Text>
+              ) : null}
             </View>
           ) : null}
 
           {snapshot.provider_issues.length > 0 ? (
             <View style={styles.block}>
-              <Text style={styles.blockLabel}>Prototype data diagnostics</Text>
-              {snapshot.provider_issues.map((issue) => (
+              <Text style={styles.blockLabel}>
+                {isPremium ? 'Prototype data diagnostics' : 'Provider diagnostics preview'}
+              </Text>
+              {visibleProviderIssues.map((issue) => (
                 <View key={`${issue.provider_key}:${issue.message}`} style={styles.issueRow}>
                   <Text style={styles.issueSeverity}>{issue.severity.toUpperCase()}</Text>
                   <Text style={styles.issueMessage}>{issue.message}</Text>
                 </View>
               ))}
+              {!isPremium && snapshot.provider_issues.length > visibleProviderIssues.length ? (
+                <View style={styles.upsellBlock}>
+                  <Text style={styles.blockBody}>
+                    Free shows only a preview of backend diagnostics. Premium unlocks the full
+                    provider issue list and the deeper evidence layer around it.
+                  </Text>
+                  {onOpenPaywall ? (
+                    <ActionButton
+                      label="Unlock drilldowns"
+                      icon="arrow.right"
+                      onPress={() => onOpenPaywall('deeper_drilldowns')}
+                    />
+                  ) : null}
+                </View>
+              ) : null}
             </View>
           ) : null}
         </>
@@ -314,6 +359,10 @@ const styles = StyleSheet.create({
   },
   block: {
     gap: 10,
+  },
+  upsellBlock: {
+    gap: 10,
+    paddingTop: 6,
   },
   blockLabel: {
     color: shellPalette.accent,

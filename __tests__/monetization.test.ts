@@ -1,6 +1,7 @@
 import {
   activateMockPremium,
   createDefaultEntitlements,
+  ENTITLEMENT_FEATURES,
   isFeatureUnlocked,
   resetToFreeEntitlements,
   restoreFromSnapshot,
@@ -23,6 +24,28 @@ describe('monetization core', () => {
     expect(isFeatureUnlocked(entitlements, 'main_snapshot')).toBe(true);
     expect(isFeatureUnlocked(entitlements, 'long_history')).toBe(false);
     expect(isFeatureUnlocked(entitlements, 'watchlists')).toBe(false);
+  });
+
+  it('keeps the full feature matrix aligned between free and premium', () => {
+    const freeEntitlements = createDefaultEntitlements();
+    const premiumEntitlements = activateMockPremium('monthly');
+
+    const expectedFree = {
+      main_snapshot: true,
+      selected_baskets: true,
+      short_history: true,
+      provenance: true,
+      deeper_drilldowns: false,
+      long_history: false,
+      watchlists: false,
+      alerts: false,
+      ad_free: false,
+    } as const;
+
+    for (const feature of ENTITLEMENT_FEATURES) {
+      expect(isFeatureUnlocked(freeEntitlements, feature)).toBe(expectedFree[feature]);
+      expect(isFeatureUnlocked(premiumEntitlements, feature)).toBe(true);
+    }
   });
 
   it('activates premium features in the mock purchase flow', () => {

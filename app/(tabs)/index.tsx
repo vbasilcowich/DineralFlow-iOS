@@ -1,6 +1,7 @@
 import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
+import { FeatureGateCard } from '@/components/feature-gate-card';
 import { LiveSnapshotPanel } from '@/components/live-snapshot-panel';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
 import {
@@ -12,12 +13,24 @@ import {
 } from '@/constants/shell';
 import { useDashboardPreview } from '@/hooks/use-dashboard-preview';
 import { useMonetization } from '@/hooks/use-monetization';
+import {
+  getFeatureDescriptor,
+  getFeatureGateState,
+  HOME_PREMIUM_FEATURES,
+  type EntitlementFeature,
+} from '@/lib/monetization';
 
 export default function HomeScreen() {
   const router = useRouter();
   const preview = useDashboardPreview();
   const monetization = useMonetization();
   const isPremium = monetization.accessTier === 'premium';
+  const openPaywallForFeature = (feature: EntitlementFeature) => {
+    router.push({
+      pathname: '/paywall',
+      params: { feature },
+    });
+  };
 
   return (
     <ScrollView
@@ -89,6 +102,31 @@ export default function HomeScreen() {
       </SectionCard>
 
       <SectionCard
+        eyebrow="Premium depth"
+        title="Free shows the shape, premium adds the extra layers"
+        body="The first paid workflow should be obvious on the home screen. Free keeps a credible preview. Premium unlocks deeper context around the same snapshot instead of inventing a separate product.">
+        <View style={styles.grid}>
+          {HOME_PREMIUM_FEATURES.map((feature) => {
+            const descriptor = getFeatureDescriptor(feature);
+            const gateState = getFeatureGateState(monetization.entitlements, feature);
+            const unlocked = gateState === 'unlocked';
+
+            return (
+              <FeatureGateCard
+                key={feature}
+                title={descriptor.title}
+                value={unlocked ? descriptor.premiumValue : descriptor.freeValue}
+                detail={unlocked ? descriptor.premiumDetail : descriptor.freeDetail}
+                status={gateState}
+                actionLabel={unlocked ? 'Review premium access' : descriptor.ctaLabel}
+                onPress={() => openPaywallForFeature(feature)}
+              />
+            );
+          })}
+        </View>
+      </SectionCard>
+
+      <SectionCard
         eyebrow="Launch guardrails"
         title="Rules that keep the first paid version defensible"
         body="These are product and legal guardrails, not just engineering preferences. The app should look like a trustworthy analytics product, not an improvised market-feed wrapper.">
@@ -101,7 +139,12 @@ export default function HomeScreen() {
         </View>
       </SectionCard>
 
-      <LiveSnapshotPanel state={preview} onRefresh={preview.refresh} accessTier={monetization.accessTier} />
+      <LiveSnapshotPanel
+        state={preview}
+        onRefresh={preview.refresh}
+        accessTier={monetization.accessTier}
+        onOpenPaywall={openPaywallForFeature}
+      />
 
       <SectionCard
         eyebrow="Project status"

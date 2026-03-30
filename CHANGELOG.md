@@ -1,5 +1,12 @@
 # Changelog
 
+## beta 0.04.1
+
+- added visible `free / premium` gating cards on the home screen for longer history, deeper drilldowns, and alerts
+- made the live snapshot panel behave differently by tier so free stays concise while premium shows a wider evidence layer
+- taught the paywall to open with feature-specific copy based on the upgrade path that led into it
+- added reusable gating UI and expanded test coverage for monetization rules, home gating, paywall context, and snapshot panel behavior
+
 ## beta 0.04
 
 - implemented the phase 1 monetization foundation with a local `free / premium` entitlement model

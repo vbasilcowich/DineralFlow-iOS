@@ -1,14 +1,34 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useLocalSearchParams } from 'expo-router';
 
 import { ActionButton, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useMonetization } from '@/hooks/use-monetization';
-import { PAYWALL_PLAN_COPY, PREMIUM_FEATURE_COPY } from '@/lib/monetization';
+import {
+  getFeatureDescriptor,
+  isEntitlementFeature,
+  PAYWALL_PLAN_COPY,
+  PREMIUM_FEATURE_COPY,
+} from '@/lib/monetization';
 
 export default function PaywallScreen() {
   const monetization = useMonetization();
   const isPremium = monetization.accessTier === 'premium';
   const usingMockBilling = monetization.billingProvider === 'mock';
+  const params = useLocalSearchParams<{ feature?: string | string[] }>();
+  const featureParam = Array.isArray(params.feature) ? params.feature[0] : params.feature;
+  const focusedFeature = featureParam && isEntitlementFeature(featureParam) ? featureParam : null;
+  const focusedDescriptor = focusedFeature ? getFeatureDescriptor(focusedFeature) : null;
+  const heroTitle = focusedDescriptor
+    ? isPremium
+      ? `${focusedDescriptor.title} is already part of premium.`
+      : focusedDescriptor.paywallTitle
+    : isPremium
+      ? 'Premium is unlocked in this development build.'
+      : 'Premium unlocks the deeper workflow.';
+  const heroBody = focusedDescriptor
+    ? focusedDescriptor.paywallBody
+    : 'This paywall is the phase 1 billing shell. It already validates free versus premium flows, feature gating, and restore behavior, while making it explicit when real StoreKit and RevenueCat billing are not active yet.';
 
   return (
     <ScrollView
@@ -21,14 +41,9 @@ export default function PaywallScreen() {
           label={usingMockBilling ? 'Mock billing' : 'RevenueCat-ready'}
           tone={usingMockBilling ? 'warning' : 'info'}
         />
-        <Text style={styles.title}>
-          {isPremium ? 'Premium is unlocked in this development build.' : 'Premium unlocks the deeper workflow.'}
-        </Text>
-        <Text style={styles.body}>
-          This paywall is the phase 1 billing shell. It already validates free versus premium
-          flows, feature gating, and restore behavior, while making it explicit when real StoreKit
-          and RevenueCat billing are not active yet.
-        </Text>
+        {focusedDescriptor ? <Pill label={`Focus: ${focusedDescriptor.title}`} tone="soft" /> : null}
+        <Text style={styles.title}>{heroTitle}</Text>
+        <Text style={styles.body}>{heroBody}</Text>
       </View>
 
       <SectionCard
@@ -47,6 +62,11 @@ export default function PaywallScreen() {
           <Pill label={`Source: ${monetization.entitlements.source}`} tone="soft" />
           <Pill label={`Billing: ${monetization.billingStatus}`} tone="soft" />
         </View>
+        {focusedDescriptor ? (
+          <Text style={styles.metaText}>
+            This paywall was opened from the {focusedDescriptor.title} upgrade path.
+          </Text>
+        ) : null}
         <Text style={styles.metaText}>{monetization.billingStatusMessage}</Text>
         {monetization.lastAction ? (
           <Text style={styles.metaText}>Last action: {monetization.lastAction}</Text>
