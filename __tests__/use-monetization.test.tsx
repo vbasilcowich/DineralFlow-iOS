@@ -11,8 +11,11 @@ function MonetizationProbe() {
       <Text testID="tier">{monetization.accessTier}</Text>
       <Text testID="ready">{String(monetization.isReady)}</Text>
       <Text testID="processing">{String(monetization.isProcessing)}</Text>
+      <Text testID="billing-provider">{monetization.billingProvider}</Text>
+      <Text testID="billing-status">{monetization.billingStatus}</Text>
+      <Text testID="can-start-purchase">{String(monetization.canStartPurchase)}</Text>
       <Text testID="feature-long-history">{String(monetization.hasFeature('long_history'))}</Text>
-      <Pressable onPress={() => void monetization.purchaseMockPremium('monthly')}>
+      <Pressable onPress={() => void monetization.purchasePremium('monthly')}>
         <Text>activate-monthly</Text>
       </Pressable>
       <Pressable onPress={() => void monetization.restorePurchases()}>
@@ -38,6 +41,9 @@ describe('useMonetization provider', () => {
     });
 
     expect(screen.getByTestId('tier').props.children).toBe('free');
+    expect(screen.getByTestId('billing-provider').props.children).toBe('mock');
+    expect(screen.getByTestId('billing-status').props.children).toBe('mock');
+    expect(screen.getByTestId('can-start-purchase').props.children).toBe('true');
     expect(screen.getByTestId('feature-long-history').props.children).toBe('false');
   });
 

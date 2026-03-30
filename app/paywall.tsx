@@ -8,6 +8,7 @@ import { PAYWALL_PLAN_COPY, PREMIUM_FEATURE_COPY } from '@/lib/monetization';
 export default function PaywallScreen() {
   const monetization = useMonetization();
   const isPremium = monetization.accessTier === 'premium';
+  const usingMockBilling = monetization.billingProvider === 'mock';
 
   return (
     <ScrollView
@@ -16,12 +17,17 @@ export default function PaywallScreen() {
       showsVerticalScrollIndicator={false}>
       <View style={styles.hero}>
         <Pill label="Premium" tone={isPremium ? 'success' : 'accent'} />
+        <Pill
+          label={usingMockBilling ? 'Mock billing' : 'RevenueCat-ready'}
+          tone={usingMockBilling ? 'warning' : 'info'}
+        />
         <Text style={styles.title}>
           {isPremium ? 'Premium is unlocked in this development build.' : 'Premium unlocks the deeper workflow.'}
         </Text>
         <Text style={styles.body}>
-          This paywall is a development-safe phase 1 stub. It lets us validate free versus premium
-          flows, feature gating, and restore behavior before wiring real StoreKit or RevenueCat credentials.
+          This paywall is the phase 1 billing shell. It already validates free versus premium
+          flows, feature gating, and restore behavior, while making it explicit when real StoreKit
+          and RevenueCat billing are not active yet.
         </Text>
       </View>
 
@@ -39,7 +45,9 @@ export default function PaywallScreen() {
             <Pill label={`Plan: ${monetization.entitlements.plan}`} tone="soft" />
           ) : null}
           <Pill label={`Source: ${monetization.entitlements.source}`} tone="soft" />
+          <Pill label={`Billing: ${monetization.billingStatus}`} tone="soft" />
         </View>
+        <Text style={styles.metaText}>{monetization.billingStatusMessage}</Text>
         {monetization.lastAction ? (
           <Text style={styles.metaText}>Last action: {monetization.lastAction}</Text>
         ) : null}
@@ -63,18 +71,25 @@ export default function PaywallScreen() {
 
       <SectionCard
         eyebrow="Plans"
-        title="Mock purchase actions for phase 1"
-        body="These buttons are development placeholders. They simulate the purchase state transitions we will later wire to StoreKit and RevenueCat.">
+        title={monetization.canStartPurchase ? 'Purchase actions for phase 1' : 'Billing setup still blocks real purchase start'}
+        body={
+          monetization.canStartPurchase
+            ? 'These actions are ready for the current billing mode. In this build they still use a safe development flow.'
+            : monetization.requiresNativeBillingBuild
+              ? 'This build can show the paywall shell, but real purchase start needs native iOS billing setup and the missing configuration values.'
+              : 'Billing start is disabled until the current provider is configured.'
+        }>
         <View style={styles.planGrid}>
           {PAYWALL_PLAN_COPY.map((plan) => (
             <View key={plan.key} style={styles.planCard}>
               <Text style={styles.planTitle}>{plan.title}</Text>
               <Text style={styles.planDetail}>{plan.detail}</Text>
               <ActionButton
-                label={`Activate ${plan.title}`}
+                label={usingMockBilling ? `Activate ${plan.title}` : `Start ${plan.title}`}
                 icon="arrow.right"
                 variant="primary"
-                onPress={() => void monetization.purchaseMockPremium(plan.key)}
+                disabled={!monetization.canStartPurchase || monetization.isProcessing}
+                onPress={() => void monetization.purchasePremium(plan.key)}
               />
             </View>
           ))}
@@ -89,11 +104,13 @@ export default function PaywallScreen() {
           <ActionButton
             label="Restore purchases"
             icon="arrow.clockwise"
+            disabled={monetization.isProcessing}
             onPress={() => void monetization.restorePurchases()}
           />
           <ActionButton
             label="Reset to free"
             icon="folder.fill"
+            disabled={monetization.isProcessing}
             onPress={() => void monetization.resetToFree()}
           />
         </View>

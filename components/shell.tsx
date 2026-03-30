@@ -64,23 +64,43 @@ type ActionButtonProps = {
   icon: 'arrow.right' | 'chart.bar.xaxis' | 'folder.fill' | 'arrow.clockwise';
   onPress: () => void;
   variant?: 'primary' | 'secondary';
+  disabled?: boolean;
 };
 
-export function ActionButton({ label, icon, onPress, variant = 'secondary' }: ActionButtonProps) {
+export function ActionButton({
+  label,
+  icon,
+  onPress,
+  variant = 'secondary',
+  disabled = false,
+}: ActionButtonProps) {
   return (
     <Pressable
+      disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.actionButton,
         variant === 'primary' ? styles.actionPrimary : styles.actionSecondary,
-        pressed && styles.actionPressed,
+        disabled && styles.actionDisabled,
+        pressed && !disabled && styles.actionPressed,
       ]}>
       <IconSymbol
         name={icon}
         size={18}
-        color={variant === 'primary' ? shellPalette.bg : shellPalette.text}
+        color={
+          disabled
+            ? shellPalette.textMuted
+            : variant === 'primary'
+              ? shellPalette.bg
+              : shellPalette.text
+        }
       />
-      <Text style={[styles.actionLabel, variant === 'primary' && styles.actionLabelPrimary]}>
+      <Text
+        style={[
+          styles.actionLabel,
+          variant === 'primary' && styles.actionLabelPrimary,
+          disabled && styles.actionLabelDisabled,
+        ]}>
         {label}
       </Text>
     </Pressable>
@@ -226,6 +246,9 @@ const styles = StyleSheet.create({
     opacity: 0.82,
     transform: [{ scale: 0.98 }],
   },
+  actionDisabled: {
+    opacity: 0.52,
+  },
   actionLabel: {
     color: shellPalette.text,
     fontSize: 14,
@@ -233,6 +256,9 @@ const styles = StyleSheet.create({
   },
   actionLabelPrimary: {
     color: shellPalette.bg,
+  },
+  actionLabelDisabled: {
+    color: shellPalette.textMuted,
   },
   phaseRow: {
     flexDirection: 'row',

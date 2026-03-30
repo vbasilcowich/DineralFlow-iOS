@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
+import type { BillingProvider, BillingStatus } from '@/lib/billing-config';
 import {
   isFeatureUnlocked,
   type AccessTier,
@@ -12,7 +13,7 @@ import {
   readEntitlementsCache,
   writeEntitlementsCache,
 } from '@/lib/monetization-cache';
-import { createFallbackSubscriptionState, createMockSubscriptionDriver } from '@/lib/subscription-driver';
+import { createFallbackSubscriptionState, createSubscriptionDriver } from '@/lib/subscription-driver';
 
 type MonetizationContextValue = {
   entitlements: EntitlementsSnapshot;
@@ -21,7 +22,12 @@ type MonetizationContextValue = {
   lastAction: string | null;
   errorMessage: string | null;
   accessTier: AccessTier;
-  purchaseMockPremium: (plan: Exclude<SubscriptionPlan, null>) => Promise<void>;
+  billingProvider: BillingProvider;
+  billingStatus: BillingStatus;
+  billingStatusMessage: string;
+  canStartPurchase: boolean;
+  requiresNativeBillingBuild: boolean;
+  purchasePremium: (plan: Exclude<SubscriptionPlan, null>) => Promise<void>;
   restorePurchases: () => Promise<void>;
   resetToFree: () => Promise<void>;
   hasFeature: (feature: EntitlementFeature) => boolean;
@@ -32,7 +38,7 @@ const MonetizationContext = createContext<MonetizationContextValue | null>(null)
 export function MonetizationProvider({ children }: { children: ReactNode }) {
   const driver = useMemo(
     () =>
-      createMockSubscriptionDriver({
+      createSubscriptionDriver({
         read: readEntitlementsCache,
         write: writeEntitlementsCache,
         clear: clearEntitlementsCache,
@@ -70,7 +76,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
     };
   }, [driver]);
 
-  const purchaseMockPremium = async (plan: Exclude<SubscriptionPlan, null>) => {
+  const purchasePremium = async (plan: Exclude<SubscriptionPlan, null>) => {
     setIsProcessing(true);
     setErrorMessage(null);
 
@@ -123,12 +129,17 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
       lastAction,
       errorMessage,
       accessTier: entitlements.tier,
-      purchaseMockPremium,
+      billingProvider: driver.billing.provider,
+      billingStatus: driver.billing.status,
+      billingStatusMessage: driver.billing.statusMessage,
+      canStartPurchase: driver.billing.canStartPurchase,
+      requiresNativeBillingBuild: driver.billing.requiresNativeBuild,
+      purchasePremium,
       restorePurchases,
       resetToFree,
       hasFeature: (feature) => isFeatureUnlocked(entitlements, feature),
     }),
-    [entitlements, errorMessage, isProcessing, isReady, lastAction],
+    [driver.billing.canStartPurchase, driver.billing.provider, driver.billing.requiresNativeBuild, driver.billing.status, driver.billing.statusMessage, entitlements, errorMessage, isProcessing, isReady, lastAction],
   );
 
   return <MonetizationContext.Provider value={value}>{children}</MonetizationContext.Provider>;
