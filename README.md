@@ -37,6 +37,12 @@ Repositorio nuevo para la migracion de `DineralFlow` desde web hacia una app iOS
 - [docs/02_architecture_decision.md](E:/VsCodeApps/DineralFlow-iOS/docs/02_architecture_decision.md)
 - [docs/03_task_script.md](E:/VsCodeApps/DineralFlow-iOS/docs/03_task_script.md)
 - [docs/04_task_review.md](E:/VsCodeApps/DineralFlow-iOS/docs/04_task_review.md)
+- [docs/05_monetization_architecture.md](E:/VsCodeApps/DineralFlow-iOS/docs/05_monetization_architecture.md)
+- [docs/06_pricing_and_cost_model.md](E:/VsCodeApps/DineralFlow-iOS/docs/06_pricing_and_cost_model.md)
+- [docs/07_backend_service_plan.md](E:/VsCodeApps/DineralFlow-iOS/docs/07_backend_service_plan.md)
+- [docs/08_monetization_test_plan.md](E:/VsCodeApps/DineralFlow-iOS/docs/08_monetization_test_plan.md)
+- [docs/09_user_flow_explained.md](E:/VsCodeApps/DineralFlow-iOS/docs/09_user_flow_explained.md)
+- [docs/10_release_readiness_monetization.md](E:/VsCodeApps/DineralFlow-iOS/docs/10_release_readiness_monetization.md)
 - [docs/agent_prompts](E:/VsCodeApps/DineralFlow-iOS/docs/agent_prompts)
 
 ## Comandos

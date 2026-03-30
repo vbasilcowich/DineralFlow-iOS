@@ -11,17 +11,18 @@ export default function RoadmapScreen() {
       showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Pill label="Roadmap" tone="info" />
-        <Text style={styles.title}>A short, honest migration path</Text>
+        <Text style={styles.title}>A short path to a public-data launch</Text>
         <Text style={styles.body}>
-          The mobile app will grow in phases so each step can be tested and reviewed before the
-          next one starts. This avoids building a large, fragile iOS port in one jump.
+          The iOS app should grow in phases that protect product clarity, monetization, and legal
+          positioning. The goal is not to port every screen quickly, but to ship a paid product we
+          can defend technically and commercially.
         </Text>
       </View>
 
       <SectionCard
         eyebrow="Plan"
-        title="What gets built first"
-        body="The first release should be useful even if the data layer is still incomplete. The emphasis is on navigation, legibility, and a clean handoff to the live backend later.">
+        title="What gets built before a paid launch"
+        body="The first release should be useful with scheduled snapshots and public-data-friendly positioning. Premium should add depth later without depending on real-time promises or risky feed assumptions.">
         <View style={styles.phaseList}>
           {projectPhases.map((phase) => (
             <PhaseRow
@@ -36,14 +37,15 @@ export default function RoadmapScreen() {
       </SectionCard>
 
       <SectionCard
-        eyebrow="Constraints"
-        title="What we can and cannot do on this machine"
-        body="Expo and React Native are enough to develop the app shell here, run tests, and iterate on the UI. For native iOS simulator builds, signing, and final device testing we will need macOS with Xcode.">
+        eyebrow="Launch rule"
+        title="The product should say latest snapshot, not real-time"
+        body="The launch positioning should avoid suggesting exchange-grade real-time coverage. We should publish the latest available snapshot, explain how fresh it is, and keep the data stance honest on every screen.">
         <View style={styles.callout}>
-          <Text style={styles.calloutLabel}>Current focus</Text>
+          <Text style={styles.calloutLabel}>Commercial guardrail</Text>
           <Text style={styles.calloutText}>
-            Keep the repo lean, keep the design sober, and move one screen at a time from placeholder
-            to real data.
+            Twelve Data and Alpha Vantage may still exist in prototype environments, but they
+            should not define the commercial iOS launch story while we are optimizing for low-cost
+            legal safety.
           </Text>
         </View>
       </SectionCard>

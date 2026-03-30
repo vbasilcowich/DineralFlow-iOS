@@ -52,3 +52,31 @@
 - tests unitarios
 - pruebas manuales en Expo Go
 - checklist para paso a Mac o EAS si hace falta
+
+## Fase 8 - Monetizacion fase 1
+
+- integrar suscripciones
+- definir tiers `free` y `premium`
+- anadir paywall y `restore purchases`
+- sincronizar entitlements entre app y backend
+- fijar el producto en modo `snapshot-based`
+- retirar del posicionamiento comercial la dependencia de `Twelve Data` y `Alpha Vantage`
+
+## Fase 9 - Monetizacion fase 2
+
+- anadir `native ads` solo al tier gratuito
+- crear `ad config` remoto y kill switch
+- aplicar frequency caps y exclusiones de pantallas criticas
+
+## Fase 10 - Monetizacion fase 3
+
+- evaluar mediacion con Meta
+- comparar `AdMob only` vs `AdMob + Meta`
+- activar solo si mejora ingresos sin empeorar privacidad, operacion o UX
+
+## Fase 11 - Release monetizable
+
+- bateria de pruebas final
+- checklist legal y App Store
+- validacion de costes y licencias de market data
+- confirmar que la promesa comercial no depende de feeds con derechos no validados

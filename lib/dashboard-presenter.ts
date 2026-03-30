@@ -79,6 +79,10 @@ export function formatProviderName(providerKey: string): string {
   return providerMap[providerKey] ?? providerKey.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
+export function hasRestrictedCommercialProvider(providerKeys: string[]): boolean {
+  return providerKeys.some((providerKey) => providerKey === 'twelve_data' || providerKey === 'alpha_vantage');
+}
+
 export function getConfiguredProviders(health: DashboardHealth | null): string[] {
   if (!health) {
     return [];

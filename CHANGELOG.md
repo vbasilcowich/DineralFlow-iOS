@@ -1,5 +1,14 @@
 # Changelog
 
+## beta 0.03
+
+- redefined the iOS product around a snapshot-based `free / premium` launch instead of a generic migration shell
+- updated the home and roadmap screens to reflect public-data-first positioning and legal/monetization guardrails
+- added documentation for monetization architecture, costs, backend hosting, testing, release readiness, and a plain-language product walkthrough
+- added new agent prompts for subscription, native ads, Meta mediation, and monetization QA
+- documented and reflected in the app that `Twelve Data` and `Alpha Vantage` are not part of the intended commercial launch posture
+- added presenter coverage for prototype-only providers and kept `lint`, `typecheck`, and tests green
+
 ## beta 0.02
 
 - connected the `Dashboard` tab to the live local DineralFlow backend preview

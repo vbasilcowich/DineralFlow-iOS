@@ -4,6 +4,7 @@ import {
   formatFreshness,
   formatSourceMode,
   getConfiguredProviders,
+  hasRestrictedCommercialProvider,
   getSourceModeTone,
 } from '@/lib/dashboard-presenter';
 
@@ -41,5 +42,11 @@ describe('dashboard presenter helpers', () => {
         available_jobs: ['market_pull'],
       }),
     ).toEqual(['twelve_data', 'fred']);
+  });
+
+  it('flags providers that are not part of the intended public-data-first commercial posture', () => {
+    expect(hasRestrictedCommercialProvider(['fred', 'eia'])).toBe(false);
+    expect(hasRestrictedCommercialProvider(['fred', 'alpha_vantage'])).toBe(true);
+    expect(hasRestrictedCommercialProvider(['twelve_data'])).toBe(true);
   });
 });

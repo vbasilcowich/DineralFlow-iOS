@@ -11,9 +11,7 @@ import {
   formatFlowScore,
   formatFreshness,
   formatLoadError,
-  formatProviderName,
   formatSourceMode,
-  getConfiguredProviders,
   getSourceModeTone,
 } from '@/lib/dashboard-presenter';
 
@@ -24,15 +22,13 @@ type LiveSnapshotPanelProps = {
 
 export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) {
   const { snapshot, health } = state;
-  const configuredProviders = getConfiguredProviders(health);
-  const effectiveProviders = snapshot?.effective_providers ?? [];
   const showingCachedSnapshot = state.snapshotOrigin === 'cached';
 
   return (
     <SectionCard
-      eyebrow="Local backend preview"
-      title="Real dashboard snapshot with local fallback"
-      body="This panel is wired to the current DineralFlow backend. When a live refresh is not available, the app can show the last valid snapshot stored on the device instead of inventing new figures.">
+      eyebrow="Prototype backend preview"
+      title="Latest backend snapshot for development"
+      body="This panel is for technical validation of the current backend connection. The commercial iOS launch is being repositioned around scheduled snapshots and public-data-first sourcing, so this preview is not the final product promise.">
       <View style={styles.buttonRow}>
         <ActionButton
           label="Refresh snapshot"
@@ -43,7 +39,7 @@ export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) 
       </View>
 
       <View style={styles.connectionRow}>
-        <Text style={styles.connectionLabel}>{health?.app_name ?? 'Market Flow API'}</Text>
+        <Text style={styles.connectionLabel}>{health?.app_name ?? 'Prototype API'}</Text>
         <Text style={styles.connectionValue}>{state.apiBaseUrl}</Text>
       </View>
       <Text style={styles.connectionNote}>{getApiBaseUrlNote()}</Text>
@@ -51,7 +47,7 @@ export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) 
       {state.status === 'loading' && !snapshot ? (
         <View style={styles.loadingCard}>
           <ActivityIndicator color={shellPalette.accent} />
-          <Text style={styles.loadingTitle}>Connecting to the local backend...</Text>
+          <Text style={styles.loadingTitle}>Connecting to the prototype backend...</Text>
           <Text style={styles.loadingBody}>
             Waiting for `/api/dashboard/snapshot` and `/health`.
           </Text>
@@ -60,7 +56,7 @@ export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) 
 
       {state.status === 'error' && !snapshot ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Snapshot unavailable</Text>
+          <Text style={styles.errorTitle}>Prototype snapshot unavailable</Text>
           <Text style={styles.errorBody}>{formatLoadError(state.errorMessage)}</Text>
           {state.errorMessage ? (
             <Text style={styles.errorHint}>Technical detail: {state.errorMessage}</Text>
@@ -119,7 +115,7 @@ export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) 
             <MetricCard
               label="Confidence"
               value={formatConfidence(snapshot.global_confidence)}
-              detail="Global confidence published by the backend snapshot."
+              detail="Confidence published in the latest stored backend snapshot."
             />
             <MetricCard
               label="Coverage"
@@ -144,33 +140,12 @@ export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) 
           </View>
 
           <View style={styles.block}>
-            <Text style={styles.blockLabel}>Effective providers</Text>
-            <View style={styles.pillWrap}>
-              {effectiveProviders.length > 0 ? (
-                effectiveProviders.map((providerKey) => (
-                  <Pill key={providerKey} label={formatProviderName(providerKey)} tone="info" />
-                ))
-              ) : (
-                <Text style={styles.blockBody}>
-                  No effective providers were reported in this snapshot.
-                </Text>
-              )}
-            </View>
-          </View>
-
-          <View style={styles.block}>
-            <Text style={styles.blockLabel}>Configured providers</Text>
-            <View style={styles.pillWrap}>
-              {configuredProviders.length > 0 ? (
-                configuredProviders.map((providerKey) => (
-                  <Pill key={providerKey} label={formatProviderName(providerKey)} tone="soft" />
-                ))
-              ) : (
-                <Text style={styles.blockBody}>
-                  Health metadata is not available yet for this load.
-                </Text>
-              )}
-            </View>
+            <Text style={styles.blockLabel}>Commercial launch profile</Text>
+            <Text style={styles.blockBody}>
+              The paid iOS product is being redesigned around stored snapshots, public-data-first
+              sourcing, and free versus premium depth. This development preview may still use
+              prototype feeds that are not part of the launch positioning.
+            </Text>
           </View>
 
           <View style={styles.block}>
@@ -210,10 +185,9 @@ export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) 
 
           {snapshot.provider_issues.length > 0 ? (
             <View style={styles.block}>
-              <Text style={styles.blockLabel}>Provider issues</Text>
+              <Text style={styles.blockLabel}>Prototype data diagnostics</Text>
               {snapshot.provider_issues.map((issue) => (
                 <View key={`${issue.provider_key}:${issue.message}`} style={styles.issueRow}>
-                  <Text style={styles.issueProvider}>{formatProviderName(issue.provider_key)}</Text>
                   <Text style={styles.issueSeverity}>{issue.severity.toUpperCase()}</Text>
                   <Text style={styles.issueMessage}>{issue.message}</Text>
                 </View>
@@ -351,11 +325,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  pillWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
   listRow: {
     flexDirection: 'row',
     gap: 12,
@@ -402,11 +371,6 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
     borderTopColor: shellPalette.border,
-  },
-  issueProvider: {
-    color: shellPalette.text,
-    fontSize: 14,
-    fontWeight: '800',
   },
   issueSeverity: {
     color: shellPalette.warning,
