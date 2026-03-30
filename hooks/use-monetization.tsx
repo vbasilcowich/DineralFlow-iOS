@@ -1,11 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import {
-  activateMockPremium,
-  createDefaultEntitlements,
   isFeatureUnlocked,
-  resetToFreeEntitlements,
-  restoreFromSnapshot,
   type AccessTier,
   type EntitlementFeature,
   type EntitlementsSnapshot,
@@ -16,6 +12,7 @@ import {
   readEntitlementsCache,
   writeEntitlementsCache,
 } from '@/lib/monetization-cache';
+import { createFallbackSubscriptionState, createMockSubscriptionDriver } from '@/lib/subscription-driver';
 
 type MonetizationContextValue = {
   entitlements: EntitlementsSnapshot;
@@ -33,7 +30,16 @@ type MonetizationContextValue = {
 const MonetizationContext = createContext<MonetizationContextValue | null>(null);
 
 export function MonetizationProvider({ children }: { children: ReactNode }) {
-  const [entitlements, setEntitlements] = useState<EntitlementsSnapshot>(createDefaultEntitlements());
+  const driver = useMemo(
+    () =>
+      createMockSubscriptionDriver({
+        read: readEntitlementsCache,
+        write: writeEntitlementsCache,
+        clear: clearEntitlementsCache,
+      }),
+    [],
+  );
+  const [entitlements, setEntitlements] = useState<EntitlementsSnapshot>(createFallbackSubscriptionState());
   const [isReady, setIsReady] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [lastAction, setLastAction] = useState<string | null>(null);
@@ -43,17 +49,17 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     async function hydrate() {
-      const cached = await readEntitlementsCache();
+      const result = await driver.hydrate();
 
       if (!mounted) {
         return;
       }
 
-      if (cached) {
-        setEntitlements(cached);
-        setLastAction('Loaded cached entitlement state');
+      if (result.entitlements) {
+        setEntitlements(result.entitlements);
       }
 
+      setLastAction(result.lastAction);
       setIsReady(true);
     }
 
@@ -62,17 +68,16 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, []);
+  }, [driver]);
 
   const purchaseMockPremium = async (plan: Exclude<SubscriptionPlan, null>) => {
     setIsProcessing(true);
     setErrorMessage(null);
 
     try {
-      const nextEntitlements = activateMockPremium(plan);
-      await writeEntitlementsCache(nextEntitlements);
-      setEntitlements(nextEntitlements);
-      setLastAction(`Mock premium activated (${plan})`);
+      const result = await driver.purchasePremium(plan);
+      setEntitlements(result.entitlements);
+      setLastAction(result.lastAction);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'mock_purchase_failed');
     } finally {
@@ -85,11 +90,9 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
     setErrorMessage(null);
 
     try {
-      const cached = await readEntitlementsCache();
-      const restored = restoreFromSnapshot(cached);
-      await writeEntitlementsCache(restored);
-      setEntitlements(restored);
-      setLastAction(cached ? 'Restored cached purchases' : 'No purchases to restore');
+      const result = await driver.restorePurchases();
+      setEntitlements(result.entitlements);
+      setLastAction(result.lastAction);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'mock_restore_failed');
     } finally {
@@ -102,11 +105,9 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
     setErrorMessage(null);
 
     try {
-      const nextEntitlements = resetToFreeEntitlements();
-      await clearEntitlementsCache();
-      await writeEntitlementsCache(nextEntitlements);
-      setEntitlements(nextEntitlements);
-      setLastAction('Reset to free tier');
+      const result = await driver.resetToFree();
+      setEntitlements(result.entitlements);
+      setLastAction(result.lastAction);
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'reset_to_free_failed');
     } finally {
