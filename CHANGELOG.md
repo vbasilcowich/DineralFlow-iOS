@@ -1,5 +1,12 @@
 # Changelog
 
+## beta 0.02
+
+- connected the `Dashboard` tab to the live local DineralFlow backend preview
+- added a cached snapshot fallback with `AsyncStorage` instead of inventing new figures when refresh fails
+- improved web API resolution for localhost previews and surfaced clearer sync diagnostics in the preview panel
+- added presenter and cache tests, and ignored local Expo preview log files
+
 ## beta 0.01
 
 - created the new `DineralFlow-iOS` repository as the iPhone-focused migration target

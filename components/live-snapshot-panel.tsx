@@ -1,0 +1,423 @@
+import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
+
+import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
+import { shellPalette } from '@/constants/shell';
+import type { DashboardPreviewState } from '@/hooks/use-dashboard-preview';
+import { getApiBaseUrlNote } from '@/lib/api-config';
+import {
+  formatBucketLabel,
+  formatConfidence,
+  formatCoverage,
+  formatFlowScore,
+  formatFreshness,
+  formatLoadError,
+  formatProviderName,
+  formatSourceMode,
+  getConfiguredProviders,
+  getSourceModeTone,
+} from '@/lib/dashboard-presenter';
+
+type LiveSnapshotPanelProps = {
+  state: DashboardPreviewState;
+  onRefresh: () => void;
+};
+
+export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) {
+  const { snapshot, health } = state;
+  const configuredProviders = getConfiguredProviders(health);
+  const effectiveProviders = snapshot?.effective_providers ?? [];
+  const showingCachedSnapshot = state.snapshotOrigin === 'cached';
+
+  return (
+    <SectionCard
+      eyebrow="Local backend preview"
+      title="Real dashboard snapshot with local fallback"
+      body="This panel is wired to the current DineralFlow backend. When a live refresh is not available, the app can show the last valid snapshot stored on the device instead of inventing new figures.">
+      <View style={styles.buttonRow}>
+        <ActionButton
+          label="Refresh snapshot"
+          icon="arrow.clockwise"
+          variant="primary"
+          onPress={onRefresh}
+        />
+      </View>
+
+      <View style={styles.connectionRow}>
+        <Text style={styles.connectionLabel}>{health?.app_name ?? 'Market Flow API'}</Text>
+        <Text style={styles.connectionValue}>{state.apiBaseUrl}</Text>
+      </View>
+      <Text style={styles.connectionNote}>{getApiBaseUrlNote()}</Text>
+
+      {state.status === 'loading' && !snapshot ? (
+        <View style={styles.loadingCard}>
+          <ActivityIndicator color={shellPalette.accent} />
+          <Text style={styles.loadingTitle}>Connecting to the local backend...</Text>
+          <Text style={styles.loadingBody}>
+            Waiting for `/api/dashboard/snapshot` and `/health`.
+          </Text>
+        </View>
+      ) : null}
+
+      {state.status === 'error' && !snapshot ? (
+        <View style={styles.errorCard}>
+          <Text style={styles.errorTitle}>Snapshot unavailable</Text>
+          <Text style={styles.errorBody}>{formatLoadError(state.errorMessage)}</Text>
+          {state.errorMessage ? (
+            <Text style={styles.errorHint}>Technical detail: {state.errorMessage}</Text>
+          ) : null}
+          <Text style={styles.errorHint}>
+            If you are using Expo Go on a phone, switch `EXPO_PUBLIC_API_BASE_URL` from localhost
+            to the backend LAN address.
+          </Text>
+        </View>
+      ) : null}
+
+      {snapshot ? (
+        <>
+          <View style={styles.badgeRow}>
+            <Pill
+              label={formatSourceMode(snapshot.source_mode)}
+              tone={getSourceModeTone(snapshot.source_mode)}
+            />
+            {showingCachedSnapshot ? (
+              <Pill label="Cached snapshot" tone="warning" />
+            ) : (
+              <Pill label="Live fetch" tone="success" />
+            )}
+            {state.lastRefreshFailed ? <Pill label="Sync failed" tone="danger" /> : null}
+            {state.isRefreshing ? <Pill label="Refreshing" tone="info" /> : null}
+            {state.lastLoadedAt ? (
+              <Pill
+                label={`Loaded ${new Date(state.lastLoadedAt).toLocaleTimeString()}`}
+                tone="soft"
+              />
+            ) : null}
+          </View>
+
+          {showingCachedSnapshot || state.lastRefreshFailed ? (
+            <View style={styles.cacheCard}>
+              <Text style={styles.cacheTitle}>
+                {showingCachedSnapshot ? 'Showing the last saved snapshot' : 'Live refresh failed'}
+              </Text>
+              <Text style={styles.cacheBody}>
+                {showingCachedSnapshot
+                  ? 'This screen is currently reading the last valid snapshot stored on the device. No values were fabricated during this fallback.'
+                  : 'The most recent network refresh did not complete, so the app is keeping the last successful snapshot visible.'}
+              </Text>
+              {state.errorMessage ? (
+                <Text style={styles.cacheHint}>{formatLoadError(state.errorMessage)}</Text>
+              ) : null}
+              {state.cacheSavedAt ? (
+                <Text style={styles.cacheHint}>
+                  Cached at {new Date(state.cacheSavedAt).toLocaleString()}.
+                </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          <View style={styles.metricGrid}>
+            <MetricCard
+              label="Confidence"
+              value={formatConfidence(snapshot.global_confidence)}
+              detail="Global confidence published by the backend snapshot."
+            />
+            <MetricCard
+              label="Coverage"
+              value={formatCoverage(snapshot.coverage)}
+              detail="Coverage level declared by the backend for this reading."
+            />
+            <MetricCard
+              label="Freshness"
+              value={formatFreshness(snapshot.data_freshness.seconds_since_refresh)}
+              detail={`Freshness status: ${snapshot.data_freshness.status}.`}
+            />
+            <MetricCard
+              label="Leading basket"
+              value={formatBucketLabel(snapshot.leading_bucket)}
+              detail={`Snapshot timestamp: ${new Date(snapshot.as_of).toLocaleString()}.`}
+            />
+          </View>
+
+          <View style={styles.block}>
+            <Text style={styles.blockLabel}>Headline</Text>
+            <Text style={styles.blockValue}>{snapshot.headline}</Text>
+          </View>
+
+          <View style={styles.block}>
+            <Text style={styles.blockLabel}>Effective providers</Text>
+            <View style={styles.pillWrap}>
+              {effectiveProviders.length > 0 ? (
+                effectiveProviders.map((providerKey) => (
+                  <Pill key={providerKey} label={formatProviderName(providerKey)} tone="info" />
+                ))
+              ) : (
+                <Text style={styles.blockBody}>
+                  No effective providers were reported in this snapshot.
+                </Text>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.block}>
+            <Text style={styles.blockLabel}>Configured providers</Text>
+            <View style={styles.pillWrap}>
+              {configuredProviders.length > 0 ? (
+                configuredProviders.map((providerKey) => (
+                  <Pill key={providerKey} label={formatProviderName(providerKey)} tone="soft" />
+                ))
+              ) : (
+                <Text style={styles.blockBody}>
+                  Health metadata is not available yet for this load.
+                </Text>
+              )}
+            </View>
+          </View>
+
+          <View style={styles.block}>
+            <Text style={styles.blockLabel}>Top flows</Text>
+            {snapshot.top_flows.length > 0 ? (
+              snapshot.top_flows.slice(0, 3).map((flow) => (
+                <View key={flow.bucket_key} style={styles.listRow}>
+                  <View style={styles.listCopy}>
+                    <Text style={styles.listTitle}>{formatBucketLabel(flow.bucket_key)}</Text>
+                    <Text style={styles.listBody}>
+                      {flow.drivers.length > 0
+                        ? flow.drivers.join(' | ')
+                        : 'No driver labels published in this row.'}
+                    </Text>
+                  </View>
+                  <View style={styles.listMeta}>
+                    <Text style={styles.listValue}>{formatFlowScore(flow.score)}</Text>
+                    <Text style={styles.listSubvalue}>{formatConfidence(flow.confidence)}</Text>
+                  </View>
+                </View>
+              ))
+            ) : (
+              <Text style={styles.blockBody}>No top-flow rows were returned by the backend.</Text>
+            )}
+          </View>
+
+          {snapshot.risks.length > 0 ? (
+            <View style={styles.block}>
+              <Text style={styles.blockLabel}>Risks reported by the backend</Text>
+              {snapshot.risks.map((risk) => (
+                <Text key={risk} style={styles.bulletRow}>
+                  - {risk}
+                </Text>
+              ))}
+            </View>
+          ) : null}
+
+          {snapshot.provider_issues.length > 0 ? (
+            <View style={styles.block}>
+              <Text style={styles.blockLabel}>Provider issues</Text>
+              {snapshot.provider_issues.map((issue) => (
+                <View key={`${issue.provider_key}:${issue.message}`} style={styles.issueRow}>
+                  <Text style={styles.issueProvider}>{formatProviderName(issue.provider_key)}</Text>
+                  <Text style={styles.issueSeverity}>{issue.severity.toUpperCase()}</Text>
+                  <Text style={styles.issueMessage}>{issue.message}</Text>
+                </View>
+              ))}
+            </View>
+          ) : null}
+        </>
+      ) : null}
+    </SectionCard>
+  );
+}
+
+const styles = StyleSheet.create({
+  buttonRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  connectionRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  connectionLabel: {
+    color: shellPalette.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  connectionValue: {
+    flex: 1,
+    textAlign: 'right',
+    color: shellPalette.textSoft,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  connectionNote: {
+    color: shellPalette.textMuted,
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+  loadingCard: {
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: shellPalette.border,
+    backgroundColor: shellPalette.panelSoft,
+    gap: 10,
+    alignItems: 'flex-start',
+  },
+  loadingTitle: {
+    color: shellPalette.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  loadingBody: {
+    color: shellPalette.textSoft,
+    fontSize: 13.5,
+    lineHeight: 19,
+  },
+  errorCard: {
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(240,140,140,0.25)',
+    backgroundColor: 'rgba(240,140,140,0.08)',
+    gap: 8,
+  },
+  errorTitle: {
+    color: shellPalette.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  errorBody: {
+    color: shellPalette.textSoft,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  errorHint: {
+    color: shellPalette.textMuted,
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+  cacheCard: {
+    borderRadius: 20,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(246,195,106,0.24)',
+    backgroundColor: 'rgba(246,195,106,0.08)',
+    gap: 8,
+  },
+  cacheTitle: {
+    color: shellPalette.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  cacheBody: {
+    color: shellPalette.textSoft,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  cacheHint: {
+    color: shellPalette.textMuted,
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+  badgeRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  metricGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  block: {
+    gap: 10,
+  },
+  blockLabel: {
+    color: shellPalette.accent,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  blockValue: {
+    color: shellPalette.text,
+    fontSize: 18,
+    lineHeight: 24,
+    fontWeight: '700',
+  },
+  blockBody: {
+    color: shellPalette.textSoft,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  pillWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  listRow: {
+    flexDirection: 'row',
+    gap: 12,
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: shellPalette.border,
+  },
+  listCopy: {
+    flex: 1,
+    gap: 4,
+  },
+  listTitle: {
+    color: shellPalette.text,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  listBody: {
+    color: shellPalette.textSoft,
+    fontSize: 13.5,
+    lineHeight: 19,
+  },
+  listMeta: {
+    alignItems: 'flex-end',
+    gap: 2,
+  },
+  listValue: {
+    color: shellPalette.text,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  listSubvalue: {
+    color: shellPalette.textMuted,
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  bulletRow: {
+    color: shellPalette.textSoft,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  issueRow: {
+    gap: 4,
+    paddingVertical: 10,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: shellPalette.border,
+  },
+  issueProvider: {
+    color: shellPalette.text,
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  issueSeverity: {
+    color: shellPalette.warning,
+    fontSize: 12,
+    fontWeight: '800',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+  },
+  issueMessage: {
+    color: shellPalette.textSoft,
+    fontSize: 13.5,
+    lineHeight: 19,
+  },
+});

@@ -1,17 +1,27 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
+import { LiveSnapshotPanel } from '@/components/live-snapshot-panel';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
 import { dashboardCards, roadmapItems, shellPalette } from '@/constants/shell';
+import { useDashboardPreview } from '@/hooks/use-dashboard-preview';
 
 export default function HomeScreen() {
   const router = useRouter();
+  const preview = useDashboardPreview();
 
   return (
     <ScrollView
       style={styles.screen}
       contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}>
+      showsVerticalScrollIndicator={false}
+      refreshControl={
+        <RefreshControl
+          refreshing={preview.isRefreshing}
+          onRefresh={preview.refresh}
+          tintColor={shellPalette.accent}
+        />
+      }>
       <View style={styles.hero}>
         <Pill label="DineralFlow iOS" tone="accent" />
         <Text style={styles.kicker}>Mobile shell for the next version of the product</Text>
@@ -48,6 +58,8 @@ export default function HomeScreen() {
           detail="Future screens should always show source, freshness, and confidence."
         />
       </View>
+
+      <LiveSnapshotPanel state={preview} onRefresh={preview.refresh} />
 
       <SectionCard
         eyebrow="Project status"

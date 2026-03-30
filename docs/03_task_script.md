@@ -17,6 +17,8 @@
 - configurar cliente API y entornos
 - conectar `health`, `snapshot`, `history` y `asset detail`
 - manejar estados `live`, `partial_live` y `unavailable`
+- avance actual: home conectada a `health` y `snapshot` con estado honesto de carga, error y refresco
+- avance actual: ultimo `snapshot` valido persistido en cache local para fallback sin datos inventados
 
 ## Fase 3 - Shell de navegacion iOS
 

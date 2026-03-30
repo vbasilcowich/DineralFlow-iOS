@@ -61,7 +61,7 @@ export function SectionCard({ eyebrow, title, body, children }: SectionCardProps
 
 type ActionButtonProps = {
   label: string;
-  icon: 'arrow.right' | 'chart.bar.xaxis' | 'folder.fill';
+  icon: 'arrow.right' | 'chart.bar.xaxis' | 'folder.fill' | 'arrow.clockwise';
   onPress: () => void;
   variant?: 'primary' | 'secondary';
 };

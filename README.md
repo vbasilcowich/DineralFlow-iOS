@@ -50,6 +50,12 @@ npm run test
 npm run doctor
 ```
 
+## Configuracion de API local
+
+- por defecto la app usa `http://127.0.0.1:8000`
+- para probarla en `Expo Go` sobre un iPhone, define `EXPO_PUBLIC_API_BASE_URL` con la IP LAN del backend, por ejemplo `http://192.168.1.20:8000`
+- la home puede conservar el ultimo `snapshot` valido en cache local para mostrarlo si falla el refresco en vivo
+
 ## Estado actual
 
 - Nuevo repo local creado en `E:\\VsCodeApps\\DineralFlow-iOS`
@@ -57,8 +63,5 @@ npm run doctor
 - Plan de migracion documentado
 - Infraestructura inicial de testing preparada para Windows
 - Validacion local completada: `lint`, `typecheck`, `test`, `doctor` y `npm run web`
-
-## Bloqueo actual
-
-- El remoto configurado `https://github.com/vbasilcowich/DineralFlow-iOS.git` no existe o no es accesible desde este entorno
-- Para completar la parte GitHub necesitaremos crear ese repo real o decidir otra URL de destino
+- Preview inicial del backend local integrada en la home
+- Fallback local con cache del ultimo `snapshot` valido integrado en la app
