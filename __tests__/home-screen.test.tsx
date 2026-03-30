@@ -24,6 +24,10 @@ jest.mock('@/components/live-snapshot-panel', () => ({
   LiveSnapshotPanel: () => null,
 }));
 
+jest.mock('@/components/history-access-panel', () => ({
+  HistoryAccessPanel: () => null,
+}));
+
 describe('HomeScreen feature gating', () => {
   beforeEach(() => {
     mockPush.mockClear();
@@ -45,6 +49,12 @@ describe('HomeScreen feature gating', () => {
   it('shows upgrade paths for the free tier', () => {
     mockUseMonetization.mockReturnValue({
       accessTier: 'free',
+      entitlementsSyncStatus: 'ready',
+      entitlementsContractVersion: 'mobile-entitlements.v1',
+      entitlementsContractState: 'backend_live',
+      maxTopFlows: 1,
+      diagnosticsAccess: 'preview',
+      allowedHistoryWindows: ['7d'],
       entitlements: {
         tier: 'free',
         plan: null,
@@ -83,6 +93,12 @@ describe('HomeScreen feature gating', () => {
   it('shows unlocked premium cards when premium is active', () => {
     mockUseMonetization.mockReturnValue({
       accessTier: 'premium',
+      entitlementsSyncStatus: 'ready',
+      entitlementsContractVersion: 'mobile-entitlements.v1',
+      entitlementsContractState: 'local_premium_mirror',
+      maxTopFlows: 3,
+      diagnosticsAccess: 'full',
+      allowedHistoryWindows: ['7d', '30d', '90d'],
       entitlements: {
         tier: 'premium',
         plan: 'monthly',

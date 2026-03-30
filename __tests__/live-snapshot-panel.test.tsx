@@ -77,6 +77,8 @@ describe('LiveSnapshotPanel', () => {
         state={createPreviewState()}
         onRefresh={jest.fn()}
         accessTier="free"
+        maxTopFlows={1}
+        diagnosticsAccess="preview"
         onOpenPaywall={onOpenPaywall}
       />,
     );
@@ -99,6 +101,8 @@ describe('LiveSnapshotPanel', () => {
         state={createPreviewState()}
         onRefresh={jest.fn()}
         accessTier="premium"
+        maxTopFlows={3}
+        diagnosticsAccess="full"
       />,
     );
 

@@ -1,5 +1,12 @@
 # Changelog
 
+## beta 0.04.2
+
+- moved monetization to a backend-sourced entitlements contract with a separate cached contract layer and explicit `ready / cached / stale / error` sync states
+- added mobile history access gating and entitlements-aware limits for top flows and diagnostics so free and premium now diverge through the contract instead of only local UI rules
+- introduced mobile contract helpers, paywall config loading, history hooks, and dedicated tests for entitlements, cached contract freshness, history access, and paywall behavior
+- taught the paywall to refresh access on open and to use legal destinations from the current backend paywall contract
+
 ## beta 0.04.1
 
 - added visible `free / premium` gating cards on the home screen for longer history, deeper drilldowns, and alerts

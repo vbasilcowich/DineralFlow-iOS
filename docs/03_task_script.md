@@ -61,6 +61,9 @@
 - sincronizar entitlements entre app y backend
 - fijar el producto en modo `snapshot-based`
 - retirar del posicionamiento comercial la dependencia de `Twelve Data` y `Alpha Vantage`
+- avance actual: gating visible de `history`, `drilldowns` y `alerts` en la home y el paywall
+- avance actual: historico real conectado al backend con ventanas cortas en `free` y largas en `premium`
+- avance actual: contrato `entitlements/paywall` definido en local para futura sincronizacion backend/app
 
 ## Fase 9 - Monetizacion fase 2
 

@@ -2,6 +2,7 @@ import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native
 import { useRouter } from 'expo-router';
 
 import { FeatureGateCard } from '@/components/feature-gate-card';
+import { HistoryAccessPanel } from '@/components/history-access-panel';
 import { LiveSnapshotPanel } from '@/components/live-snapshot-panel';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
 import {
@@ -47,12 +48,31 @@ export default function HomeScreen() {
       <View style={styles.hero}>
         <Pill label="DineralFlow iOS" tone="accent" />
         <Pill label={isPremium ? 'Premium unlocked' : 'Free tier active'} tone={isPremium ? 'success' : 'info'} />
+        <Pill
+          label={
+            monetization.entitlementsContractState === 'backend_cached'
+              ? 'Access rules cached'
+              : monetization.entitlementsContractState === 'backend_live'
+                ? 'Access rules synced'
+                : 'Local access fallback'
+          }
+          tone={
+            monetization.entitlementsContractState === 'backend_cached'
+              ? 'warning'
+              : monetization.entitlementsContractState === 'backend_live'
+                ? 'success'
+                : 'soft'
+          }
+        />
         <Text style={styles.kicker}>Snapshot-based finance app for iPhone</Text>
         <Text style={styles.title}>Global capital regime with a free tier and premium depth.</Text>
         <Text style={styles.body}>
           The launch product is being redesigned around scheduled snapshots, public-data-first
           sourcing, and a clear free versus premium model. The goal is to monetize without
           pretending the app is a real-time terminal on day one.
+        </Text>
+        <Text style={styles.metaNote}>
+          Contract sync: {monetization.entitlementsSyncStatus}. Revision {monetization.entitlementsContractVersion}.
         </Text>
         <View style={styles.actions}>
           <ActionButton
@@ -143,6 +163,14 @@ export default function HomeScreen() {
         state={preview}
         onRefresh={preview.refresh}
         accessTier={monetization.accessTier}
+        maxTopFlows={monetization.maxTopFlows}
+        diagnosticsAccess={monetization.diagnosticsAccess}
+        onOpenPaywall={openPaywallForFeature}
+      />
+
+      <HistoryAccessPanel
+        entitlements={monetization.entitlements}
+        allowedHistoryWindows={monetization.allowedHistoryWindows}
         onOpenPaywall={openPaywallForFeature}
       />
 
@@ -229,6 +257,11 @@ const styles = StyleSheet.create({
     color: shellPalette.textSoft,
     fontSize: 15.5,
     lineHeight: 23,
+  },
+  metaNote: {
+    color: shellPalette.textMuted,
+    fontSize: 12.5,
+    lineHeight: 18,
   },
   actions: {
     flexDirection: 'row',

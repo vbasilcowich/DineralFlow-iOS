@@ -1,34 +1,50 @@
-import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 
 import { ActionButton, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useMonetization } from '@/hooks/use-monetization';
+import { usePaywallConfig } from '@/hooks/use-paywall-config';
 import {
   getFeatureDescriptor,
   isEntitlementFeature,
   PAYWALL_PLAN_COPY,
-  PREMIUM_FEATURE_COPY,
 } from '@/lib/monetization';
 
 export default function PaywallScreen() {
   const monetization = useMonetization();
   const isPremium = monetization.accessTier === 'premium';
   const usingMockBilling = monetization.billingProvider === 'mock';
+  const didSyncOnOpenRef = useRef(false);
   const params = useLocalSearchParams<{ feature?: string | string[] }>();
   const featureParam = Array.isArray(params.feature) ? params.feature[0] : params.feature;
   const focusedFeature = featureParam && isEntitlementFeature(featureParam) ? featureParam : null;
   const focusedDescriptor = focusedFeature ? getFeatureDescriptor(focusedFeature) : null;
+  const paywallConfig = usePaywallConfig(focusedFeature, monetization.entitlements);
   const heroTitle = focusedDescriptor
     ? isPremium
       ? `${focusedDescriptor.title} is already part of premium.`
-      : focusedDescriptor.paywallTitle
+      : paywallConfig.config.headline
     : isPremium
       ? 'Premium is unlocked in this development build.'
-      : 'Premium unlocks the deeper workflow.';
+      : paywallConfig.config.headline;
   const heroBody = focusedDescriptor
-    ? focusedDescriptor.paywallBody
-    : 'This paywall is the phase 1 billing shell. It already validates free versus premium flows, feature gating, and restore behavior, while making it explicit when real StoreKit and RevenueCat billing are not active yet.';
+    ? paywallConfig.config.body
+    : paywallConfig.config.body;
+
+  useEffect(() => {
+    if (didSyncOnOpenRef.current) {
+      return;
+    }
+
+    didSyncOnOpenRef.current = true;
+    void monetization.syncEntitlements('paywall_opened');
+  }, [monetization]);
+
+  const openLegalLink = (url: string) => {
+    void Linking.openURL(url);
+  };
 
   return (
     <ScrollView
@@ -40,6 +56,10 @@ export default function PaywallScreen() {
         <Pill
           label={usingMockBilling ? 'Mock billing' : 'RevenueCat-ready'}
           tone={usingMockBilling ? 'warning' : 'info'}
+        />
+        <Pill
+          label={paywallConfig.source === 'backend' ? 'Backend paywall' : 'Local paywall fallback'}
+          tone={paywallConfig.source === 'backend' ? 'success' : 'soft'}
         />
         {focusedDescriptor ? <Pill label={`Focus: ${focusedDescriptor.title}`} tone="soft" /> : null}
         <Text style={styles.title}>{heroTitle}</Text>
@@ -60,12 +80,30 @@ export default function PaywallScreen() {
             <Pill label={`Plan: ${monetization.entitlements.plan}`} tone="soft" />
           ) : null}
           <Pill label={`Source: ${monetization.entitlements.source}`} tone="soft" />
+          <Pill label={`Contract: ${monetization.entitlementsContractState}`} tone="soft" />
           <Pill label={`Billing: ${monetization.billingStatus}`} tone="soft" />
         </View>
         {focusedDescriptor ? (
           <Text style={styles.metaText}>
             This paywall was opened from the {focusedDescriptor.title} upgrade path.
           </Text>
+        ) : null}
+        <Text style={styles.metaText}>
+          Entitlements sync: {monetization.entitlementsSyncStatus}
+        </Text>
+        <Text style={styles.metaText}>
+          Contract revision: {monetization.entitlementsContractVersion}
+        </Text>
+        {monetization.entitlementsLastSyncAt ? (
+          <Text style={styles.metaText}>
+            Last access sync: {new Date(monetization.entitlementsLastSyncAt).toLocaleString()}
+          </Text>
+        ) : null}
+        {monetization.entitlementsSyncMessage ? (
+          <Text style={styles.metaText}>{monetization.entitlementsSyncMessage}</Text>
+        ) : null}
+        {paywallConfig.errorMessage ? (
+          <Text style={styles.metaText}>Paywall config fallback: {paywallConfig.errorMessage}</Text>
         ) : null}
         <Text style={styles.metaText}>{monetization.billingStatusMessage}</Text>
         {monetization.lastAction ? (
@@ -81,7 +119,7 @@ export default function PaywallScreen() {
         title="Sell depth, not noisy feeds"
         body="Premium should monetize richer interpretation and convenience. The first implementation keeps the promise intentionally narrow and honest.">
         <View style={styles.featureList}>
-          {PREMIUM_FEATURE_COPY.map((item) => (
+          {paywallConfig.config.highlights.map((item) => (
             <Text key={item} style={styles.featureItem}>
               - {item}
             </Text>
@@ -117,10 +155,34 @@ export default function PaywallScreen() {
       </SectionCard>
 
       <SectionCard
+        eyebrow="Legal links"
+        title="Use the backend legal destinations from the current paywall contract"
+        body="The paywall copy and legal links should come from the same contract so the commercial layer stays auditable.">
+        <View style={styles.buttonRow}>
+          <ActionButton
+            label="Open terms"
+            icon="arrow.right"
+            onPress={() => openLegalLink(paywallConfig.config.legal_links.terms_url)}
+          />
+          <ActionButton
+            label="Open privacy"
+            icon="arrow.right"
+            onPress={() => openLegalLink(paywallConfig.config.legal_links.privacy_url)}
+          />
+        </View>
+      </SectionCard>
+
+      <SectionCard
         eyebrow="Restore and reset"
         title="State transitions we need before real billing"
         body="Restore purchases and downgrade handling are product-critical. This development paywall keeps those flows testable now.">
         <View style={styles.buttonRow}>
+          <ActionButton
+            label="Refresh access"
+            icon="arrow.clockwise"
+            disabled={monetization.isProcessing}
+            onPress={() => void monetization.syncEntitlements()}
+          />
           <ActionButton
             label="Restore purchases"
             icon="arrow.clockwise"

@@ -20,6 +20,8 @@ type LiveSnapshotPanelProps = {
   state: DashboardPreviewState;
   onRefresh: () => void;
   accessTier: AccessTier;
+  maxTopFlows: number;
+  diagnosticsAccess: 'preview' | 'full';
   onOpenPaywall?: (feature: EntitlementFeature) => void;
 };
 
@@ -27,15 +29,17 @@ export function LiveSnapshotPanel({
   state,
   onRefresh,
   accessTier,
+  maxTopFlows,
+  diagnosticsAccess,
   onOpenPaywall,
 }: LiveSnapshotPanelProps) {
   const { snapshot, health } = state;
   const showingCachedSnapshot = state.snapshotOrigin === 'cached';
   const isPremium = accessTier === 'premium';
-  const topFlowLimit = accessTier === 'premium' ? 3 : 1;
+  const topFlowLimit = maxTopFlows;
   const visibleRisks = snapshot ? snapshot.risks.slice(0, isPremium ? snapshot.risks.length : 1) : [];
   const visibleProviderIssues = snapshot
-    ? snapshot.provider_issues.slice(0, isPremium ? snapshot.provider_issues.length : 1)
+    ? snapshot.provider_issues.slice(0, diagnosticsAccess === 'full' ? snapshot.provider_issues.length : 1)
     : [];
 
   return (
@@ -222,7 +226,7 @@ export function LiveSnapshotPanel({
           {snapshot.provider_issues.length > 0 ? (
             <View style={styles.block}>
               <Text style={styles.blockLabel}>
-                {isPremium ? 'Prototype data diagnostics' : 'Provider diagnostics preview'}
+                {diagnosticsAccess === 'full' ? 'Prototype data diagnostics' : 'Provider diagnostics preview'}
               </Text>
               {visibleProviderIssues.map((issue) => (
                 <View key={`${issue.provider_key}:${issue.message}`} style={styles.issueRow}>
@@ -230,7 +234,7 @@ export function LiveSnapshotPanel({
                   <Text style={styles.issueMessage}>{issue.message}</Text>
                 </View>
               ))}
-              {!isPremium && snapshot.provider_issues.length > visibleProviderIssues.length ? (
+              {diagnosticsAccess !== 'full' && snapshot.provider_issues.length > visibleProviderIssues.length ? (
                 <View style={styles.upsellBlock}>
                   <Text style={styles.blockBody}>
                     Free shows only a preview of backend diagnostics. Premium unlocks the full

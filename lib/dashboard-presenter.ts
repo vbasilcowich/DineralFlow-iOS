@@ -1,4 +1,4 @@
-import type { DashboardHealth } from '@/lib/dashboard-api';
+import type { DashboardHealth, DashboardHistoryPoint } from '@/lib/dashboard-api';
 
 const BUCKET_LABELS: Record<string, string> = {
   risk_on: 'Equities',
@@ -7,6 +7,8 @@ const BUCKET_LABELS: Record<string, string> = {
   inflation_hedge: 'Inflation hedges',
   emerging_markets: 'Emerging markets',
   energy_complex: 'Energy',
+  duration: 'Long bonds',
+  em_carry: 'Emerging market carry',
 };
 
 const SOURCE_MODE_LABELS: Record<string, string> = {
@@ -49,6 +51,10 @@ export function formatCoverage(value: number): string {
 export function formatFlowScore(value: number): string {
   const prefix = value > 0 ? '+' : '';
   return `${prefix}${value.toFixed(1)}`;
+}
+
+export function formatHistorySummary(point: DashboardHistoryPoint): string {
+  return `${formatBucketLabel(point.leading_bucket)} led this stored snapshot at ${formatFlowScore(point.leading_score)} with ${formatConfidence(point.global_confidence)} confidence.`;
 }
 
 export function formatFreshness(secondsSinceRefresh: number): string {

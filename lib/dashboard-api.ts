@@ -23,6 +23,8 @@ export type TopFlow = {
   drivers: string[];
 };
 
+export type HistoryWindow = '7d' | '30d' | '90d';
+
 export type ProviderIssue = {
   provider_key: string;
   severity: string;
@@ -33,6 +35,14 @@ export type BucketScore = {
   bucket_key: string;
   score: number;
   confidence: number;
+};
+
+export type DashboardHistoryPoint = {
+  timestamp: string;
+  headline: string;
+  global_confidence: number;
+  leading_bucket: string;
+  leading_score: number;
 };
 
 export type DashboardSnapshot = {
@@ -48,6 +58,11 @@ export type DashboardSnapshot = {
   top_flows: TopFlow[];
   risks: string[];
   provider_issues: ProviderIssue[];
+};
+
+export type DashboardHistoryResponse = {
+  window: HistoryWindow;
+  points: DashboardHistoryPoint[];
 };
 
 async function fetchJson<T>(path: string, apiBaseUrl: string): Promise<T> {
@@ -76,4 +91,11 @@ export async function fetchDashboardSnapshot(apiBaseUrl = getApiBaseUrl()): Prom
 
 export async function fetchDashboardHealth(apiBaseUrl = getApiBaseUrl()): Promise<DashboardHealth> {
   return fetchJson<DashboardHealth>('/health', apiBaseUrl);
+}
+
+export async function fetchDashboardHistory(
+  window: HistoryWindow,
+  apiBaseUrl = getApiBaseUrl(),
+): Promise<DashboardHistoryResponse> {
+  return fetchJson<DashboardHistoryResponse>(`/api/dashboard/history?window=${window}`, apiBaseUrl);
 }

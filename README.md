@@ -43,6 +43,7 @@ Repositorio nuevo para la migracion de `DineralFlow` desde web hacia una app iOS
 - [docs/08_monetization_test_plan.md](E:/VsCodeApps/DineralFlow-iOS/docs/08_monetization_test_plan.md)
 - [docs/09_user_flow_explained.md](E:/VsCodeApps/DineralFlow-iOS/docs/09_user_flow_explained.md)
 - [docs/10_release_readiness_monetization.md](E:/VsCodeApps/DineralFlow-iOS/docs/10_release_readiness_monetization.md)
+- [docs/11_entitlements_contract.md](E:/VsCodeApps/DineralFlow-iOS/docs/11_entitlements_contract.md)
 - [docs/agent_prompts](E:/VsCodeApps/DineralFlow-iOS/docs/agent_prompts)
 
 ## Comandos

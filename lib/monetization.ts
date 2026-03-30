@@ -1,5 +1,6 @@
 export type AccessTier = 'free' | 'premium';
 export type SubscriptionPlan = 'monthly' | 'annual' | null;
+export type HistoryWindow = '7d' | '30d' | '90d';
 export type EntitlementFeature =
   | 'main_snapshot'
   | 'selected_baskets'
@@ -10,7 +11,12 @@ export type EntitlementFeature =
   | 'watchlists'
   | 'alerts'
   | 'ad_free';
-export type EntitlementSource = 'default' | 'cache' | 'mock_purchase' | 'mock_restore';
+export type EntitlementSource =
+  | 'default'
+  | 'cache'
+  | 'mock_purchase'
+  | 'mock_restore'
+  | 'backend_sync';
 export type FeatureGateState = 'preview' | 'locked' | 'unlocked';
 
 type FeatureDescriptor = {
@@ -58,6 +64,8 @@ export const HOME_PREMIUM_FEATURES: EntitlementFeature[] = [
   'deeper_drilldowns',
   'alerts',
 ] as const;
+
+export const HISTORY_WINDOWS: HistoryWindow[] = ['7d', '30d', '90d'];
 
 export const PREMIUM_FEATURE_COPY = [
   'Full basket drilldowns and deeper detail',
@@ -197,18 +205,29 @@ function buildFeatureMap(tier: AccessTier): Record<EntitlementFeature, boolean> 
   };
 }
 
+export function mergeFeatureOverrides(
+  tier: AccessTier,
+  overrides: Partial<Record<EntitlementFeature, boolean>> = {},
+): Record<EntitlementFeature, boolean> {
+  return {
+    ...buildFeatureMap(tier),
+    ...overrides,
+  };
+}
+
 export function buildEntitlements(
   tier: AccessTier,
   plan: SubscriptionPlan,
   source: EntitlementSource,
   updatedAt = new Date().toISOString(),
+  featureOverrides: Partial<Record<EntitlementFeature, boolean>> = {},
 ): EntitlementsSnapshot {
   return {
     tier,
     plan,
     source,
     updatedAt,
-    features: buildFeatureMap(tier),
+    features: mergeFeatureOverrides(tier, featureOverrides),
   };
 }
 
@@ -255,6 +274,23 @@ export function getFeatureGateState(
   }
 
   return FEATURE_DESCRIPTORS[feature].freeState;
+}
+
+export function canAccessHistoryWindow(
+  entitlements: EntitlementsSnapshot,
+  window: HistoryWindow,
+): boolean {
+  if (window === '7d') {
+    return true;
+  }
+
+  return isFeatureUnlocked(entitlements, 'long_history');
+}
+
+export function getAvailableHistoryWindows(
+  entitlements: EntitlementsSnapshot,
+): HistoryWindow[] {
+  return HISTORY_WINDOWS.filter((window) => canAccessHistoryWindow(entitlements, window));
 }
 
 export function isFeatureUnlocked(

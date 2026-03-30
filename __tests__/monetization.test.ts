@@ -1,7 +1,9 @@
 import {
   activateMockPremium,
+  canAccessHistoryWindow,
   createDefaultEntitlements,
   ENTITLEMENT_FEATURES,
+  getAvailableHistoryWindows,
   isFeatureUnlocked,
   resetToFreeEntitlements,
   restoreFromSnapshot,
@@ -46,6 +48,20 @@ describe('monetization core', () => {
       expect(isFeatureUnlocked(freeEntitlements, feature)).toBe(expectedFree[feature]);
       expect(isFeatureUnlocked(premiumEntitlements, feature)).toBe(true);
     }
+  });
+
+  it('limits history windows in free and unlocks them in premium', () => {
+    const freeEntitlements = createDefaultEntitlements();
+    const premiumEntitlements = activateMockPremium('annual');
+
+    expect(canAccessHistoryWindow(freeEntitlements, '7d')).toBe(true);
+    expect(canAccessHistoryWindow(freeEntitlements, '30d')).toBe(false);
+    expect(canAccessHistoryWindow(freeEntitlements, '90d')).toBe(false);
+    expect(getAvailableHistoryWindows(freeEntitlements)).toEqual(['7d']);
+
+    expect(canAccessHistoryWindow(premiumEntitlements, '30d')).toBe(true);
+    expect(canAccessHistoryWindow(premiumEntitlements, '90d')).toBe(true);
+    expect(getAvailableHistoryWindows(premiumEntitlements)).toEqual(['7d', '30d', '90d']);
   });
 
   it('activates premium features in the mock purchase flow', () => {

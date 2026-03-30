@@ -2,6 +2,7 @@ import {
   formatBucketLabel,
   formatCoverage,
   formatFreshness,
+  formatHistorySummary,
   formatSourceMode,
   getConfiguredProviders,
   hasRestrictedCommercialProvider,
@@ -12,6 +13,8 @@ describe('dashboard presenter helpers', () => {
   it('formats known basket labels in plain language', () => {
     expect(formatBucketLabel('risk_on')).toBe('Equities');
     expect(formatBucketLabel('energy_complex')).toBe('Energy');
+    expect(formatBucketLabel('duration')).toBe('Long bonds');
+    expect(formatBucketLabel('em_carry')).toBe('Emerging market carry');
   });
 
   it('normalizes coverage values from fractions to percentages', () => {
@@ -48,5 +51,17 @@ describe('dashboard presenter helpers', () => {
     expect(hasRestrictedCommercialProvider(['fred', 'eia'])).toBe(false);
     expect(hasRestrictedCommercialProvider(['fred', 'alpha_vantage'])).toBe(true);
     expect(hasRestrictedCommercialProvider(['twelve_data'])).toBe(true);
+  });
+
+  it('formats history summaries without depending on backend headline language', () => {
+    expect(
+      formatHistorySummary({
+        timestamp: '2026-03-30T00:00:00Z',
+        headline: 'Capital inclinando hacia refugios',
+        global_confidence: 79.13,
+        leading_bucket: 'safe_haven',
+        leading_score: 48.78,
+      }),
+    ).toBe('Safe assets led this stored snapshot at +48.8 with 79% confidence.');
   });
 });

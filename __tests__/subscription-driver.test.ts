@@ -69,7 +69,14 @@ describe('subscription driver', () => {
 
     const result = await driver.restorePurchases();
 
-    expect(result.entitlements).toEqual(createDefaultEntitlements());
+    expect(result.entitlements).toEqual(
+      expect.objectContaining({
+        tier: 'free',
+        plan: null,
+        source: 'default',
+        features: createDefaultEntitlements().features,
+      }),
+    );
     expect(result.lastAction).toBe('No purchases to restore');
   });
 
@@ -88,4 +95,3 @@ describe('subscription driver', () => {
     expect(createFallbackSubscriptionState()).toEqual(createDefaultEntitlements());
   });
 });
-
