@@ -3,31 +3,46 @@ import React from 'react';
 
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Colors } from '@/constants/theme';
-import { useColorScheme } from '@/hooks/use-color-scheme';
+import { shellPalette } from '@/constants/shell';
 
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
+        tabBarActiveTintColor: shellPalette.accent,
+        tabBarInactiveTintColor: shellPalette.textMuted,
         headerShown: false,
         tabBarButton: HapticTab,
+        tabBarStyle: {
+          backgroundColor: shellPalette.bg,
+          borderTopColor: shellPalette.border,
+          height: 88,
+          paddingTop: 10,
+          paddingBottom: 12,
+        },
+        tabBarLabelStyle: {
+          fontSize: 12,
+          fontWeight: '700',
+          letterSpacing: 0.4,
+        },
+        tabBarItemStyle: {
+          paddingTop: 8,
+        },
       }}>
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Dashboard',
+          tabBarIcon: ({ color }) => <IconSymbol size={24} name="chart.bar.fill" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="roadmap"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Roadmap',
+          tabBarIcon: ({ color }) => (
+            <IconSymbol size={24} name="list.bullet.rectangle.fill" color={color} />
+          ),
         }}
       />
     </Tabs>

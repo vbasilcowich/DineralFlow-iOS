@@ -1,50 +1,64 @@
-# Welcome to your Expo app 👋
+# DineralFlow iOS
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Repositorio nuevo para la migracion de `DineralFlow` desde web hacia una app iOS centrada en iPhone.
 
-## Get started
+## Decision tecnica actual
 
-1. Install dependencies
+- Base recomendada: `Expo + React Native + Expo Router + TypeScript`
+- Motivo: permite trabajar desde Windows, reutilizar logica de dominio del proyecto web y probar rapido sin depender de Xcode en cada iteracion
+- Objetivo de producto: mantener paridad funcional con el dashboard web, sus drilldowns, el contexto de procedencia y la regla de no inventar datos
 
-   ```bash
-   npm install
-   ```
+## Que podemos probar en este PC
 
-2. Start the app
+- `npm run web`
+- `npm run lint`
+- `npm run typecheck`
+- `npm run test`
+- `npm run doctor`
 
-   ```bash
-   npx expo start
-   ```
+## Que no podemos hacer totalmente aqui
 
-In the output, you'll find options to open the app in a
+- Ejecutar el simulador iOS nativo de Xcode
+- Firmar builds iOS nativos locales
+- Publicar en App Store o TestFlight
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+## Dependencias y costes relevantes
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+- `Node.js`, `Expo`, `React Native`, `TypeScript`, `Jest`: libres y gratuitas
+- `GitHub CLI`: libre y gratuita
+- `Expo Go` en iPhone: gratuita para desarrollo
+- `Apple Developer Program`: de pago si queremos distribuir por TestFlight o App Store
+- `macOS + Xcode`: necesarios para simulador iOS nativo y ciertos pasos de firma/build local
 
-## Get a fresh project
+## Estructura documental
 
-When you're ready, run:
+- [docs/00_execution_guide.md](E:/VsCodeApps/DineralFlow-iOS/docs/00_execution_guide.md)
+- [docs/01_feature_inventory.md](E:/VsCodeApps/DineralFlow-iOS/docs/01_feature_inventory.md)
+- [docs/02_architecture_decision.md](E:/VsCodeApps/DineralFlow-iOS/docs/02_architecture_decision.md)
+- [docs/03_task_script.md](E:/VsCodeApps/DineralFlow-iOS/docs/03_task_script.md)
+- [docs/04_task_review.md](E:/VsCodeApps/DineralFlow-iOS/docs/04_task_review.md)
+- [docs/agent_prompts](E:/VsCodeApps/DineralFlow-iOS/docs/agent_prompts)
+
+## Comandos
 
 ```bash
-npm run reset-project
+npm install
+npm run web
+npm run lint
+npm run typecheck
+npm run test
+npm run doctor
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+## Estado actual
 
-## Learn more
+- Nuevo repo local creado en `E:\\VsCodeApps\\DineralFlow-iOS`
+- Shell inicial de DineralFlow creada sobre Expo Router
+- Plan de migracion documentado
+- Infraestructura inicial de testing preparada para Windows
+- Validacion local completada: `lint`, `typecheck`, `test`, `doctor` y `npm run web`
 
-To learn more about developing your project with Expo, look at the following resources:
+## Bloqueo actual
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+- El remoto configurado `https://github.com/vbasilcowich/DineralFlow-iOS.git` no existe o no es accesible desde este entorno
+- Para completar la parte GitHub necesitaremos crear ese repo real o decidir otra URL de destino
