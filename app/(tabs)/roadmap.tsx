@@ -1,9 +1,15 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 
-import { PhaseRow, Pill, SectionCard } from '@/components/shell';
+import { ActionButton, PhaseRow, Pill, SectionCard } from '@/components/shell';
 import { projectPhases, shellPalette } from '@/constants/shell';
+import { useMonetization } from '@/hooks/use-monetization';
 
 export default function RoadmapScreen() {
+  const router = useRouter();
+  const monetization = useMonetization();
+  const isPremium = monetization.accessTier === 'premium';
+
   return (
     <ScrollView
       style={styles.screen}
@@ -11,12 +17,21 @@ export default function RoadmapScreen() {
       showsVerticalScrollIndicator={false}>
       <View style={styles.header}>
         <Pill label="Roadmap" tone="info" />
+        <Pill label={isPremium ? 'Premium active' : 'Free tier active'} tone={isPremium ? 'success' : 'soft'} />
         <Text style={styles.title}>A short path to a public-data launch</Text>
         <Text style={styles.body}>
           The iOS app should grow in phases that protect product clarity, monetization, and legal
           positioning. The goal is not to port every screen quickly, but to ship a paid product we
           can defend technically and commercially.
         </Text>
+        <View style={styles.headerActions}>
+          <ActionButton
+            label={isPremium ? 'Review premium state' : 'Open paywall'}
+            icon="arrow.right"
+            variant="primary"
+            onPress={() => router.push('/paywall')}
+          />
+        </View>
       </View>
 
       <SectionCard
@@ -86,6 +101,12 @@ const styles = StyleSheet.create({
   },
   phaseList: {
     gap: 2,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    paddingTop: 4,
   },
   callout: {
     borderRadius: 20,

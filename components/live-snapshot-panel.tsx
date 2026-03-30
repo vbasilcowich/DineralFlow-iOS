@@ -3,6 +3,7 @@ import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '../constants/shell';
 import type { DashboardPreviewState } from '@/hooks/use-dashboard-preview';
+import type { AccessTier } from '@/lib/monetization';
 import { getApiBaseUrlNote } from '@/lib/api-config';
 import {
   formatBucketLabel,
@@ -18,11 +19,13 @@ import {
 type LiveSnapshotPanelProps = {
   state: DashboardPreviewState;
   onRefresh: () => void;
+  accessTier: AccessTier;
 };
 
-export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) {
+export function LiveSnapshotPanel({ state, onRefresh, accessTier }: LiveSnapshotPanelProps) {
   const { snapshot, health } = state;
   const showingCachedSnapshot = state.snapshotOrigin === 'cached';
+  const topFlowLimit = accessTier === 'premium' ? 3 : 1;
 
   return (
     <SectionCard
@@ -151,7 +154,7 @@ export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) 
           <View style={styles.block}>
             <Text style={styles.blockLabel}>Top flows</Text>
             {snapshot.top_flows.length > 0 ? (
-              snapshot.top_flows.slice(0, 3).map((flow) => (
+              snapshot.top_flows.slice(0, topFlowLimit).map((flow) => (
                 <View key={flow.bucket_key} style={styles.listRow}>
                   <View style={styles.listCopy}>
                     <Text style={styles.listTitle}>{formatBucketLabel(flow.bucket_key)}</Text>
@@ -170,6 +173,11 @@ export function LiveSnapshotPanel({ state, onRefresh }: LiveSnapshotPanelProps) 
             ) : (
               <Text style={styles.blockBody}>No top-flow rows were returned by the backend.</Text>
             )}
+            {accessTier === 'free' && snapshot.top_flows.length > topFlowLimit ? (
+              <Text style={styles.blockBody}>
+                Premium unlocks a wider flow list and the deeper drilldowns planned for phase 1.
+              </Text>
+            ) : null}
           </View>
 
           {snapshot.risks.length > 0 ? (

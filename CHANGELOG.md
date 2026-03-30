@@ -1,5 +1,13 @@
 # Changelog
 
+## beta 0.04
+
+- implemented the phase 1 monetization foundation with a local `free / premium` entitlement model
+- added a prototype paywall, restore flow, and device-local premium activation without real billing credentials
+- wired a monetization provider into the app root and reflected the current tier in the home snapshot shell
+- gated part of the snapshot experience so the free tier stays useful while premium signals deeper access
+- added monetization cache and rules tests and kept `lint`, `typecheck`, and `test` green
+
 ## beta 0.03
 
 - redefined the iOS product around a snapshot-based `free / premium` launch instead of a generic migration shell

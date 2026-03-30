@@ -11,10 +11,13 @@ import {
   shellPalette,
 } from '@/constants/shell';
 import { useDashboardPreview } from '@/hooks/use-dashboard-preview';
+import { useMonetization } from '@/hooks/use-monetization';
 
 export default function HomeScreen() {
   const router = useRouter();
   const preview = useDashboardPreview();
+  const monetization = useMonetization();
+  const isPremium = monetization.accessTier === 'premium';
 
   return (
     <ScrollView
@@ -30,6 +33,7 @@ export default function HomeScreen() {
       }>
       <View style={styles.hero}>
         <Pill label="DineralFlow iOS" tone="accent" />
+        <Pill label={isPremium ? 'Premium unlocked' : 'Free tier active'} tone={isPremium ? 'success' : 'info'} />
         <Text style={styles.kicker}>Snapshot-based finance app for iPhone</Text>
         <Text style={styles.title}>Global capital regime with a free tier and premium depth.</Text>
         <Text style={styles.body}>
@@ -47,7 +51,7 @@ export default function HomeScreen() {
           <ActionButton
             label="View free vs premium"
             icon="folder.fill"
-            onPress={() => router.push('/roadmap')}
+            onPress={() => router.push('/paywall')}
           />
         </View>
       </View>
@@ -59,9 +63,13 @@ export default function HomeScreen() {
           detail="The app should read the latest stored backend snapshot, not call data vendors on every open."
         />
         <MetricCard
-          label="Data stance"
-          value="Public-data-first"
-          detail="The paid launch should prioritize sources with a safer public or reusable footing."
+          label="Access tier"
+          value={isPremium ? 'Premium' : 'Free'}
+          detail={
+            isPremium
+              ? 'Premium unlocks deeper drilldowns, longer history, and a clean ad-free posture.'
+              : 'Free keeps the main snapshot readable while premium adds depth and convenience.'
+          }
         />
       </View>
 
@@ -93,7 +101,7 @@ export default function HomeScreen() {
         </View>
       </SectionCard>
 
-      <LiveSnapshotPanel state={preview} onRefresh={preview.refresh} />
+      <LiveSnapshotPanel state={preview} onRefresh={preview.refresh} accessTier={monetization.accessTier} />
 
       <SectionCard
         eyebrow="Project status"
