@@ -6,7 +6,12 @@ import {
   type EntitlementsSnapshot,
   type SubscriptionPlan,
 } from '@/lib/monetization';
-import { resolveBillingState, type BillingState } from '@/lib/billing-config';
+import { getBillingConfig, resolveBillingState, type BillingConfig, type BillingState } from '@/lib/billing-config';
+import {
+  hydrateRevenueCatState,
+  purchaseRevenueCatPlan,
+  restoreRevenueCatState,
+} from '@/lib/revenuecat-client';
 
 export type SubscriptionDriver = {
   billing: BillingState;
@@ -31,11 +36,22 @@ type CacheAdapter = {
   clear: () => Promise<void>;
 };
 
+type DriverResult = {
+  entitlements: EntitlementsSnapshot | null;
+  lastAction: string | null;
+};
+
+type PurchaseDriverResult = {
+  entitlements: EntitlementsSnapshot;
+  lastAction: string;
+};
+
 export function createMockSubscriptionDriver(cache: CacheAdapter): SubscriptionDriver {
   return {
     billing: resolveBillingState({
       provider: 'mock',
       platform: 'web',
+      executionEnvironment: 'bare',
       revenueCatApiKeyIos: null,
       revenueCatEntitlementId: null,
       revenueCatOfferingId: null,
@@ -120,15 +136,90 @@ export function createRevenueCatStubDriver(cache: CacheAdapter, billing: Billing
   };
 }
 
+export function createRevenueCatSubscriptionDriver(
+  cache: CacheAdapter,
+  billingConfig: BillingConfig,
+  billing: BillingState,
+): SubscriptionDriver {
+  async function runHydrationOperation(
+    operation: () => Promise<DriverResult>,
+    fallbackLastAction: string | null = null,
+  ): Promise<DriverResult> {
+    try {
+      const result = await operation();
+
+      if (result.entitlements) {
+        await cache.write(result.entitlements);
+      }
+
+      return result;
+    } catch (error) {
+      const cached = await cache.read();
+
+      if (cached) {
+        return {
+          entitlements: cached,
+          lastAction: fallbackLastAction ?? 'Loaded cached entitlement state after RevenueCat error',
+        };
+      }
+
+      throw error;
+    }
+  }
+
+  return {
+    billing,
+    async hydrate() {
+      return runHydrationOperation(
+        () => hydrateRevenueCatState(billingConfig),
+        'Loaded cached entitlement state after RevenueCat sync failure',
+      );
+    },
+    async purchasePremium(plan) {
+      const result = await purchaseRevenueCatPlan(billingConfig, plan);
+      await cache.write(result.entitlements);
+
+      return result;
+    },
+    async restorePurchases() {
+      const result = await runHydrationOperation(
+        () => restoreRevenueCatState(billingConfig),
+        'Loaded cached entitlement state after RevenueCat restore failure',
+      );
+      const entitlements = result.entitlements ?? resetToFreeEntitlements();
+
+      return {
+        entitlements,
+        lastAction: result.lastAction ?? 'No active RevenueCat purchases to restore',
+      } satisfies PurchaseDriverResult;
+    },
+    async resetToFree() {
+      const entitlements = resetToFreeEntitlements();
+      await cache.clear();
+      await cache.write(entitlements);
+
+      return {
+        entitlements,
+        lastAction: 'Cleared local entitlement cache',
+      };
+    },
+  };
+}
+
 export function createSubscriptionDriver(
   cache: CacheAdapter,
-  billing = resolveBillingState(),
+  billingConfig = getBillingConfig(),
+  billing = resolveBillingState(billingConfig),
 ): SubscriptionDriver {
   if (billing.provider === 'mock') {
     return createMockSubscriptionDriver(cache);
   }
 
-  return createRevenueCatStubDriver(cache, billing);
+  if (billing.status !== 'ready') {
+    return createRevenueCatStubDriver(cache, billing);
+  }
+
+  return createRevenueCatSubscriptionDriver(cache, billingConfig, billing);
 }
 
 export function createFallbackSubscriptionState(): EntitlementsSnapshot {

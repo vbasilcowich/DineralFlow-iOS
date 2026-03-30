@@ -3,7 +3,8 @@ import {
   createDefaultEntitlements,
   type EntitlementsSnapshot,
 } from '@/lib/monetization';
-import { createFallbackSubscriptionState, createMockSubscriptionDriver } from '@/lib/subscription-driver';
+import { createFallbackSubscriptionState, createMockSubscriptionDriver, createSubscriptionDriver } from '@/lib/subscription-driver';
+import Purchases from 'react-native-purchases';
 
 function createMemoryCache(initialSnapshot: EntitlementsSnapshot | null = null) {
   let value = initialSnapshot;
@@ -21,6 +22,10 @@ function createMemoryCache(initialSnapshot: EntitlementsSnapshot | null = null) 
 }
 
 describe('subscription driver', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
   it('hydrates from cache when a previous entitlement exists', async () => {
     const cache = createMemoryCache(activateMockPremium('annual'));
     const driver = createMockSubscriptionDriver(cache);
@@ -93,5 +98,131 @@ describe('subscription driver', () => {
 
   it('provides a free fallback state for bootstrapping', () => {
     expect(createFallbackSubscriptionState()).toEqual(createDefaultEntitlements());
+  });
+
+  it('uses RevenueCat purchases when the billing mode is ready on native', async () => {
+    const cache = createMemoryCache(null);
+    const mockPurchases = Purchases as unknown as {
+      isConfigured: jest.Mock;
+      getOfferings: jest.Mock;
+      purchasePackage: jest.Mock;
+    };
+
+    mockPurchases.isConfigured.mockResolvedValue(true);
+    mockPurchases.getOfferings.mockResolvedValue({
+      all: {
+        default: {
+          monthly: {
+            identifier: '$rc_monthly',
+            packageType: 'MONTHLY',
+            product: { identifier: 'monthly' },
+            presentedOfferingContext: { offeringIdentifier: 'default', placementIdentifier: null, targetingContext: null },
+          },
+        },
+      },
+      current: null,
+    });
+    mockPurchases.purchasePackage.mockResolvedValue({
+      productIdentifier: 'monthly',
+      customerInfo: {
+        entitlements: {
+          active: {
+            premium: {
+              identifier: 'premium',
+              isActive: true,
+              productIdentifier: 'monthly',
+            },
+          },
+          all: {},
+          verification: 'NOT_REQUESTED',
+        },
+        activeSubscriptions: ['monthly'],
+        allPurchasedProductIdentifiers: ['monthly'],
+        latestExpirationDate: null,
+        firstSeen: '2026-03-30T00:00:00Z',
+        originalAppUserId: 'anonymous',
+        requestDate: '2026-03-30T12:00:00Z',
+        allExpirationDates: {},
+        allPurchaseDates: {},
+        originalApplicationVersion: null,
+        originalPurchaseDate: null,
+        managementURL: null,
+        nonSubscriptionTransactions: [],
+        subscriptionsByProductIdentifier: {},
+      },
+    });
+
+    const driver = createSubscriptionDriver(
+      cache,
+      {
+        provider: 'revenuecat',
+        platform: 'ios',
+        executionEnvironment: 'standalone',
+        revenueCatApiKeyIos: 'test_public_key',
+        revenueCatEntitlementId: 'premium',
+        revenueCatOfferingId: 'default',
+      },
+    );
+
+    const result = await driver.purchasePremium('monthly');
+
+    expect(result.entitlements.tier).toBe('premium');
+    expect(result.entitlements.plan).toBe('monthly');
+    expect(result.entitlements.source).toBe('revenuecat_purchase');
+    expect(cache.getCurrentValue()).toEqual(result.entitlements);
+  });
+
+  it('restores RevenueCat purchases into the premium state when the entitlement is active', async () => {
+    const cache = createMemoryCache(null);
+    const mockPurchases = Purchases as unknown as {
+      isConfigured: jest.Mock;
+      restorePurchases: jest.Mock;
+    };
+
+    mockPurchases.isConfigured.mockResolvedValue(true);
+    mockPurchases.restorePurchases.mockResolvedValue({
+      entitlements: {
+        active: {
+          premium: {
+            identifier: 'premium',
+            isActive: true,
+            productIdentifier: 'yearly',
+          },
+        },
+        all: {},
+        verification: 'NOT_REQUESTED',
+      },
+      activeSubscriptions: ['yearly'],
+      allPurchasedProductIdentifiers: ['yearly'],
+      latestExpirationDate: null,
+      firstSeen: '2026-03-30T00:00:00Z',
+      originalAppUserId: 'anonymous',
+      requestDate: '2026-03-30T12:30:00Z',
+      allExpirationDates: {},
+      allPurchaseDates: {},
+      originalApplicationVersion: null,
+      originalPurchaseDate: null,
+      managementURL: null,
+      nonSubscriptionTransactions: [],
+      subscriptionsByProductIdentifier: {},
+    });
+
+    const driver = createSubscriptionDriver(
+      cache,
+      {
+        provider: 'revenuecat',
+        platform: 'ios',
+        executionEnvironment: 'standalone',
+        revenueCatApiKeyIos: 'test_public_key',
+        revenueCatEntitlementId: 'premium',
+        revenueCatOfferingId: 'default',
+      },
+    );
+
+    const result = await driver.restorePurchases();
+
+    expect(result.entitlements.tier).toBe('premium');
+    expect(result.entitlements.plan).toBe('annual');
+    expect(result.entitlements.source).toBe('revenuecat_restore');
   });
 });

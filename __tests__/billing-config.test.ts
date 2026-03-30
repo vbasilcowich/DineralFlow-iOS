@@ -34,6 +34,7 @@ describe('billing config', () => {
     const config: BillingConfig = {
       provider: 'revenuecat',
       platform: 'ios',
+      executionEnvironment: 'standalone',
       revenueCatApiKeyIos: null,
       revenueCatEntitlementId: 'premium',
       revenueCatOfferingId: 'default',
@@ -50,6 +51,7 @@ describe('billing config', () => {
     const config: BillingConfig = {
       provider: 'revenuecat',
       platform: 'web',
+      executionEnvironment: 'bare',
       revenueCatApiKeyIos: 'appl_mock',
       revenueCatEntitlementId: 'premium',
       revenueCatOfferingId: 'default',
@@ -62,10 +64,11 @@ describe('billing config', () => {
     });
   });
 
-  it('reports sdk_not_installed when the config is present on native but the SDK is not wired yet', () => {
+  it('reports ready when the config is present on a supported native build', () => {
     const config: BillingConfig = {
       provider: 'revenuecat',
       platform: 'ios',
+      executionEnvironment: 'standalone',
       revenueCatApiKeyIos: 'appl_mock',
       revenueCatEntitlementId: 'premium',
       revenueCatOfferingId: 'default',
@@ -73,9 +76,25 @@ describe('billing config', () => {
 
     expect(resolveBillingState(config)).toMatchObject({
       provider: 'revenuecat',
-      status: 'sdk_not_installed',
+      status: 'ready',
+      canStartPurchase: true,
+    });
+  });
+
+  it('keeps RevenueCat blocked inside Expo Go store client mode', () => {
+    const config: BillingConfig = {
+      provider: 'revenuecat',
+      platform: 'ios',
+      executionEnvironment: 'storeClient',
+      revenueCatApiKeyIos: 'appl_mock',
+      revenueCatEntitlementId: 'premium',
+      revenueCatOfferingId: 'default',
+    };
+
+    expect(resolveBillingState(config)).toMatchObject({
+      provider: 'revenuecat',
+      status: 'requires_native_build',
       canStartPurchase: false,
     });
   });
 });
-

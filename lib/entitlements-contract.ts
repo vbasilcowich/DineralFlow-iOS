@@ -57,6 +57,16 @@ function createLocalTimestamp(): string {
   return new Date().toISOString();
 }
 
+function isLocalPremiumMirrorSource(source: EntitlementsSnapshot['source']): boolean {
+  return (
+    source === 'mock_purchase' ||
+    source === 'mock_restore' ||
+    source === 'revenuecat_purchase' ||
+    source === 'revenuecat_restore' ||
+    source === 'revenuecat_sync'
+  );
+}
+
 function parseBackendTimestamp(value: string | null | undefined): number | null {
   if (!value) {
     return null;
@@ -93,7 +103,11 @@ export function buildLocalEntitlementsMirror(
     canAccessHistoryWindow(entitlements, window as HistoryWindow),
   ) as HistoryWindow[];
   const timestamp = createLocalTimestamp();
-  const localPremium = entitlements.source === 'mock_purchase' || entitlements.source === 'mock_restore';
+  const localPremium = isLocalPremiumMirrorSource(entitlements.source);
+  const revenueCatMirror =
+    entitlements.source === 'revenuecat_purchase' ||
+    entitlements.source === 'revenuecat_restore' ||
+    entitlements.source === 'revenuecat_sync';
   const source: BackendEntitlementsSource =
     entitlements.source === 'backend_sync'
       ? 'backend'
@@ -110,12 +124,20 @@ export function buildLocalEntitlementsMirror(
     expires_at: null,
     server_time: timestamp,
     stale_after_seconds: LOCAL_STALE_AFTER_SECONDS,
-    contract_version: localPremium ? 'local-premium-mirror.v1' : 'local-fallback.v1',
+    contract_version: localPremium
+      ? revenueCatMirror
+        ? 'local-premium-mirror.revenuecat.v1'
+        : 'local-premium-mirror.v1'
+      : 'local-fallback.v1',
     paywall_revision: 'paywall.local.v1',
     sync_status: localPremium ? 'ok' : 'unconfigured',
     last_sync_at: localPremium ? timestamp : null,
-    sync_reason: localPremium ? 'local_mirror' : 'local_fallback',
-    billing_provider: localPremium ? 'mock' : 'none',
+    sync_reason: localPremium
+      ? revenueCatMirror
+        ? 'local_revenuecat_mirror'
+        : 'local_mirror'
+      : 'local_fallback',
+    billing_provider: localPremium ? (revenueCatMirror ? 'revenuecat' : 'mock') : 'none',
     features: entitlements.features,
     limits: {
       allowed_history_windows: allowedHistoryWindows,

@@ -1,4 +1,8 @@
-import { activateMockPremium, createDefaultEntitlements } from '@/lib/monetization';
+import {
+  activateMockPremium,
+  activateRevenueCatPremium,
+  createDefaultEntitlements,
+} from '@/lib/monetization';
 import { buildLocalEntitlementsMirror } from '@/lib/entitlements-contract';
 
 describe('entitlements contract mirror', () => {
@@ -28,5 +32,18 @@ describe('entitlements contract mirror', () => {
     expect(response.limits.max_top_flows).toBe(3);
     expect(response.limits.diagnostics_access).toBe('full');
     expect(response.ads.mode).toBe('none');
+  });
+
+  it('maps local RevenueCat premium into a revenuecat-backed mirror contract', () => {
+    const response = buildLocalEntitlementsMirror(
+      activateRevenueCatPremium('monthly', 'revenuecat_purchase', '2026-03-30T12:00:00Z'),
+    );
+
+    expect(response.access_tier).toBe('premium');
+    expect(response.plan).toBe('monthly');
+    expect(response.source).toBe('revenuecat_mirror');
+    expect(response.contract_version).toBe('local-premium-mirror.revenuecat.v1');
+    expect(response.billing_provider).toBe('revenuecat');
+    expect(response.sync_reason).toBe('local_revenuecat_mirror');
   });
 });

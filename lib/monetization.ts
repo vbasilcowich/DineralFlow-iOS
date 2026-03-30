@@ -16,6 +16,9 @@ export type EntitlementSource =
   | 'cache'
   | 'mock_purchase'
   | 'mock_restore'
+  | 'revenuecat_purchase'
+  | 'revenuecat_restore'
+  | 'revenuecat_sync'
   | 'backend_sync';
 export type FeatureGateState = 'preview' | 'locked' | 'unlocked';
 
@@ -237,6 +240,14 @@ export function createDefaultEntitlements(): EntitlementsSnapshot {
 
 export function activateMockPremium(plan: Exclude<SubscriptionPlan, null>): EntitlementsSnapshot {
   return buildEntitlements('premium', plan, 'mock_purchase');
+}
+
+export function activateRevenueCatPremium(
+  plan: SubscriptionPlan,
+  source: Extract<EntitlementSource, 'revenuecat_purchase' | 'revenuecat_restore' | 'revenuecat_sync'>,
+  updatedAt = new Date().toISOString(),
+): EntitlementsSnapshot {
+  return buildEntitlements('premium', plan, source, updatedAt);
 }
 
 export function restoreFromSnapshot(

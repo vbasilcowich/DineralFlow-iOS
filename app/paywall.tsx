@@ -16,6 +16,7 @@ export default function PaywallScreen() {
   const monetization = useMonetization();
   const isPremium = monetization.accessTier === 'premium';
   const usingMockBilling = monetization.billingProvider === 'mock';
+  const usingRevenueCatBilling = monetization.billingProvider === 'revenuecat';
   const didSyncOnOpenRef = useRef(false);
   const params = useLocalSearchParams<{ feature?: string | string[] }>();
   const featureParam = Array.isArray(params.feature) ? params.feature[0] : params.feature;
@@ -54,7 +55,7 @@ export default function PaywallScreen() {
       <View style={styles.hero}>
         <Pill label="Premium" tone={isPremium ? 'success' : 'accent'} />
         <Pill
-          label={usingMockBilling ? 'Mock billing' : 'RevenueCat-ready'}
+          label={usingMockBilling ? 'Mock billing' : 'RevenueCat billing'}
           tone={usingMockBilling ? 'warning' : 'info'}
         />
         <Pill
@@ -129,10 +130,18 @@ export default function PaywallScreen() {
 
       <SectionCard
         eyebrow="Plans"
-        title={monetization.canStartPurchase ? 'Purchase actions for phase 1' : 'Billing setup still blocks real purchase start'}
+        title={
+          monetization.canStartPurchase
+            ? usingRevenueCatBilling
+              ? 'RevenueCat purchase actions are ready for native builds'
+              : 'Purchase actions for phase 1'
+            : 'Billing setup still blocks real purchase start'
+        }
         body={
           monetization.canStartPurchase
-            ? 'These actions are ready for the current billing mode. In this build they still use a safe development flow.'
+            ? usingRevenueCatBilling
+              ? 'This build can start RevenueCat purchases in a native development build or TestFlight build. Web and Expo Go still only preview the paywall shell.'
+              : 'These actions are ready for the current billing mode. In this build they still use a safe development flow.'
             : monetization.requiresNativeBillingBuild
               ? 'This build can show the paywall shell, but real purchase start needs native iOS billing setup and the missing configuration values.'
               : 'Billing start is disabled until the current provider is configured.'
@@ -174,8 +183,12 @@ export default function PaywallScreen() {
 
       <SectionCard
         eyebrow="Restore and reset"
-        title="State transitions we need before real billing"
-        body="Restore purchases and downgrade handling are product-critical. This development paywall keeps those flows testable now.">
+        title={usingMockBilling ? 'State transitions we need before real billing' : 'Restore and sync access state'}
+        body={
+          usingMockBilling
+            ? 'Restore purchases and downgrade handling are product-critical. This development paywall keeps those flows testable now.'
+            : 'RevenueCat builds should focus on restore and sync. Resetting to free remains a mock-only developer shortcut.'
+        }>
         <View style={styles.buttonRow}>
           <ActionButton
             label="Refresh access"
@@ -189,12 +202,14 @@ export default function PaywallScreen() {
             disabled={monetization.isProcessing}
             onPress={() => void monetization.restorePurchases()}
           />
-          <ActionButton
-            label="Reset to free"
-            icon="folder.fill"
-            disabled={monetization.isProcessing}
-            onPress={() => void monetization.resetToFree()}
-          />
+          {usingMockBilling ? (
+            <ActionButton
+              label="Reset to free"
+              icon="folder.fill"
+              disabled={monetization.isProcessing}
+              onPress={() => void monetization.resetToFree()}
+            />
+          ) : null}
         </View>
       </SectionCard>
     </ScrollView>

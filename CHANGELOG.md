@@ -1,5 +1,12 @@
 # Changelog
 
+## beta 0.04.3
+
+- integrated `RevenueCat Test Store` into the native billing layer with a real subscription driver built on `react-native-purchases`
+- promoted native `RevenueCat` builds to `ready` while keeping `web` and `Expo Go` in an honest `requires_native_build` state
+- preserved locally purchased premium access against a lagging free backend contract by mirroring RevenueCat entitlements through the existing contract layer
+- added `expo-dev-client`, `eas.json`, local env wiring, iPad testing checklist, and new tests for RevenueCat billing, entitlement mirrors, and billing-state resolution
+
 ## beta 0.04.2
 
 - moved monetization to a backend-sourced entitlements contract with a separate cached contract layer and explicit `ready / cached / stale / error` sync states

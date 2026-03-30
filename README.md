@@ -11,6 +11,7 @@ Repositorio nuevo para la migracion de `DineralFlow` desde web hacia una app iOS
 ## Que podemos probar en este PC
 
 - `npm run web`
+- `npm run start:dev-client`
 - `npm run lint`
 - `npm run typecheck`
 - `npm run test`
@@ -44,6 +45,7 @@ Repositorio nuevo para la migracion de `DineralFlow` desde web hacia una app iOS
 - [docs/09_user_flow_explained.md](E:/VsCodeApps/DineralFlow-iOS/docs/09_user_flow_explained.md)
 - [docs/10_release_readiness_monetization.md](E:/VsCodeApps/DineralFlow-iOS/docs/10_release_readiness_monetization.md)
 - [docs/11_entitlements_contract.md](E:/VsCodeApps/DineralFlow-iOS/docs/11_entitlements_contract.md)
+- [docs/12_ipad_revenuecat_test_store_checklist.md](E:/VsCodeApps/DineralFlow-iOS/docs/12_ipad_revenuecat_test_store_checklist.md)
 - [docs/agent_prompts](E:/VsCodeApps/DineralFlow-iOS/docs/agent_prompts)
 
 ## Comandos
@@ -51,6 +53,7 @@ Repositorio nuevo para la migracion de `DineralFlow` desde web hacia una app iOS
 ```bash
 npm install
 npm run web
+npm run start:dev-client
 npm run lint
 npm run typecheck
 npm run test
@@ -67,7 +70,26 @@ npm run doctor
   - `EXPO_PUBLIC_REVENUECAT_API_KEY_IOS`
   - `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID`
   - `EXPO_PUBLIC_REVENUECAT_OFFERING_ID`
+- fase actual de desarrollo:
+  - `EXPO_PUBLIC_BILLING_PROVIDER=revenuecat`
+  - `EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=<RevenueCat Test Store public API key>`
+  - `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=premium`
+  - `EXPO_PUBLIC_REVENUECAT_OFFERING_ID=default`
 - se incluye una plantilla en [ .env.example](E:/VsCodeApps/DineralFlow-iOS/.env.example)
+
+## RevenueCat Test Store e iPad
+
+- `Expo Go` solo sirve para previsualizar el flujo. RevenueCat documenta que en `Expo Go` el SDK entra en `Preview API Mode`, asi que no hay compras reales ni acceso nativo completo.
+- Para probar RevenueCat de verdad en iPad hace falta un `development build` con `expo-dev-client`.
+- el repo ya incluye [eas.json](E:/VsCodeApps/DineralFlow-iOS/eas.json) y el script `npm run build:ios:development` para dejar preparado ese build
+- Para iPad fisico, `EAS Build` permite construir desde Windows, pero Expo documenta que cualquier build iOS para dispositivo requiere una cuenta de pago de `Apple Developer` para la firma.
+- En la fase actual, la forma correcta de probar monetizacion es:
+  - `EXPO_PUBLIC_BILLING_PROVIDER=revenuecat`
+  - `EXPO_PUBLIC_REVENUECAT_API_KEY_IOS=<RevenueCat Test Store public API key>`
+  - `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=<entitlement id>`
+  - `EXPO_PUBLIC_REVENUECAT_OFFERING_ID=<offering id>`
+- Mas adelante, al pasar a App Store, ese mismo campo `EXPO_PUBLIC_REVENUECAT_API_KEY_IOS` debe cambiar al `iOS public SDK key` real del proyecto en RevenueCat. No se debe publicar una build con clave de `Test Store`.
+- Checklist detallado: [docs/12_ipad_revenuecat_test_store_checklist.md](E:/VsCodeApps/DineralFlow-iOS/docs/12_ipad_revenuecat_test_store_checklist.md)
 
 ## Estado actual
 
@@ -78,3 +100,13 @@ npm run doctor
 - Validacion local completada: `lint`, `typecheck`, `test`, `doctor` y `npm run web`
 - Preview inicial del backend local integrada en la home
 - Fallback local con cache del ultimo `snapshot` valido integrado en la app
+- RevenueCat Test Store integrado en la capa de billing nativa, manteniendo fallback cacheado y contrato de entitlements con backend
+
+## Referencias oficiales
+
+- RevenueCat Expo installation: https://www.revenuecat.com/docs/getting-started/installation/expo
+- RevenueCat Test Store: https://www.revenuecat.com/docs/test-and-launch/sandbox/test-store
+- RevenueCat Apple sandbox/TestFlight: https://www.revenuecat.com/docs/test-and-launch/sandbox/apple-app-store
+- Expo: switch from Expo Go to development build: https://docs.expo.dev/develop/development-builds/expo-go-to-dev-build/
+- Expo: create a development build on EAS: https://docs.expo.dev/develop/development-builds/create-a-build/
+- Expo: internal distribution: https://docs.expo.dev/build/internal-distribution/

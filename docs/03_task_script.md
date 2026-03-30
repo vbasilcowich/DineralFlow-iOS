@@ -64,6 +64,24 @@
 - avance actual: gating visible de `history`, `drilldowns` y `alerts` en la home y el paywall
 - avance actual: historico real conectado al backend con ventanas cortas en `free` y largas en `premium`
 - avance actual: contrato `entitlements/paywall` definido en local para futura sincronizacion backend/app
+- siguiente paso documental cerrado: integrar `RevenueCat Test Store` en builds de desarrollo y dejar checklist de prueba en iPad
+- avance actual:
+  - `RevenueCat Test Store` integrado en la app con `react-native-purchases`
+  - el driver de suscripcion ya usa `purchase`, `restore` e `hydrate` reales en builds nativos
+  - `Expo Go` y `web` siguen mostrando solo el shell del paywall
+  - el repo ya incluye `eas.json` y el checklist [docs/12_ipad_revenuecat_test_store_checklist.md](E:/VsCodeApps/DineralFlow-iOS/docs/12_ipad_revenuecat_test_store_checklist.md)
+- decision operativa actual:
+  - `Expo Go` solo para preview del flujo
+  - `development build` para pruebas reales de RevenueCat
+  - usar `Test Store public API key` en debug/dev builds
+  - migrar a `iOS public SDK key` solo en builds de App Store/TestFlight
+- prerequisitos de prueba en iPad:
+  - `expo-dev-client`
+  - `EAS CLI`
+  - cuenta `Expo`
+  - cuenta de pago `Apple Developer` para firmar builds de dispositivo iOS
+  - dispositivo registrado si usamos distribucion interna `ad hoc`
+- referencia operativa: [docs/12_ipad_revenuecat_test_store_checklist.md](E:/VsCodeApps/DineralFlow-iOS/docs/12_ipad_revenuecat_test_store_checklist.md)
 
 ## Fase 9 - Monetizacion fase 2
 

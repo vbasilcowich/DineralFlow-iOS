@@ -69,9 +69,15 @@ function shouldPreserveLocalPremium(
   entitlements: EntitlementsSnapshot,
 ): boolean {
   return (
-    billingProvider === 'mock' &&
+    (billingProvider === 'mock' || billingProvider === 'revenuecat') &&
     entitlements.tier === 'premium' &&
-    (entitlements.source === 'mock_purchase' || entitlements.source === 'mock_restore')
+    (
+      entitlements.source === 'mock_purchase' ||
+      entitlements.source === 'mock_restore' ||
+      entitlements.source === 'revenuecat_purchase' ||
+      entitlements.source === 'revenuecat_restore' ||
+      entitlements.source === 'revenuecat_sync'
+    )
   );
 }
 
@@ -284,7 +290,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
         cachedContract: backendContractCacheRef.current,
       });
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'mock_purchase_failed');
+      setErrorMessage(error instanceof Error ? error.message : 'purchase_failed');
     } finally {
       setIsProcessing(false);
     }
@@ -304,7 +310,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
         cachedContract: backendContractCacheRef.current,
       });
     } catch (error) {
-      setErrorMessage(error instanceof Error ? error.message : 'mock_restore_failed');
+      setErrorMessage(error instanceof Error ? error.message : 'restore_failed');
     } finally {
       setIsProcessing(false);
     }

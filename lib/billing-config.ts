@@ -1,3 +1,4 @@
+import Constants from 'expo-constants';
 import { Platform } from 'react-native';
 
 export type BillingProvider = 'mock' | 'revenuecat';
@@ -11,6 +12,7 @@ export type BillingStatus =
 export type BillingConfig = {
   provider: BillingProvider;
   platform: string;
+  executionEnvironment: string | null;
   revenueCatApiKeyIos: string | null;
   revenueCatEntitlementId: string | null;
   revenueCatOfferingId: string | null;
@@ -40,6 +42,7 @@ export function getBillingConfig(): BillingConfig {
   return {
     provider,
     platform: Platform.OS,
+    executionEnvironment: Constants.executionEnvironment ?? null,
     revenueCatApiKeyIos: cleanEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_API_KEY_IOS),
     revenueCatEntitlementId: cleanEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID),
     revenueCatOfferingId: cleanEnvValue(process.env.EXPO_PUBLIC_REVENUECAT_OFFERING_ID),
@@ -69,24 +72,23 @@ export function resolveBillingState(config = getBillingConfig()): BillingState {
     };
   }
 
-  if (config.platform === 'web') {
+  if (config.platform === 'web' || config.executionEnvironment === 'storeClient') {
     return {
       provider: 'revenuecat',
       status: 'requires_native_build',
       canStartPurchase: false,
       requiresNativeBuild: true,
       statusMessage:
-        'RevenueCat needs a native iOS development build or simulator target. Web can only exercise the paywall shell.',
+        'RevenueCat needs a native development build. Web and Expo Go can only exercise the paywall shell.',
     };
   }
 
   return {
     provider: 'revenuecat',
-    status: 'sdk_not_installed',
-    canStartPurchase: false,
+    status: 'ready',
+    canStartPurchase: true,
     requiresNativeBuild: true,
     statusMessage:
-      'RevenueCat configuration is present, but the native purchases SDK is not wired into this repo yet.',
+      'RevenueCat is configured for a native build. Use a development build or TestFlight build to start purchases on-device.',
   };
 }
-
