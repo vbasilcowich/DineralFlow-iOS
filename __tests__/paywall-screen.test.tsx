@@ -76,11 +76,8 @@ describe('PaywallScreen', () => {
     render(<PaywallScreen />);
 
     expect(screen.getByText('Premium unlocks the deeper workflow.')).toBeTruthy();
-    expect(
-      screen.getByText(
-        'This paywall was opened from the Longer history upgrade path.',
-      ),
-    ).toBeTruthy();
+    expect(screen.getByText('Focus: Longer history')).toBeTruthy();
+    expect(screen.getByText(/This paywall was opened from the upgrade path for/i)).toBeTruthy();
     expect(screen.getByText('Billing setup still blocks real purchase start')).toBeTruthy();
     expect(screen.getByText('Start Monthly')).toBeTruthy();
     expect(screen.getByText('Open terms')).toBeTruthy();

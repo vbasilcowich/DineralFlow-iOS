@@ -74,8 +74,10 @@ describe('HomeScreen feature gating', () => {
       },
     });
 
-    render(<HomeScreen />);
+    const view = render(<HomeScreen />);
 
+    expect(view.getByLabelText('English')).toBeTruthy();
+    expect(view.getByLabelText('Español')).toBeTruthy();
     expect(screen.getByText('Longer history')).toBeTruthy();
     expect(screen.getByText('Basket drilldowns')).toBeTruthy();
     expect(screen.getByText('Alerts')).toBeTruthy();

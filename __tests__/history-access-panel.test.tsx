@@ -84,7 +84,7 @@ describe('HistoryAccessPanel', () => {
       />,
     );
 
-    expect(screen.getByText('Real snapshot history, gated by window')).toBeTruthy();
+    expect(screen.getByText('Stored history with clear access rules')).toBeTruthy();
     expect(screen.getByText('Free history')).toBeTruthy();
 
     fireEvent.press(screen.getByText('30d'));

@@ -31,6 +31,33 @@ export type ProviderIssue = {
   message: string;
 };
 
+export type MarketBriefEvidence = {
+  signal_key: string;
+  label: string;
+  provider_key: string;
+  provider_label: string;
+  latest_value: number | null;
+  previous_value: number | null;
+  delta_value: number | null;
+  delta_text: string;
+  summary: string;
+  supports_theme: number;
+  last_update_at: string;
+};
+
+export type MarketBrief = {
+  title: string;
+  summary: string;
+  confidence: number;
+  updated_at: string;
+  mode: string;
+  source_mode: string;
+  bullets: string[];
+  evidence: MarketBriefEvidence[];
+  source_labels: string[];
+  disclaimer: string;
+};
+
 export type BucketScore = {
   bucket_key: string;
   score: number;
@@ -58,6 +85,7 @@ export type DashboardSnapshot = {
   top_flows: TopFlow[];
   risks: string[];
   provider_issues: ProviderIssue[];
+  market_brief: MarketBrief;
 };
 
 export type DashboardHistoryResponse = {

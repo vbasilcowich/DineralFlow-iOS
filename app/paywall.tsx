@@ -2,10 +2,12 @@ import { useEffect, useRef } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams } from 'expo-router';
 
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { ActionButton, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useMonetization } from '@/hooks/use-monetization';
 import { usePaywallConfig } from '@/hooks/use-paywall-config';
+import { useLanguage } from '@/lib/language';
 import {
   getFeatureDescriptor,
   isEntitlementFeature,
@@ -14,6 +16,7 @@ import {
 
 export default function PaywallScreen() {
   const monetization = useMonetization();
+  const { language } = useLanguage();
   const isPremium = monetization.accessTier === 'premium';
   const usingMockBilling = monetization.billingProvider === 'mock';
   const usingRevenueCatBilling = monetization.billingProvider === 'revenuecat';
@@ -23,16 +26,151 @@ export default function PaywallScreen() {
   const focusedFeature = featureParam && isEntitlementFeature(featureParam) ? featureParam : null;
   const focusedDescriptor = focusedFeature ? getFeatureDescriptor(focusedFeature) : null;
   const paywallConfig = usePaywallConfig(focusedFeature, monetization.entitlements);
+  const localizePaywallText = (text: string) => {
+    if (language === 'en') {
+      return text;
+    }
+
+    const translations: Record<string, string> = {
+      'Premium unlocks the deeper workflow.': 'Premium desbloquea el flujo mas profundo.',
+      'Free keeps the short recent arc. Premium unlocks longer history windows, deeper basket drilldowns, and later alerts.':
+        'La capa gratis mantiene visible el tramo corto reciente. Premium desbloquea mas historico, drilldowns de cestas y futuras alertas.',
+      'Premium is already active in this build.':
+        'Premium ya esta activo en este build.',
+      '30 and 90-day windows': 'Ventanas de 30 y 90 dias',
+      'Deeper basket drilldowns': 'Drilldowns de cestas mas profundos',
+      'Alerts later in phase 1': 'Alertas mas adelante en la fase 1',
+      'Ad-free experience': 'Experiencia sin anuncios',
+      'Monthly': 'Mensual',
+      'Annual': 'Anual',
+      'Flexible access to premium depth while we validate the first paid workflow.':
+        'Acceso flexible a la capa premium mientras validamos el primer flujo de pago.',
+      'Lower-friction long-term access once the premium workflow is stable.':
+        'Acceso de largo plazo con menos friccion cuando el flujo premium sea estable.',
+      'Longer history': 'Mas historico',
+      'Basket drilldowns': 'Drilldowns de cestas',
+      'Alerts': 'Alertas',
+    };
+
+    return translations[text] ?? text;
+  };
+  const copy = language === 'es'
+    ? {
+        premium: 'Premium',
+        mockBilling: 'Facturacion mock',
+        revenueCatBilling: 'Facturacion RevenueCat',
+        backendPaywall: 'Paywall del backend',
+        localFallback: 'Paywall local de respaldo',
+        focus: 'Foco',
+        currentAccess: 'Acceso actual',
+        currentAccessPremium: 'El acceso premium esta activo',
+        currentAccessFree: 'La capa gratis esta activa',
+        currentAccessBodyPremium: 'Este estado desbloquea drilldowns mas profundos, mas historico, futuras watchlists y una experiencia sin anuncios.',
+        currentAccessBodyFree: 'La capa gratis mantiene legible el snapshot principal y reserva mas profundidad y futuras funciones de comodidad para premium.',
+        tier: 'Nivel',
+        plan: 'Plan',
+        source: 'Fuente',
+        contract: 'Contrato',
+        billing: 'Facturacion',
+        openedFrom: 'Este paywall se abrio desde la ruta de mejora de',
+        entitlementsSync: 'Sincronizacion de entitlements',
+        contractRevision: 'Revision del contrato',
+        lastAccessSync: 'Ultima sincronizacion de acceso',
+        paywallFallback: 'Fallback de configuracion del paywall',
+        lastAction: 'Ultima accion',
+        error: 'Error',
+        premiumAdds: 'Que anade premium',
+        premiumAddsTitle: 'Vendemos profundidad, no feeds ruidosos',
+        premiumAddsBody: 'Premium debe monetizar una interpretacion mas rica y comodidad. Esta primera implementacion mantiene la promesa estrecha y honesta.',
+        plans: 'Planes',
+        plansTitleReadyNative: 'Las compras con RevenueCat estan listas para builds nativos',
+        plansTitleReady: 'Acciones de compra listas para la fase 1',
+        plansTitleBlocked: 'La configuracion de billing sigue bloqueando el inicio de compra real',
+        plansBodyReadyNative: 'Este build puede iniciar compras con RevenueCat en un development build nativo o en TestFlight. Web y Expo Go solo muestran el esqueleto del paywall.',
+        plansBodyReady: 'Estas acciones estan listas para el modo de facturacion actual. En este build siguen usando un flujo seguro de desarrollo.',
+        plansBodyNativeBlocked: 'Este build puede mostrar el paywall, pero el inicio real de compra necesita billing nativo iOS y la configuracion que falta.',
+        plansBodyBlocked: 'El inicio de billing esta desactivado hasta que se configure el proveedor actual.',
+        activate: 'Activar',
+        start: 'Empezar',
+        legalLinks: 'Enlaces legales',
+        legalLinksTitle: 'Usar los destinos legales del backend desde el contrato actual del paywall',
+        legalLinksBody: 'El copy del paywall y los enlaces legales deben venir del mismo contrato para que la capa comercial siga siendo auditable.',
+        openTerms: 'Abrir terminos',
+        openPrivacy: 'Abrir privacidad',
+        restore: 'Restaurar y resetear',
+        restoreTitleMock: 'Transiciones de estado que necesitamos antes del billing real',
+        restoreTitleReal: 'Restaurar y sincronizar el estado de acceso',
+        restoreBodyMock: 'Restaurar compras y gestionar el downgrade es critico. Este paywall de desarrollo mantiene esos flujos probables desde ahora.',
+        restoreBodyReal: 'En builds con RevenueCat debemos centrarnos en restaurar y sincronizar. Volver a free queda como atajo solo para desarrollo mock.',
+        refreshAccess: 'Actualizar acceso',
+        restorePurchases: 'Restaurar compras',
+        resetToFree: 'Volver a free',
+      }
+    : {
+        premium: 'Premium',
+        mockBilling: 'Mock billing',
+        revenueCatBilling: 'RevenueCat billing',
+        backendPaywall: 'Backend paywall',
+        localFallback: 'Local paywall fallback',
+        focus: 'Focus',
+        currentAccess: 'Current access',
+        currentAccessPremium: 'Premium access is active',
+        currentAccessFree: 'Free tier is active',
+        currentAccessBodyPremium: 'This state unlocks deeper drilldowns, longer history, future watchlists, and an ad-free experience.',
+        currentAccessBodyFree: 'The free tier keeps the main snapshot readable while reserving deeper depth and future convenience features for premium.',
+        tier: 'Tier',
+        plan: 'Plan',
+        source: 'Source',
+        contract: 'Contract',
+        billing: 'Billing',
+        openedFrom: 'This paywall was opened from the upgrade path for',
+        entitlementsSync: 'Entitlements sync',
+        contractRevision: 'Contract revision',
+        lastAccessSync: 'Last access sync',
+        paywallFallback: 'Paywall config fallback',
+        lastAction: 'Last action',
+        error: 'Error',
+        premiumAdds: 'What premium adds',
+        premiumAddsTitle: 'Sell depth, not noisy feeds',
+        premiumAddsBody: 'Premium should monetize richer interpretation and convenience. The first implementation keeps the promise intentionally narrow and honest.',
+        plans: 'Plans',
+        plansTitleReadyNative: 'RevenueCat purchase actions are ready for native builds',
+        plansTitleReady: 'Purchase actions for phase 1',
+        plansTitleBlocked: 'Billing setup still blocks real purchase start',
+        plansBodyReadyNative: 'This build can start RevenueCat purchases in a native development build or TestFlight build. Web and Expo Go still only preview the paywall shell.',
+        plansBodyReady: 'These actions are ready for the current billing mode. In this build they still use a safe development flow.',
+        plansBodyNativeBlocked: 'This build can show the paywall shell, but real purchase start needs native iOS billing setup and the missing configuration values.',
+        plansBodyBlocked: 'Billing start is disabled until the current provider is configured.',
+        activate: 'Activate',
+        start: 'Start',
+        legalLinks: 'Legal links',
+        legalLinksTitle: 'Use the backend legal destinations from the current paywall contract',
+        legalLinksBody: 'The paywall copy and legal links should come from the same contract so the commercial layer stays auditable.',
+        openTerms: 'Open terms',
+        openPrivacy: 'Open privacy',
+        restore: 'Restore and reset',
+        restoreTitleMock: 'State transitions we need before real billing',
+        restoreTitleReal: 'Restore and sync access state',
+        restoreBodyMock: 'Restore purchases and downgrade handling are product-critical. This development paywall keeps those flows testable now.',
+        restoreBodyReal: 'RevenueCat builds should focus on restore and sync. Resetting to free remains a mock-only developer shortcut.',
+        refreshAccess: 'Refresh access',
+        restorePurchases: 'Restore purchases',
+        resetToFree: 'Reset to free',
+      };
   const heroTitle = focusedDescriptor
     ? isPremium
-      ? `${focusedDescriptor.title} is already part of premium.`
-      : paywallConfig.config.headline
+      ? language === 'es'
+        ? `${localizePaywallText(focusedDescriptor.title)} ya forma parte de premium.`
+        : `${localizePaywallText(focusedDescriptor.title)} is already part of premium.`
+      : localizePaywallText(paywallConfig.config.headline)
     : isPremium
-      ? 'Premium is unlocked in this development build.'
-      : paywallConfig.config.headline;
+      ? language === 'es'
+        ? 'Premium ya esta desbloqueado en este build de desarrollo.'
+        : 'Premium is unlocked in this development build.'
+      : localizePaywallText(paywallConfig.config.headline);
   const heroBody = focusedDescriptor
-    ? paywallConfig.config.body
-    : paywallConfig.config.body;
+    ? localizePaywallText(paywallConfig.config.body)
+    : localizePaywallText(paywallConfig.config.body);
 
   useEffect(() => {
     if (didSyncOnOpenRef.current) {
@@ -52,107 +190,116 @@ export default function PaywallScreen() {
       style={styles.screen}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
+      <View style={styles.switcherRow}>
+        <LanguageSwitcher />
+      </View>
       <View style={styles.hero}>
-        <Pill label="Premium" tone={isPremium ? 'success' : 'accent'} />
+        <Pill label={copy.premium} tone={isPremium ? 'success' : 'accent'} />
         <Pill
-          label={usingMockBilling ? 'Mock billing' : 'RevenueCat billing'}
+          label={usingMockBilling ? copy.mockBilling : copy.revenueCatBilling}
           tone={usingMockBilling ? 'warning' : 'info'}
         />
         <Pill
-          label={paywallConfig.source === 'backend' ? 'Backend paywall' : 'Local paywall fallback'}
+          label={paywallConfig.source === 'backend' ? copy.backendPaywall : copy.localFallback}
           tone={paywallConfig.source === 'backend' ? 'success' : 'soft'}
         />
-        {focusedDescriptor ? <Pill label={`Focus: ${focusedDescriptor.title}`} tone="soft" /> : null}
+        {focusedDescriptor ? (
+          <Pill label={`${copy.focus}: ${localizePaywallText(focusedDescriptor.title)}`} tone="soft" />
+        ) : null}
         <Text style={styles.title}>{heroTitle}</Text>
         <Text style={styles.body}>{heroBody}</Text>
       </View>
 
       <SectionCard
-        eyebrow="Current access"
-        title={isPremium ? 'Premium access is active' : 'Free tier is active'}
+        eyebrow={copy.currentAccess}
+        title={isPremium ? copy.currentAccessPremium : copy.currentAccessFree}
         body={
           isPremium
-            ? 'This state unlocks deeper drilldowns, longer history, future watchlists, and an ad-free experience.'
-            : 'The free tier keeps the main snapshot readable while reserving deeper depth and future convenience features for premium.'
+            ? copy.currentAccessBodyPremium
+            : copy.currentAccessBodyFree
         }>
         <View style={styles.badgeRow}>
-          <Pill label={`Tier: ${monetization.accessTier}`} tone={isPremium ? 'success' : 'info'} />
+          <Pill label={`${copy.tier}: ${monetization.accessTier}`} tone={isPremium ? 'success' : 'info'} />
           {monetization.entitlements.plan ? (
-            <Pill label={`Plan: ${monetization.entitlements.plan}`} tone="soft" />
+            <Pill label={`${copy.plan}: ${monetization.entitlements.plan}`} tone="soft" />
           ) : null}
-          <Pill label={`Source: ${monetization.entitlements.source}`} tone="soft" />
-          <Pill label={`Contract: ${monetization.entitlementsContractState}`} tone="soft" />
-          <Pill label={`Billing: ${monetization.billingStatus}`} tone="soft" />
+          <Pill label={`${copy.source}: ${monetization.entitlements.source}`} tone="soft" />
+          <Pill label={`${copy.contract}: ${monetization.entitlementsContractState}`} tone="soft" />
+          <Pill label={`${copy.billing}: ${monetization.billingStatus}`} tone="soft" />
         </View>
         {focusedDescriptor ? (
           <Text style={styles.metaText}>
-            This paywall was opened from the {focusedDescriptor.title} upgrade path.
+            {copy.openedFrom} {localizePaywallText(focusedDescriptor.title)}.
           </Text>
         ) : null}
         <Text style={styles.metaText}>
-          Entitlements sync: {monetization.entitlementsSyncStatus}
+          {copy.entitlementsSync}: {monetization.entitlementsSyncStatus}
         </Text>
         <Text style={styles.metaText}>
-          Contract revision: {monetization.entitlementsContractVersion}
+          {copy.contractRevision}: {monetization.entitlementsContractVersion}
         </Text>
         {monetization.entitlementsLastSyncAt ? (
           <Text style={styles.metaText}>
-            Last access sync: {new Date(monetization.entitlementsLastSyncAt).toLocaleString()}
+            {copy.lastAccessSync}: {new Date(monetization.entitlementsLastSyncAt).toLocaleString()}
           </Text>
         ) : null}
         {monetization.entitlementsSyncMessage ? (
           <Text style={styles.metaText}>{monetization.entitlementsSyncMessage}</Text>
         ) : null}
         {paywallConfig.errorMessage ? (
-          <Text style={styles.metaText}>Paywall config fallback: {paywallConfig.errorMessage}</Text>
+          <Text style={styles.metaText}>{copy.paywallFallback}: {paywallConfig.errorMessage}</Text>
         ) : null}
         <Text style={styles.metaText}>{monetization.billingStatusMessage}</Text>
         {monetization.lastAction ? (
-          <Text style={styles.metaText}>Last action: {monetization.lastAction}</Text>
+          <Text style={styles.metaText}>{copy.lastAction}: {monetization.lastAction}</Text>
         ) : null}
         {monetization.errorMessage ? (
-          <Text style={styles.errorText}>Error: {monetization.errorMessage}</Text>
+          <Text style={styles.errorText}>{copy.error}: {monetization.errorMessage}</Text>
         ) : null}
       </SectionCard>
 
       <SectionCard
-        eyebrow="What premium adds"
-        title="Sell depth, not noisy feeds"
-        body="Premium should monetize richer interpretation and convenience. The first implementation keeps the promise intentionally narrow and honest.">
+        eyebrow={copy.premiumAdds}
+        title={copy.premiumAddsTitle}
+        body={copy.premiumAddsBody}>
         <View style={styles.featureList}>
           {paywallConfig.config.highlights.map((item) => (
             <Text key={item} style={styles.featureItem}>
-              - {item}
+              - {localizePaywallText(item)}
             </Text>
           ))}
         </View>
       </SectionCard>
 
       <SectionCard
-        eyebrow="Plans"
+        eyebrow={copy.plans}
         title={
           monetization.canStartPurchase
             ? usingRevenueCatBilling
-              ? 'RevenueCat purchase actions are ready for native builds'
-              : 'Purchase actions for phase 1'
-            : 'Billing setup still blocks real purchase start'
+              ? copy.plansTitleReadyNative
+              : copy.plansTitleReady
+            : copy.plansTitleBlocked
         }
         body={
           monetization.canStartPurchase
             ? usingRevenueCatBilling
-              ? 'This build can start RevenueCat purchases in a native development build or TestFlight build. Web and Expo Go still only preview the paywall shell.'
-              : 'These actions are ready for the current billing mode. In this build they still use a safe development flow.'
+              ? copy.plansBodyReadyNative
+              : copy.plansBodyReady
             : monetization.requiresNativeBillingBuild
-              ? 'This build can show the paywall shell, but real purchase start needs native iOS billing setup and the missing configuration values.'
-              : 'Billing start is disabled until the current provider is configured.'
+              ? copy.plansBodyNativeBlocked
+              : copy.plansBodyBlocked
         }>
         <View style={styles.planGrid}>
           {PAYWALL_PLAN_COPY.map((plan) => (
             <View key={plan.key} style={styles.planCard}>
-              <Text style={styles.planTitle}>{plan.title}</Text>
-              <Text style={styles.planDetail}>{plan.detail}</Text>
+              <Text style={styles.planTitle}>{localizePaywallText(plan.title)}</Text>
+              <Text style={styles.planDetail}>{localizePaywallText(plan.detail)}</Text>
               <ActionButton
-                label={usingMockBilling ? `Activate ${plan.title}` : `Start ${plan.title}`}
+                label={
+                  usingMockBilling
+                    ? `${copy.activate} ${localizePaywallText(plan.title)}`
+                    : `${copy.start} ${localizePaywallText(plan.title)}`
+                }
                 icon="arrow.right"
                 variant="primary"
                 disabled={!monetization.canStartPurchase || monetization.isProcessing}
@@ -164,17 +311,17 @@ export default function PaywallScreen() {
       </SectionCard>
 
       <SectionCard
-        eyebrow="Legal links"
-        title="Use the backend legal destinations from the current paywall contract"
-        body="The paywall copy and legal links should come from the same contract so the commercial layer stays auditable.">
+        eyebrow={copy.legalLinks}
+        title={copy.legalLinksTitle}
+        body={copy.legalLinksBody}>
         <View style={styles.buttonRow}>
           <ActionButton
-            label="Open terms"
+            label={copy.openTerms}
             icon="arrow.right"
             onPress={() => openLegalLink(paywallConfig.config.legal_links.terms_url)}
           />
           <ActionButton
-            label="Open privacy"
+            label={copy.openPrivacy}
             icon="arrow.right"
             onPress={() => openLegalLink(paywallConfig.config.legal_links.privacy_url)}
           />
@@ -182,29 +329,29 @@ export default function PaywallScreen() {
       </SectionCard>
 
       <SectionCard
-        eyebrow="Restore and reset"
-        title={usingMockBilling ? 'State transitions we need before real billing' : 'Restore and sync access state'}
+        eyebrow={copy.restore}
+        title={usingMockBilling ? copy.restoreTitleMock : copy.restoreTitleReal}
         body={
           usingMockBilling
-            ? 'Restore purchases and downgrade handling are product-critical. This development paywall keeps those flows testable now.'
-            : 'RevenueCat builds should focus on restore and sync. Resetting to free remains a mock-only developer shortcut.'
+            ? copy.restoreBodyMock
+            : copy.restoreBodyReal
         }>
         <View style={styles.buttonRow}>
           <ActionButton
-            label="Refresh access"
+            label={copy.refreshAccess}
             icon="arrow.clockwise"
             disabled={monetization.isProcessing}
             onPress={() => void monetization.syncEntitlements()}
           />
           <ActionButton
-            label="Restore purchases"
+            label={copy.restorePurchases}
             icon="arrow.clockwise"
             disabled={monetization.isProcessing}
             onPress={() => void monetization.restorePurchases()}
           />
           {usingMockBilling ? (
             <ActionButton
-              label="Reset to free"
+              label={copy.resetToFree}
               icon="folder.fill"
               disabled={monetization.isProcessing}
               onPress={() => void monetization.resetToFree()}
@@ -222,28 +369,40 @@ const styles = StyleSheet.create({
     backgroundColor: shellPalette.bg,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 32,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
+    paddingHorizontal: 18,
+    paddingTop: 22,
+    paddingBottom: 36,
     gap: 18,
   },
+  switcherRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+  },
   hero: {
-    borderRadius: 30,
+    borderRadius: 28,
     padding: 22,
-    backgroundColor: shellPalette.panel,
+    backgroundColor: shellPalette.contrast,
     borderWidth: 1,
-    borderColor: shellPalette.border,
+    borderColor: 'rgba(245,248,251,0.08)',
     gap: 12,
+    shadowColor: shellPalette.shadow,
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
   },
   title: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 30,
     lineHeight: 35,
     fontWeight: '900',
     letterSpacing: -0.4,
   },
   body: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.78)',
     fontSize: 15,
     lineHeight: 22,
   },
@@ -279,8 +438,8 @@ const styles = StyleSheet.create({
     flexBasis: '48%',
     flexGrow: 1,
     minWidth: 150,
-    borderRadius: 20,
-    backgroundColor: shellPalette.panelSoft,
+    borderRadius: 22,
+    backgroundColor: shellPalette.panelMuted,
     borderWidth: 1,
     borderColor: shellPalette.border,
     padding: 16,

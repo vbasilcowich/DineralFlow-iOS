@@ -3,12 +3,13 @@ import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { MetricCard, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useDashboardHistory, type HistoryWindow } from '@/hooks/use-dashboard-history';
+import { useLanguage } from '@/lib/language';
 import type { EntitlementFeature, EntitlementsSnapshot } from '@/lib/monetization';
 import {
   formatBucketLabel,
   formatConfidence,
-  formatHistorySummary,
-  formatLoadError,
+  formatHistorySummaryLocalized,
+  formatLoadErrorLocalized,
 } from '@/lib/dashboard-presenter';
 
 type HistoryAccessPanelProps = {
@@ -24,6 +25,7 @@ export function HistoryAccessPanel({
   allowedHistoryWindows,
   onOpenPaywall,
 }: HistoryAccessPanelProps) {
+  const { language } = useLanguage();
   const isPremium = entitlements.tier === 'premium';
   const defaultWindow = allowedHistoryWindows.includes('30d') ? '30d' : '7d';
   const historyState = useDashboardHistory(defaultWindow);
@@ -40,12 +42,51 @@ export function HistoryAccessPanel({
     historyState.history && historyState.history.points.length > 0
       ? historyState.history.points[historyState.history.points.length - 1]
       : null;
+  const copy = language === 'es'
+    ? {
+        eyebrow: 'Evolucion reciente',
+        title: 'Historico guardado con reglas de acceso claras',
+        body: 'La app lee directamente el endpoint historico del backend. Gratis mantiene visible el arco reciente de 7 dias, mientras premium desbloquea ventanas mas largas sin prometer tiempo real.',
+        premiumLabel: 'Premium',
+        window: 'Ventana',
+        premiumHistory: 'Historico premium',
+        freeHistory: 'Historico gratis',
+        refreshing: 'Actualizando',
+        loading: 'Cargando la ventana historica real desde el backend...',
+        points: 'Puntos',
+        pointsDetail: 'Numero de snapshots del backend devueltos para esta ventana.',
+        averageConfidence: 'Confianza media',
+        confidenceDetail: 'Confianza media a lo largo de la ventana cargada.',
+        latestLeader: 'Lider mas reciente',
+        latestLeaderDetail: 'Cesta lider en el ultimo punto de esta ventana.',
+        noHistory: 'El backend todavia no devolvio suficientes puntos historicos reales para esta ventana.',
+        upsell: 'Premium desbloquea las ventanas de 30 y 90 dias mientras la capa gratis se mantiene anclada a 7 dias.',
+      }
+    : {
+        eyebrow: 'Recent evolution',
+        title: 'Stored history with clear access rules',
+        body: 'The app reads the backend history endpoint directly. Free keeps the recent 7-day arc visible, while premium unlocks the longer windows without promising real-time data.',
+        premiumLabel: 'Premium',
+        window: 'Window',
+        premiumHistory: 'Premium history',
+        freeHistory: 'Free history',
+        refreshing: 'Refreshing',
+        loading: 'Loading the real history window from the backend...',
+        points: 'Points',
+        pointsDetail: 'Number of backend snapshots currently returned for this window.',
+        averageConfidence: 'Average confidence',
+        confidenceDetail: 'Average confidence across the loaded history window.',
+        latestLeader: 'Latest leader',
+        latestLeaderDetail: 'Leading basket in the latest point of this window.',
+        noHistory: 'The backend did not return enough real history points for this window yet.',
+        upsell: 'Premium unlocks the 30-day and 90-day windows while the free tier stays anchored to 7 days.',
+      };
 
   return (
     <SectionCard
-      eyebrow="History access"
-      title="Real snapshot history, gated by window"
-      body="The app should use the backend history endpoint directly. Free keeps the recent 7-day window. Premium unlocks longer ranges without pretending to be a live terminal.">
+      eyebrow={copy.eyebrow}
+      title={copy.title}
+      body={copy.body}>
       <View style={styles.windowRow}>
         {HISTORY_WINDOWS.map((window) => {
           const locked = !allowedHistoryWindows.includes(window);
@@ -71,43 +112,45 @@ export function HistoryAccessPanel({
               <Text style={[styles.windowLabel, active && styles.windowLabelActive]}>
                 {window}
               </Text>
-              {locked ? <Text style={styles.windowLock}>Premium</Text> : null}
+              {locked ? <Text style={styles.windowLock}>{copy.premiumLabel}</Text> : null}
             </Pressable>
           );
         })}
       </View>
 
       <View style={styles.badgeRow}>
-        <Pill label={`Window: ${historyState.selectedWindow}`} tone="soft" />
-        <Pill label={isPremium ? 'Premium history' : 'Free history'} tone={isPremium ? 'success' : 'info'} />
-        {historyState.isRefreshing ? <Pill label="Refreshing" tone="info" /> : null}
+        <Pill label={`${copy.window}: ${historyState.selectedWindow}`} tone="soft" />
+        <Pill label={isPremium ? copy.premiumHistory : copy.freeHistory} tone={isPremium ? 'success' : 'info'} />
+        {historyState.isRefreshing ? <Pill label={copy.refreshing} tone="info" /> : null}
       </View>
 
       {historyState.status === 'loading' && !historyState.history ? (
-        <Text style={styles.helperText}>Loading the real history window from the backend...</Text>
+        <Text style={styles.helperText}>{copy.loading}</Text>
       ) : null}
 
       {historyState.status === 'error' && !historyState.history ? (
-        <Text style={styles.helperText}>{formatLoadError(historyState.errorMessage)}</Text>
+        <Text style={styles.helperText}>
+          {formatLoadErrorLocalized(historyState.errorMessage, language)}
+        </Text>
       ) : null}
 
       {historyState.history ? (
         <>
           <View style={styles.metricGrid}>
             <MetricCard
-              label="Points"
+              label={copy.points}
               value={String(historyState.history.points.length)}
-              detail="Number of backend snapshots currently returned for this window."
+              detail={copy.pointsDetail}
             />
             <MetricCard
-              label="Average confidence"
+              label={copy.averageConfidence}
               value={averageConfidence !== null ? formatConfidence(averageConfidence) : '-'}
-              detail="Average confidence across the loaded history window."
+              detail={copy.confidenceDetail}
             />
             <MetricCard
-              label="Latest leader"
-              value={latestPoint ? formatBucketLabel(latestPoint.leading_bucket) : '-'}
-              detail="Leading basket in the latest point of this window."
+              label={copy.latestLeader}
+              value={latestPoint ? formatBucketLabel(latestPoint.leading_bucket, language) : '-'}
+              detail={copy.latestLeaderDetail}
             />
           </View>
 
@@ -116,8 +159,12 @@ export function HistoryAccessPanel({
               {historyState.history.points.slice(-4).reverse().map((point) => (
                 <View key={`${point.timestamp}:${point.leading_bucket}`} style={styles.listRow}>
                   <View style={styles.listCopy}>
-                    <Text style={styles.listTitle}>{formatBucketLabel(point.leading_bucket)}</Text>
-                    <Text style={styles.listBody}>{formatHistorySummary(point)}</Text>
+                    <Text style={styles.listTitle}>
+                      {formatBucketLabel(point.leading_bucket, language)}
+                    </Text>
+                    <Text style={styles.listBody}>
+                      {formatHistorySummaryLocalized(point, language)}
+                    </Text>
                   </View>
                   <View style={styles.listMeta}>
                     <Text style={styles.listValue}>{formatConfidence(point.global_confidence)}</Text>
@@ -129,17 +176,13 @@ export function HistoryAccessPanel({
               ))}
             </View>
           ) : (
-            <Text style={styles.helperText}>
-              The backend did not return enough real history points for this window yet.
-            </Text>
+            <Text style={styles.helperText}>{copy.noHistory}</Text>
           )}
         </>
       ) : null}
 
       {!isPremium ? (
-        <Text style={styles.helperText}>
-          Premium unlocks the 30-day and 90-day windows while the free tier stays anchored to 7 days.
-        </Text>
+        <Text style={styles.helperText}>{copy.upsell}</Text>
       ) : null}
     </SectionCard>
   );
@@ -153,17 +196,17 @@ const styles = StyleSheet.create({
   },
   windowPill: {
     minWidth: 86,
-    borderRadius: 16,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: shellPalette.border,
-    backgroundColor: shellPalette.panelSoft,
+    backgroundColor: shellPalette.panelMuted,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 2,
   },
   windowPillActive: {
-    borderColor: 'rgba(212,175,55,0.42)',
-    backgroundColor: 'rgba(212,175,55,0.12)',
+    borderColor: 'rgba(62,157,120,0.22)',
+    backgroundColor: shellPalette.accentSoft,
   },
   windowPillLocked: {
     opacity: 0.72,
@@ -177,7 +220,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
   },
   windowLabelActive: {
-    color: shellPalette.accentSoft,
+    color: shellPalette.accentStrong,
   },
   windowLock: {
     color: shellPalette.textMuted,
@@ -203,6 +246,11 @@ const styles = StyleSheet.create({
   },
   list: {
     gap: 2,
+    backgroundColor: shellPalette.panelMuted,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: shellPalette.border,
+    paddingHorizontal: 14,
   },
   listRow: {
     flexDirection: 'row',

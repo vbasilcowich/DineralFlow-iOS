@@ -4,8 +4,11 @@ import React from 'react';
 import { HapticTab } from '@/components/haptic-tab';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { shellPalette } from '@/constants/shell';
+import { useLanguage } from '@/lib/language';
 
 export default function TabLayout() {
+  const { language } = useLanguage();
+
   return (
     <Tabs
       screenOptions={{
@@ -14,11 +17,16 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarStyle: {
-          backgroundColor: shellPalette.bg,
+          backgroundColor: shellPalette.panel,
           borderTopColor: shellPalette.border,
           height: 88,
           paddingTop: 10,
           paddingBottom: 12,
+          shadowColor: shellPalette.shadow,
+          shadowOpacity: 1,
+          shadowRadius: 12,
+          shadowOffset: { width: 0, height: -4 },
+          elevation: 8,
         },
         tabBarLabelStyle: {
           fontSize: 12,
@@ -32,14 +40,14 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Dashboard',
+          title: language === 'es' ? 'Inicio' : 'Dashboard',
           tabBarIcon: ({ color }) => <IconSymbol size={24} name="chart.bar.fill" color={color} />,
         }}
       />
       <Tabs.Screen
         name="roadmap"
         options={{
-          title: 'Roadmap',
+          title: language === 'es' ? 'Plan' : 'Roadmap',
           tabBarIcon: ({ color }) => (
             <IconSymbol size={24} name="list.bullet.rectangle.fill" color={color} />
           ),

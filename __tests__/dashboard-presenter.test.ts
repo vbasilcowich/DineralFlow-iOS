@@ -23,7 +23,8 @@ describe('dashboard presenter helpers', () => {
   });
 
   it('maps source mode labels and tones', () => {
-    expect(formatSourceMode('live')).toBe('Live data');
+    expect(formatSourceMode('live')).toBe('Complete snapshot');
+    expect(formatSourceMode('partial_live')).toBe('Partial coverage');
     expect(getSourceModeTone('live')).toBe('success');
     expect(getSourceModeTone('partial_live')).toBe('warning');
     expect(getSourceModeTone('unavailable')).toBe('danger');

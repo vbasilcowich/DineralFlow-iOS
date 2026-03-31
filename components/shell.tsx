@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
+
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { shellPalette } from '@/constants/shell';
 
@@ -8,35 +9,96 @@ type PillProps = {
   tone?: 'accent' | 'info' | 'success' | 'warning' | 'danger' | 'soft';
 };
 
+const PILL_TONES = {
+  accent: {
+    backgroundColor: shellPalette.accentSoft,
+    borderColor: 'rgba(62,157,120,0.18)',
+    textColor: shellPalette.accentStrong,
+  },
+  info: {
+    backgroundColor: 'rgba(90,136,229,0.12)',
+    borderColor: 'rgba(90,136,229,0.18)',
+    textColor: shellPalette.info,
+  },
+  success: {
+    backgroundColor: 'rgba(52,165,111,0.12)',
+    borderColor: 'rgba(52,165,111,0.18)',
+    textColor: shellPalette.success,
+  },
+  warning: {
+    backgroundColor: 'rgba(231,163,75,0.14)',
+    borderColor: 'rgba(231,163,75,0.20)',
+    textColor: shellPalette.warning,
+  },
+  danger: {
+    backgroundColor: 'rgba(213,100,104,0.14)',
+    borderColor: 'rgba(213,100,104,0.18)',
+    textColor: shellPalette.danger,
+  },
+  soft: {
+    backgroundColor: shellPalette.panelMuted,
+    borderColor: shellPalette.border,
+    textColor: shellPalette.textSoft,
+  },
+} as const;
+
 export function Pill({ label, tone = 'soft' }: PillProps) {
-  const toneStyle = {
-    accent: styles.pill_accent,
-    info: styles.pill_info,
-    success: styles.pill_success,
-    warning: styles.pill_warning,
-    danger: styles.pill_danger,
-    soft: styles.pill_soft,
-  }[tone];
+  const toneStyle = PILL_TONES[tone];
 
   return (
-    <View style={[styles.pill, toneStyle]}>
-      <Text style={[styles.pillText, tone !== 'soft' && styles.pillTextStrong]}>{label}</Text>
+    <View
+      style={[
+        styles.pill,
+        {
+          backgroundColor: toneStyle.backgroundColor,
+          borderColor: toneStyle.borderColor,
+        },
+      ]}>
+      <Text style={[styles.pillText, { color: toneStyle.textColor }]}>{label}</Text>
     </View>
   );
 }
 
-type MetricProps = {
+type MetricCardProps = {
   label: string;
   value: string;
   detail: string;
+  tone?: 'surface' | 'accent' | 'contrast';
 };
 
-export function MetricCard({ label, value, detail }: MetricProps) {
+export function MetricCard({
+  label,
+  value,
+  detail,
+  tone = 'surface',
+}: MetricCardProps) {
+  const isContrast = tone === 'contrast';
+  const isAccent = tone === 'accent';
+
   return (
-    <View style={styles.metricCard}>
-      <Text style={styles.metricLabel}>{label}</Text>
-      <Text style={styles.metricValue}>{value}</Text>
-      <Text style={styles.metricDetail}>{detail}</Text>
+    <View
+      style={[
+        styles.metricCard,
+        tone === 'accent' && styles.metricCard_accent,
+        tone === 'contrast' && styles.metricCard_contrast,
+      ]}>
+      <Text
+        style={[
+          styles.metricLabel,
+          (isAccent || isContrast) && styles.metricLabelStrong,
+          isContrast && styles.metricLabelContrast,
+        ]}>
+        {label}
+      </Text>
+      <Text style={[styles.metricValue, isContrast && styles.metricValueContrast]}>{value}</Text>
+      <Text
+        style={[
+          styles.metricDetail,
+          isAccent && styles.metricDetailAccent,
+          isContrast && styles.metricDetailContrast,
+        ]}>
+        {detail}
+      </Text>
     </View>
   );
 }
@@ -46,14 +108,49 @@ type SectionCardProps = {
   title: string;
   body: string;
   children?: ReactNode;
+  variant?: 'surface' | 'accent' | 'contrast';
 };
 
-export function SectionCard({ eyebrow, title, body, children }: SectionCardProps) {
+export function SectionCard({
+  eyebrow,
+  title,
+  body,
+  children,
+  variant = 'surface',
+}: SectionCardProps) {
+  const isContrast = variant === 'contrast';
+  const isAccent = variant === 'accent';
+
   return (
-    <View style={styles.sectionCard}>
-      <Text style={styles.eyebrow}>{eyebrow}</Text>
-      <Text style={styles.sectionTitle}>{title}</Text>
-      <Text style={styles.sectionBody}>{body}</Text>
+    <View
+      style={[
+        styles.sectionCard,
+        variant === 'accent' && styles.sectionCard_accent,
+        variant === 'contrast' && styles.sectionCard_contrast,
+      ]}>
+      <Text
+        style={[
+          styles.eyebrow,
+          isAccent && styles.eyebrowAccent,
+          isContrast && styles.eyebrowContrast,
+        ]}>
+        {eyebrow}
+      </Text>
+      <Text
+        style={[
+          styles.sectionTitle,
+          (isAccent || isContrast) && styles.sectionTitleContrast,
+        ]}>
+        {title}
+      </Text>
+      <Text
+        style={[
+          styles.sectionBody,
+          isAccent && styles.sectionBodyAccent,
+          isContrast && styles.sectionBodyContrast,
+        ]}>
+        {body}
+      </Text>
       {children}
     </View>
   );
@@ -61,7 +158,7 @@ export function SectionCard({ eyebrow, title, body, children }: SectionCardProps
 
 type ActionButtonProps = {
   label: string;
-  icon: 'arrow.right' | 'chart.bar.xaxis' | 'folder.fill' | 'arrow.clockwise';
+  icon: 'arrow.right' | 'folder.fill' | 'arrow.clockwise';
   onPress: () => void;
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
@@ -74,31 +171,27 @@ export function ActionButton({
   variant = 'secondary',
   disabled = false,
 }: ActionButtonProps) {
+  const isPrimary = variant === 'primary';
+
   return (
     <Pressable
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [
         styles.actionButton,
-        variant === 'primary' ? styles.actionPrimary : styles.actionSecondary,
+        isPrimary ? styles.actionPrimary : styles.actionSecondary,
         disabled && styles.actionDisabled,
         pressed && !disabled && styles.actionPressed,
       ]}>
       <IconSymbol
         name={icon}
         size={18}
-        color={
-          disabled
-            ? shellPalette.textMuted
-            : variant === 'primary'
-              ? shellPalette.bg
-              : shellPalette.text
-        }
+        color={disabled ? shellPalette.textMuted : isPrimary ? shellPalette.contrastText : shellPalette.text}
       />
       <Text
         style={[
           styles.actionLabel,
-          variant === 'primary' && styles.actionLabelPrimary,
+          isPrimary && styles.actionLabelPrimary,
           disabled && styles.actionLabelDisabled,
         ]}>
         {label}
@@ -132,71 +225,67 @@ export function PhaseRow({ label, title, description, status }: PhaseRowProps) {
 const styles = StyleSheet.create({
   pill: {
     borderRadius: 999,
-    paddingHorizontal: 10,
-    paddingVertical: 6,
+    paddingHorizontal: 11,
+    paddingVertical: 7,
     borderWidth: 1,
     alignSelf: 'flex-start',
   },
-  pill_soft: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
-    borderColor: shellPalette.border,
-  },
-  pill_accent: {
-    backgroundColor: 'rgba(212,175,55,0.14)',
-    borderColor: 'rgba(212,175,55,0.28)',
-  },
-  pill_info: {
-    backgroundColor: 'rgba(121,184,255,0.14)',
-    borderColor: 'rgba(121,184,255,0.26)',
-  },
-  pill_success: {
-    backgroundColor: 'rgba(124,214,166,0.14)',
-    borderColor: 'rgba(124,214,166,0.26)',
-  },
-  pill_warning: {
-    backgroundColor: 'rgba(246,195,106,0.14)',
-    borderColor: 'rgba(246,195,106,0.26)',
-  },
-  pill_danger: {
-    backgroundColor: 'rgba(240,140,140,0.14)',
-    borderColor: 'rgba(240,140,140,0.26)',
-  },
   pillText: {
-    color: shellPalette.textSoft,
-    fontSize: 12,
-    fontWeight: '700',
-    letterSpacing: 0.8,
+    fontSize: 11.5,
+    fontWeight: '800',
+    letterSpacing: 0.65,
     textTransform: 'uppercase',
-  },
-  pillTextStrong: {
-    color: shellPalette.text,
   },
   metricCard: {
     flex: 1,
-    minWidth: 130,
+    minWidth: 100,
     padding: 16,
-    borderRadius: 24,
-    backgroundColor: shellPalette.panelSoft,
+    borderRadius: 18,
+    backgroundColor: shellPalette.panelMuted,
     borderWidth: 1,
     borderColor: shellPalette.border,
     gap: 6,
   },
+  metricCard_accent: {
+    backgroundColor: shellPalette.accentSoft,
+    borderColor: 'rgba(62,157,120,0.14)',
+  },
+  metricCard_contrast: {
+    backgroundColor: shellPalette.contrastSoft,
+    borderColor: 'rgba(245,248,251,0.08)',
+  },
   metricLabel: {
     color: shellPalette.textMuted,
-    fontSize: 12,
+    fontSize: 11.5,
     textTransform: 'uppercase',
-    letterSpacing: 0.9,
-    fontWeight: '700',
+    letterSpacing: 0.85,
+    fontWeight: '800',
+  },
+  metricLabelStrong: {
+    color: shellPalette.textSoft,
+  },
+  metricLabelContrast: {
+    color: 'rgba(245,248,251,0.72)',
   },
   metricValue: {
     color: shellPalette.text,
-    fontSize: 18,
-    fontWeight: '800',
+    fontSize: 22,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+  },
+  metricValueContrast: {
+    color: shellPalette.contrastText,
   },
   metricDetail: {
     color: shellPalette.textSoft,
     fontSize: 13,
     lineHeight: 18,
+  },
+  metricDetailAccent: {
+    color: shellPalette.accentStrong,
+  },
+  metricDetailContrast: {
+    color: 'rgba(245,248,251,0.72)',
   },
   sectionCard: {
     borderRadius: 28,
@@ -205,24 +294,53 @@ const styles = StyleSheet.create({
     borderColor: shellPalette.border,
     padding: 20,
     gap: 12,
+    shadowColor: shellPalette.shadow,
+    shadowOpacity: 1,
+    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    elevation: 4,
+  },
+  sectionCard_accent: {
+    backgroundColor: shellPalette.accent,
+    borderColor: 'rgba(45,126,97,0.18)',
+  },
+  sectionCard_contrast: {
+    backgroundColor: shellPalette.contrast,
+    borderColor: 'rgba(245,248,251,0.08)',
   },
   eyebrow: {
-    color: shellPalette.accent,
-    fontSize: 12,
+    color: shellPalette.accentStrong,
+    fontSize: 11.5,
     fontWeight: '800',
-    letterSpacing: 1.2,
+    letterSpacing: 1.1,
     textTransform: 'uppercase',
+  },
+  eyebrowAccent: {
+    color: 'rgba(245,248,251,0.82)',
+  },
+  eyebrowContrast: {
+    color: 'rgba(245,248,251,0.68)',
   },
   sectionTitle: {
     color: shellPalette.text,
-    fontSize: 26,
-    lineHeight: 31,
-    fontWeight: '800',
+    fontSize: 28,
+    lineHeight: 33,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+  },
+  sectionTitleContrast: {
+    color: shellPalette.contrastText,
   },
   sectionBody: {
     color: shellPalette.textSoft,
     fontSize: 15,
     lineHeight: 22,
+  },
+  sectionBodyAccent: {
+    color: 'rgba(245,248,251,0.84)',
+  },
+  sectionBodyContrast: {
+    color: 'rgba(245,248,251,0.78)',
   },
   actionButton: {
     minHeight: 48,
@@ -236,14 +354,14 @@ const styles = StyleSheet.create({
   },
   actionPrimary: {
     backgroundColor: shellPalette.accent,
-    borderColor: 'rgba(212,175,55,0.55)',
+    borderColor: 'rgba(45,126,97,0.24)',
   },
   actionSecondary: {
-    backgroundColor: shellPalette.panelSoft,
+    backgroundColor: shellPalette.panelMuted,
     borderColor: shellPalette.border,
   },
   actionPressed: {
-    opacity: 0.82,
+    opacity: 0.86,
     transform: [{ scale: 0.98 }],
   },
   actionDisabled: {
@@ -252,10 +370,10 @@ const styles = StyleSheet.create({
   actionLabel: {
     color: shellPalette.text,
     fontSize: 14,
-    fontWeight: '700',
+    fontWeight: '800',
   },
   actionLabelPrimary: {
-    color: shellPalette.bg,
+    color: shellPalette.contrastText,
   },
   actionLabelDisabled: {
     color: shellPalette.textMuted,
@@ -269,19 +387,19 @@ const styles = StyleSheet.create({
     borderTopColor: shellPalette.border,
   },
   phaseBadge: {
-    width: 58,
-    borderRadius: 18,
-    backgroundColor: 'rgba(255,255,255,0.06)',
+    width: 64,
+    borderRadius: 16,
+    backgroundColor: shellPalette.panelMuted,
     borderWidth: 1,
     borderColor: shellPalette.border,
-    paddingVertical: 8,
+    paddingVertical: 9,
     paddingHorizontal: 10,
     alignItems: 'center',
   },
   phaseBadgeText: {
-    color: shellPalette.textSoft,
+    color: shellPalette.accentStrong,
     fontSize: 11,
-    fontWeight: '800',
+    fontWeight: '900',
     letterSpacing: 0.6,
     textTransform: 'uppercase',
     textAlign: 'center',
@@ -301,7 +419,7 @@ const styles = StyleSheet.create({
     lineHeight: 19,
   },
   phaseStatus: {
-    color: shellPalette.accentSoft,
+    color: shellPalette.accentStrong,
     fontSize: 12,
     fontWeight: '800',
     textTransform: 'uppercase',

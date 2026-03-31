@@ -1,20 +1,25 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
-import { shellPalette } from '../constants/shell';
-import type { DashboardPreviewState } from '@/hooks/use-dashboard-preview';
-import type { AccessTier, EntitlementFeature } from '@/lib/monetization';
 import { getApiBaseUrlNote } from '@/lib/api-config';
 import {
   formatBucketLabel,
   formatConfidence,
   formatCoverage,
+  formatDriverKey,
   formatFlowScore,
-  formatFreshness,
-  formatLoadError,
+  formatFreshnessLocalized,
+  formatLoadErrorLocalized,
+  formatProviderIssueMessageLocalized,
+  formatRiskTextLocalized,
   formatSourceMode,
   getSourceModeTone,
+  localizeBriefText,
 } from '@/lib/dashboard-presenter';
+import type { DashboardPreviewState } from '@/hooks/use-dashboard-preview';
+import { useLanguage } from '@/lib/language';
+import type { AccessTier, EntitlementFeature } from '@/lib/monetization';
+import { shellPalette } from '../constants/shell';
 
 type LiveSnapshotPanelProps = {
   state: DashboardPreviewState;
@@ -23,7 +28,12 @@ type LiveSnapshotPanelProps = {
   maxTopFlows: number;
   diagnosticsAccess: 'preview' | 'full';
   onOpenPaywall?: (feature: EntitlementFeature) => void;
+  onOpenConfidence?: () => void;
 };
+
+function formatBriefTimestamp(timestamp: string) {
+  return new Date(timestamp).toLocaleString();
+}
 
 export function LiveSnapshotPanel({
   state,
@@ -32,7 +42,9 @@ export function LiveSnapshotPanel({
   maxTopFlows,
   diagnosticsAccess,
   onOpenPaywall,
+  onOpenConfidence,
 }: LiveSnapshotPanelProps) {
+  const { language } = useLanguage();
   const { snapshot, health } = state;
   const showingCachedSnapshot = state.snapshotOrigin === 'cached';
   const isPremium = accessTier === 'premium';
@@ -41,19 +53,126 @@ export function LiveSnapshotPanel({
   const visibleProviderIssues = snapshot
     ? snapshot.provider_issues.slice(0, diagnosticsAccess === 'full' ? snapshot.provider_issues.length : 1)
     : [];
+  const brief = snapshot?.market_brief ?? null;
+  const visibleBriefBullets = brief?.bullets.slice(0, isPremium ? brief.bullets.length : 2) ?? [];
+  const visibleBriefEvidence =
+    brief?.evidence.slice(0, diagnosticsAccess === 'full' ? 3 : 1) ?? [];
+  const primaryFlow = snapshot?.top_flows[0] ?? null;
+  const secondaryFlow = snapshot?.top_flows[1] ?? null;
+
+  const copy = language === 'es'
+    ? {
+        eyebrow: 'Analisis de mercado',
+        title: 'Ultimo resumen de mercado',
+        body: 'Este es el bloque editorial central de la app. Se genera a partir del ultimo snapshot guardado por el backend y deja clara la postura de las fuentes en lugar de fingir tiempo real.',
+        refresh: 'Actualizar snapshot',
+        unavailable: 'Snapshot no disponible',
+        technicalDetail: 'Detalle tecnico',
+        phoneHint: 'Si usas Expo Go en un telefono, cambia `EXPO_PUBLIC_API_BASE_URL` desde localhost a la IP local del backend.',
+        cached: 'Snapshot en cache',
+        fresh: 'Lectura reciente',
+        failed: 'Actualizacion fallida',
+        refreshing: 'Actualizando',
+        loaded: 'Cargado',
+        showingLast: 'Mostrando el ultimo snapshot guardado',
+        lastFailed: 'Fallo la ultima actualizacion',
+        cacheBody: 'Esta pantalla esta leyendo el ultimo snapshot valido guardado en el dispositivo. No se han inventado valores durante este fallback.',
+        failedBody: 'La ultima actualizacion de red no termino bien, asi que la app mantiene visible el ultimo snapshot correcto.',
+        cachedAt: 'Guardado en cache',
+        confidence: 'Confianza',
+        updated: 'Actualizado',
+        sources: 'Fuentes',
+        bulletHint: 'Premium muestra la lista completa de bullets publicada con este mismo snapshot.',
+        evidenceHint: 'Gratis muestra solo una parte de la evidencia. Premium desbloquea mas de la capa de prueba detras de este mismo brief.',
+        unlock: 'Desbloquear detalle',
+        snapshotConfidence: 'Confianza del snapshot',
+        coverage: 'Cobertura',
+        freshness: 'Frescura',
+        leadingBasket: 'Cesta lider',
+        publicData: 'Postura de datos publicos',
+        publicDataBody: 'Este lanzamiento se esta orientando alrededor de snapshots programados y fuentes mas faciles de usar comercialmente, como FRED y EIA, en lugar de feeds de mercado de pago.',
+        scoreboard: 'Marcador detras del brief',
+        noDrivers: 'No se publicaron etiquetas de impulsores en esta fila.',
+        noFlows: 'El backend no devolvio filas de flujo para esta lectura.',
+        flowsHint: 'Gratis se mantiene conciso y muestra solo el flujo mas fuerte publicado. Premium desbloquea una lista mas amplia y los drilldowns profundos planificados para la fase 1.',
+        frictions: 'Fricciones y matices',
+        premiumRisks: 'Premium mantiene visible el resto de fricciones publicadas alrededor de este mismo snapshot.',
+        diagnostics: 'Diagnosticos del backend',
+        diagnosticsPreview: 'Vista previa de diagnosticos',
+        diagnosticsHint: 'Gratis muestra solo una vista previa de los diagnosticos del backend. Premium desbloquea la lista completa de incidencias de proveedor y la capa de evidencia mas profunda.',
+        primaryFlow: 'Tendencia primaria',
+        secondaryFlow: 'Tendencia secundaria',
+        score: 'Score',
+        explainConfidence: 'Como se calcula la confianza',
+        confidencePreviewHint: 'La explicacion de confianza abre una pantalla separada con metodologia, preview del analisis y acceso premium al detalle.',
+      }
+    : {
+        eyebrow: 'Market analysis',
+        title: 'Latest market brief',
+        body: 'This is the central editorial block of the app. It is generated from the latest stored backend snapshot and keeps the source posture explicit instead of pretending to be real-time.',
+        refresh: 'Refresh snapshot',
+        unavailable: 'Prototype snapshot unavailable',
+        technicalDetail: 'Technical detail',
+        phoneHint: 'If you are using Expo Go on a phone, switch `EXPO_PUBLIC_API_BASE_URL` from localhost to the backend LAN address.',
+        cached: 'Cached snapshot',
+        fresh: 'Fresh fetch',
+        failed: 'Refresh failed',
+        refreshing: 'Refreshing',
+        loaded: 'Loaded',
+        showingLast: 'Showing the last saved snapshot',
+        lastFailed: 'Fresh fetch failed',
+        cacheBody: 'This screen is currently reading the last valid snapshot stored on the device. No values were fabricated during this fallback.',
+        failedBody: 'The most recent network refresh did not complete, so the app is keeping the last successful snapshot visible.',
+        cachedAt: 'Cached at',
+        confidence: 'Confidence',
+        updated: 'Updated',
+        sources: 'Sources',
+        bulletHint: 'Premium shows the full bullet list published with this same stored snapshot.',
+        evidenceHint: 'Free shows a short evidence preview. Premium unlocks more of the proof layer behind the same brief.',
+        unlock: 'Unlock drilldowns',
+        snapshotConfidence: 'Snapshot confidence',
+        coverage: 'Coverage',
+        freshness: 'Freshness',
+        leadingBasket: 'Leading basket',
+        publicData: 'Public-data posture',
+        publicDataBody: 'This launch path is being shaped around scheduled stored snapshots and sources that are easier to use commercially, such as FRED and EIA, rather than paid market feeds.',
+        scoreboard: 'Scoreboard behind the brief',
+        noDrivers: 'No driver labels were published in this row.',
+        noFlows: 'No flow rows were returned by the backend.',
+        flowsHint: 'Free stays concise and shows the strongest published flow first. Premium unlocks a wider flow list and the deeper basket drilldowns planned for phase 1.',
+        frictions: 'Friction and caveats',
+        premiumRisks: 'Premium keeps the rest of the published friction list visible around the same snapshot.',
+        diagnostics: 'Backend diagnostics',
+        diagnosticsPreview: 'Diagnostics preview',
+        diagnosticsHint: 'Free shows only a preview of backend diagnostics. Premium unlocks the full provider issue list and the deeper evidence layer around it.',
+        primaryFlow: 'Primary flow',
+        secondaryFlow: 'Secondary flow',
+        score: 'Score',
+        explainConfidence: 'How confidence works',
+        confidencePreviewHint: 'The confidence view opens a separate screen with methodology, analysis preview, and premium access to deeper detail.',
+      };
 
   return (
     <SectionCard
-      eyebrow="Prototype backend preview"
-      title="Latest backend snapshot for development"
-      body="This panel is for technical validation of the current backend connection. The commercial iOS launch is being repositioned around scheduled snapshots and public-data-first sourcing, so this preview is not the final product promise.">
+      eyebrow={copy.eyebrow}
+      title={copy.title}
+      body={copy.body}
+      variant="contrast">
       <View style={styles.buttonRow}>
         <ActionButton
-          label="Refresh snapshot"
+          label={copy.refresh}
           icon="arrow.clockwise"
           variant="primary"
           onPress={onRefresh}
         />
+        {onOpenConfidence ? (
+          <ActionButton
+            label={copy.explainConfidence}
+            icon="arrow.right"
+            variant="secondary"
+            onPress={onOpenConfidence}
+          />
+        ) : null}
       </View>
 
       <View style={styles.connectionRow}>
@@ -65,24 +184,25 @@ export function LiveSnapshotPanel({
       {state.status === 'loading' && !snapshot ? (
         <View style={styles.loadingCard}>
           <ActivityIndicator color={shellPalette.accent} />
-          <Text style={styles.loadingTitle}>Connecting to the prototype backend...</Text>
+          <Text style={styles.loadingTitle}>
+            {language === 'es' ? 'Conectando con el backend local...' : 'Connecting to the prototype backend...'}
+          </Text>
           <Text style={styles.loadingBody}>
-            Waiting for `/api/dashboard/snapshot` and `/health`.
+            {language === 'es'
+              ? 'Esperando `/api/dashboard/snapshot` y `/health`.'
+              : 'Waiting for `/api/dashboard/snapshot` and `/health`.'}
           </Text>
         </View>
       ) : null}
 
       {state.status === 'error' && !snapshot ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorTitle}>Prototype snapshot unavailable</Text>
-          <Text style={styles.errorBody}>{formatLoadError(state.errorMessage)}</Text>
+          <Text style={styles.errorTitle}>{copy.unavailable}</Text>
+          <Text style={styles.errorBody}>{formatLoadErrorLocalized(state.errorMessage, language)}</Text>
           {state.errorMessage ? (
-            <Text style={styles.errorHint}>Technical detail: {state.errorMessage}</Text>
+            <Text style={styles.errorHint}>{copy.technicalDetail}: {state.errorMessage}</Text>
           ) : null}
-          <Text style={styles.errorHint}>
-            If you are using Expo Go on a phone, switch `EXPO_PUBLIC_API_BASE_URL` from localhost
-            to the backend LAN address.
-          </Text>
+          <Text style={styles.errorHint}>{copy.phoneHint}</Text>
         </View>
       ) : null}
 
@@ -90,19 +210,19 @@ export function LiveSnapshotPanel({
         <>
           <View style={styles.badgeRow}>
             <Pill
-              label={formatSourceMode(snapshot.source_mode)}
+              label={formatSourceMode(snapshot.source_mode, language)}
               tone={getSourceModeTone(snapshot.source_mode)}
             />
             {showingCachedSnapshot ? (
-              <Pill label="Cached snapshot" tone="warning" />
+              <Pill label={copy.cached} tone="warning" />
             ) : (
-              <Pill label="Live fetch" tone="success" />
+              <Pill label={copy.fresh} tone="success" />
             )}
-            {state.lastRefreshFailed ? <Pill label="Sync failed" tone="danger" /> : null}
-            {state.isRefreshing ? <Pill label="Refreshing" tone="info" /> : null}
+            {state.lastRefreshFailed ? <Pill label={copy.failed} tone="danger" /> : null}
+            {state.isRefreshing ? <Pill label={copy.refreshing} tone="info" /> : null}
             {state.lastLoadedAt ? (
               <Pill
-                label={`Loaded ${new Date(state.lastLoadedAt).toLocaleTimeString()}`}
+                label={`${copy.loaded} ${new Date(state.lastLoadedAt).toLocaleTimeString()}`}
                 tone="soft"
               />
             ) : null}
@@ -111,72 +231,190 @@ export function LiveSnapshotPanel({
           {showingCachedSnapshot || state.lastRefreshFailed ? (
             <View style={styles.cacheCard}>
               <Text style={styles.cacheTitle}>
-                {showingCachedSnapshot ? 'Showing the last saved snapshot' : 'Live refresh failed'}
+                {showingCachedSnapshot ? copy.showingLast : copy.lastFailed}
               </Text>
               <Text style={styles.cacheBody}>
-                {showingCachedSnapshot
-                  ? 'This screen is currently reading the last valid snapshot stored on the device. No values were fabricated during this fallback.'
-                  : 'The most recent network refresh did not complete, so the app is keeping the last successful snapshot visible.'}
+                {showingCachedSnapshot ? copy.cacheBody : copy.failedBody}
               </Text>
               {state.errorMessage ? (
-                <Text style={styles.cacheHint}>{formatLoadError(state.errorMessage)}</Text>
+                <Text style={styles.cacheHint}>
+                  {formatLoadErrorLocalized(state.errorMessage, language)}
+                </Text>
               ) : null}
               {state.cacheSavedAt ? (
                 <Text style={styles.cacheHint}>
-                  Cached at {new Date(state.cacheSavedAt).toLocaleString()}.
+                  {copy.cachedAt} {new Date(state.cacheSavedAt).toLocaleString()}.
                 </Text>
+              ) : null}
+            </View>
+          ) : null}
+
+          {brief ? (
+            <View style={styles.briefCard}>
+              {(primaryFlow || secondaryFlow) ? (
+                <View style={styles.flowHierarchy}>
+                  {primaryFlow ? (
+                    <View style={[styles.flowCard, styles.flowCardPrimary]}>
+                      <Text style={styles.flowLabel}>{copy.primaryFlow}</Text>
+                      <Text style={styles.flowTitle}>
+                        {formatBucketLabel(primaryFlow.bucket_key, language)}
+                      </Text>
+                      <View style={styles.flowMetaRow}>
+                        <Text style={styles.flowMetaValue}>
+                          {copy.score} {formatFlowScore(primaryFlow.score)}
+                        </Text>
+                        <Text style={styles.flowMetaValue}>
+                          {formatConfidence(primaryFlow.confidence)} {copy.confidence.toLowerCase()}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
+
+                  {secondaryFlow ? (
+                    <View style={styles.flowCard}>
+                      <Text style={styles.flowLabel}>{copy.secondaryFlow}</Text>
+                      <Text style={styles.flowTitleSecondary}>
+                        {formatBucketLabel(secondaryFlow.bucket_key, language)}
+                      </Text>
+                      <View style={styles.flowMetaRow}>
+                        <Text style={styles.flowMetaValueMuted}>
+                          {copy.score} {formatFlowScore(secondaryFlow.score)}
+                        </Text>
+                        <Text style={styles.flowMetaValueMuted}>
+                          {formatConfidence(secondaryFlow.confidence)} {copy.confidence.toLowerCase()}
+                        </Text>
+                      </View>
+                    </View>
+                  ) : null}
+                </View>
+              ) : null}
+
+              <View style={styles.briefHeader}>
+                <View style={styles.briefHeaderCopy}>
+                  <Text style={styles.briefTitle}>{localizeBriefText(brief.title, language)}</Text>
+                  <Text style={styles.briefSummary}>{localizeBriefText(brief.summary, language)}</Text>
+                </View>
+                <View style={styles.briefConfidenceBadge}>
+                  <Text style={styles.briefConfidenceValue}>{formatConfidence(brief.confidence)}</Text>
+                  <Text style={styles.briefConfidenceLabel}>{copy.confidence}</Text>
+                </View>
+              </View>
+
+              <View style={styles.briefMetaRow}>
+                <Text style={styles.briefMetaText}>
+                  {copy.updated} {formatBriefTimestamp(brief.updated_at)}
+                </Text>
+                <Text style={styles.briefMetaText}>
+                  {copy.sources}: {brief.source_labels.join(', ') || 'Public dataset mix'}
+                </Text>
+              </View>
+
+              <View style={styles.briefBullets}>
+                {visibleBriefBullets.map((bullet) => (
+                  <Text key={bullet} style={styles.briefBullet}>
+                    - {localizeBriefText(bullet, language)}
+                  </Text>
+                ))}
+              </View>
+
+              {brief.bullets.length > visibleBriefBullets.length ? (
+                <Text style={styles.briefHint}>{copy.bulletHint}</Text>
+              ) : null}
+
+              <View style={styles.evidenceList}>
+                {visibleBriefEvidence.map((item) => (
+                  <View key={item.signal_key} style={styles.evidenceCard}>
+                    <View style={styles.evidenceHeader}>
+                      <Text style={styles.evidenceTitle}>{localizeBriefText(item.label, language)}</Text>
+                      <Text style={styles.evidenceDelta}>{item.delta_text}</Text>
+                    </View>
+                    <Text style={styles.evidenceBody}>{localizeBriefText(item.summary, language)}</Text>
+                    <Text style={styles.evidenceMeta}>
+                      {item.provider_label} - {formatBriefTimestamp(item.last_update_at)}
+                    </Text>
+                  </View>
+                ))}
+              </View>
+
+              {brief.evidence.length > visibleBriefEvidence.length ? (
+                <View style={styles.upsellBlock}>
+                  <Text style={styles.blockBody}>{copy.evidenceHint}</Text>
+                  {onOpenPaywall ? (
+                    <ActionButton
+                      label={copy.unlock}
+                      icon="arrow.right"
+                      variant="primary"
+                      onPress={() => onOpenPaywall('deeper_drilldowns')}
+                    />
+                  ) : null}
+                </View>
+              ) : null}
+
+              {onOpenConfidence ? (
+                <Text style={styles.briefHint}>{copy.confidencePreviewHint}</Text>
               ) : null}
             </View>
           ) : null}
 
           <View style={styles.metricGrid}>
             <MetricCard
-              label="Confidence"
+              label={copy.snapshotConfidence}
               value={formatConfidence(snapshot.global_confidence)}
-              detail="Confidence published in the latest stored backend snapshot."
+              detail={
+                language === 'es'
+                  ? 'Confianza publicada en el ultimo snapshot guardado por el backend.'
+                  : 'Confidence published in the latest stored backend snapshot.'
+              }
+              tone="contrast"
             />
             <MetricCard
-              label="Coverage"
+              label={copy.coverage}
               value={formatCoverage(snapshot.coverage)}
-              detail="Coverage level declared by the backend for this reading."
+              detail={
+                language === 'es'
+                  ? 'Nivel de cobertura declarado por el backend para esta lectura.'
+                  : 'Coverage level declared by the backend for this reading.'
+              }
+              tone="contrast"
             />
             <MetricCard
-              label="Freshness"
-              value={formatFreshness(snapshot.data_freshness.seconds_since_refresh)}
-              detail={`Freshness status: ${snapshot.data_freshness.status}.`}
+              label={copy.freshness}
+              value={formatFreshnessLocalized(snapshot.data_freshness.seconds_since_refresh, language)}
+              detail={
+                language === 'es'
+                  ? `Estado de frescura: ${snapshot.data_freshness.status}.`
+                  : `Freshness status: ${snapshot.data_freshness.status}.`
+              }
+              tone="contrast"
             />
             <MetricCard
-              label="Leading basket"
-              value={formatBucketLabel(snapshot.leading_bucket)}
-              detail={`Snapshot timestamp: ${new Date(snapshot.as_of).toLocaleString()}.`}
+              label={copy.leadingBasket}
+              value={formatBucketLabel(snapshot.leading_bucket, language)}
+              detail={
+                language === 'es'
+                  ? `Marca temporal del snapshot: ${new Date(snapshot.as_of).toLocaleString()}.`
+                  : `Snapshot timestamp: ${new Date(snapshot.as_of).toLocaleString()}.`
+              }
+              tone="contrast"
             />
           </View>
 
           <View style={styles.block}>
-            <Text style={styles.blockLabel}>Headline</Text>
-            <Text style={styles.blockValue}>{snapshot.headline}</Text>
+            <Text style={styles.blockLabel}>{copy.publicData}</Text>
+            <Text style={styles.blockBody}>{copy.publicDataBody}</Text>
           </View>
 
           <View style={styles.block}>
-            <Text style={styles.blockLabel}>Commercial launch profile</Text>
-            <Text style={styles.blockBody}>
-              The paid iOS product is being redesigned around stored snapshots, public-data-first
-              sourcing, and free versus premium depth. This development preview may still use
-              prototype feeds that are not part of the launch positioning.
-            </Text>
-          </View>
-
-          <View style={styles.block}>
-            <Text style={styles.blockLabel}>Top flows</Text>
+            <Text style={styles.blockLabel}>{copy.scoreboard}</Text>
             {snapshot.top_flows.length > 0 ? (
               snapshot.top_flows.slice(0, topFlowLimit).map((flow) => (
                 <View key={flow.bucket_key} style={styles.listRow}>
                   <View style={styles.listCopy}>
-                    <Text style={styles.listTitle}>{formatBucketLabel(flow.bucket_key)}</Text>
+                    <Text style={styles.listTitle}>{formatBucketLabel(flow.bucket_key, language)}</Text>
                     <Text style={styles.listBody}>
                       {flow.drivers.length > 0
-                        ? flow.drivers.join(' | ')
-                        : 'No driver labels published in this row.'}
+                        ? flow.drivers.map(formatDriverKey).join(' | ')
+                        : copy.noDrivers}
                     </Text>
                   </View>
                   <View style={styles.listMeta}>
@@ -186,17 +424,14 @@ export function LiveSnapshotPanel({
                 </View>
               ))
             ) : (
-              <Text style={styles.blockBody}>No top-flow rows were returned by the backend.</Text>
+              <Text style={styles.blockBody}>{copy.noFlows}</Text>
             )}
             {accessTier === 'free' && snapshot.top_flows.length > topFlowLimit ? (
               <View style={styles.upsellBlock}>
-                <Text style={styles.blockBody}>
-                  Free stays concise and shows the strongest published flow first. Premium unlocks
-                  a wider flow list and the deeper basket drilldowns planned for phase 1.
-                </Text>
+                <Text style={styles.blockBody}>{copy.flowsHint}</Text>
                 {onOpenPaywall ? (
                   <ActionButton
-                    label="Unlock drilldowns"
+                    label={copy.unlock}
                     icon="arrow.right"
                     variant="primary"
                     onPress={() => onOpenPaywall('deeper_drilldowns')}
@@ -208,17 +443,14 @@ export function LiveSnapshotPanel({
 
           {snapshot.risks.length > 0 ? (
             <View style={styles.block}>
-              <Text style={styles.blockLabel}>Risks reported by the backend</Text>
+              <Text style={styles.blockLabel}>{copy.frictions}</Text>
               {visibleRisks.map((risk) => (
                 <Text key={risk} style={styles.bulletRow}>
-                  - {risk}
+                  - {formatRiskTextLocalized(risk, language)}
                 </Text>
               ))}
               {!isPremium && snapshot.risks.length > visibleRisks.length ? (
-                <Text style={styles.blockBody}>
-                  Premium keeps the rest of the published risk list visible around the same
-                  snapshot.
-                </Text>
+                <Text style={styles.blockBody}>{copy.premiumRisks}</Text>
               ) : null}
             </View>
           ) : null}
@@ -226,23 +458,20 @@ export function LiveSnapshotPanel({
           {snapshot.provider_issues.length > 0 ? (
             <View style={styles.block}>
               <Text style={styles.blockLabel}>
-                {diagnosticsAccess === 'full' ? 'Prototype data diagnostics' : 'Provider diagnostics preview'}
+                {diagnosticsAccess === 'full' ? copy.diagnostics : copy.diagnosticsPreview}
               </Text>
               {visibleProviderIssues.map((issue) => (
                 <View key={`${issue.provider_key}:${issue.message}`} style={styles.issueRow}>
                   <Text style={styles.issueSeverity}>{issue.severity.toUpperCase()}</Text>
-                  <Text style={styles.issueMessage}>{issue.message}</Text>
+                  <Text style={styles.issueMessage}>{formatProviderIssueMessageLocalized(issue, language)}</Text>
                 </View>
               ))}
               {diagnosticsAccess !== 'full' && snapshot.provider_issues.length > visibleProviderIssues.length ? (
                 <View style={styles.upsellBlock}>
-                  <Text style={styles.blockBody}>
-                    Free shows only a preview of backend diagnostics. Premium unlocks the full
-                    provider issue list and the deeper evidence layer around it.
-                  </Text>
+                  <Text style={styles.blockBody}>{copy.diagnosticsHint}</Text>
                   {onOpenPaywall ? (
                     <ActionButton
-                      label="Unlock drilldowns"
+                      label={copy.unlock}
                       icon="arrow.right"
                       onPress={() => onOpenPaywall('deeper_drilldowns')}
                     />
@@ -270,19 +499,19 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   connectionLabel: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 15,
     fontWeight: '800',
   },
   connectionValue: {
     flex: 1,
     textAlign: 'right',
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.72)',
     fontSize: 13,
     lineHeight: 18,
   },
   connectionNote: {
-    color: shellPalette.textMuted,
+    color: 'rgba(245,248,251,0.56)',
     fontSize: 12.5,
     lineHeight: 18,
   },
@@ -290,18 +519,18 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: shellPalette.border,
-    backgroundColor: shellPalette.panelSoft,
+    borderColor: 'rgba(245,248,251,0.08)',
+    backgroundColor: shellPalette.contrastSoft,
     gap: 10,
     alignItems: 'flex-start',
   },
   loadingTitle: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 15,
     fontWeight: '800',
   },
   loadingBody: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.74)',
     fontSize: 13.5,
     lineHeight: 19,
   },
@@ -309,22 +538,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(240,140,140,0.25)',
-    backgroundColor: 'rgba(240,140,140,0.08)',
+    borderColor: 'rgba(213,100,104,0.32)',
+    backgroundColor: 'rgba(213,100,104,0.12)',
     gap: 8,
   },
   errorTitle: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 15,
     fontWeight: '800',
   },
   errorBody: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.78)',
     fontSize: 14,
     lineHeight: 20,
   },
   errorHint: {
-    color: shellPalette.textMuted,
+    color: 'rgba(245,248,251,0.62)',
     fontSize: 12.5,
     lineHeight: 18,
   },
@@ -332,22 +561,22 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 18,
     borderWidth: 1,
-    borderColor: 'rgba(246,195,106,0.24)',
-    backgroundColor: 'rgba(246,195,106,0.08)',
+    borderColor: 'rgba(231,163,75,0.28)',
+    backgroundColor: 'rgba(231,163,75,0.12)',
     gap: 8,
   },
   cacheTitle: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 15,
     fontWeight: '800',
   },
   cacheBody: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.78)',
     fontSize: 14,
     lineHeight: 20,
   },
   cacheHint: {
-    color: shellPalette.textMuted,
+    color: 'rgba(245,248,251,0.62)',
     fontSize: 12.5,
     lineHeight: 18,
   },
@@ -355,6 +584,167 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
+  },
+  briefCard: {
+    borderRadius: 24,
+    borderWidth: 1,
+    borderColor: 'rgba(245,248,251,0.08)',
+    backgroundColor: shellPalette.contrastSoft,
+    padding: 18,
+    gap: 14,
+  },
+  flowHierarchy: {
+    gap: 10,
+  },
+  flowCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(245,248,251,0.08)',
+    backgroundColor: 'rgba(245,248,251,0.03)',
+    padding: 14,
+    gap: 8,
+  },
+  flowCardPrimary: {
+    backgroundColor: 'rgba(62,157,120,0.16)',
+    borderColor: 'rgba(62,157,120,0.26)',
+  },
+  flowLabel: {
+    color: 'rgba(245,248,251,0.60)',
+    fontSize: 11.5,
+    fontWeight: '800',
+    letterSpacing: 0.9,
+    textTransform: 'uppercase',
+  },
+  flowTitle: {
+    color: shellPalette.contrastText,
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+  },
+  flowTitleSecondary: {
+    color: shellPalette.contrastText,
+    fontSize: 18,
+    lineHeight: 22,
+    fontWeight: '800',
+  },
+  flowMetaRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  flowMetaValue: {
+    color: '#A7F0CF',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  flowMetaValueMuted: {
+    color: 'rgba(245,248,251,0.70)',
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  briefHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 14,
+  },
+  briefHeaderCopy: {
+    flex: 1,
+    gap: 8,
+  },
+  briefTitle: {
+    color: shellPalette.contrastText,
+    fontSize: 26,
+    lineHeight: 31,
+    fontWeight: '900',
+    letterSpacing: -0.45,
+  },
+  briefSummary: {
+    color: 'rgba(245,248,251,0.84)',
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  briefConfidenceBadge: {
+    minWidth: 88,
+    borderRadius: 20,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    backgroundColor: 'rgba(62,157,120,0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(62,157,120,0.22)',
+    alignItems: 'center',
+    gap: 2,
+  },
+  briefConfidenceValue: {
+    color: '#8EE0BA',
+    fontSize: 18,
+    fontWeight: '900',
+  },
+  briefConfidenceLabel: {
+    color: 'rgba(245,248,251,0.64)',
+    fontSize: 11.5,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
+  },
+  briefMetaRow: {
+    gap: 4,
+  },
+  briefMetaText: {
+    color: 'rgba(245,248,251,0.60)',
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+  briefBullets: {
+    gap: 8,
+  },
+  briefBullet: {
+    color: 'rgba(245,248,251,0.82)',
+    fontSize: 14,
+    lineHeight: 20,
+  },
+  briefHint: {
+    color: 'rgba(245,248,251,0.60)',
+    fontSize: 12.5,
+    lineHeight: 18,
+  },
+  evidenceList: {
+    gap: 10,
+  },
+  evidenceCard: {
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(245,248,251,0.08)',
+    backgroundColor: 'rgba(245,248,251,0.03)',
+    padding: 14,
+    gap: 8,
+  },
+  evidenceHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    gap: 12,
+    alignItems: 'flex-start',
+  },
+  evidenceTitle: {
+    flex: 1,
+    color: shellPalette.contrastText,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  evidenceDelta: {
+    color: '#8EE0BA',
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  evidenceBody: {
+    color: 'rgba(245,248,251,0.76)',
+    fontSize: 13.5,
+    lineHeight: 19,
+  },
+  evidenceMeta: {
+    color: 'rgba(245,248,251,0.54)',
+    fontSize: 12,
+    lineHeight: 17,
   },
   metricGrid: {
     flexDirection: 'row',
@@ -369,20 +759,14 @@ const styles = StyleSheet.create({
     paddingTop: 6,
   },
   blockLabel: {
-    color: shellPalette.accent,
+    color: 'rgba(245,248,251,0.62)',
     fontSize: 12,
     fontWeight: '800',
     letterSpacing: 1,
     textTransform: 'uppercase',
   },
-  blockValue: {
-    color: shellPalette.text,
-    fontSize: 18,
-    lineHeight: 24,
-    fontWeight: '700',
-  },
   blockBody: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.76)',
     fontSize: 14,
     lineHeight: 20,
   },
@@ -392,19 +776,19 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: shellPalette.border,
+    borderTopColor: 'rgba(245,248,251,0.10)',
   },
   listCopy: {
     flex: 1,
     gap: 4,
   },
   listTitle: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 15,
     fontWeight: '800',
   },
   listBody: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.72)',
     fontSize: 13.5,
     lineHeight: 19,
   },
@@ -413,17 +797,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   listValue: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 16,
     fontWeight: '800',
   },
   listSubvalue: {
-    color: shellPalette.textMuted,
+    color: 'rgba(245,248,251,0.56)',
     fontSize: 12.5,
     fontWeight: '700',
   },
   bulletRow: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.76)',
     fontSize: 14,
     lineHeight: 20,
   },
@@ -431,7 +815,7 @@ const styles = StyleSheet.create({
     gap: 4,
     paddingVertical: 10,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: shellPalette.border,
+    borderTopColor: 'rgba(245,248,251,0.10)',
   },
   issueSeverity: {
     color: shellPalette.warning,
@@ -441,7 +825,7 @@ const styles = StyleSheet.create({
     textTransform: 'uppercase',
   },
   issueMessage: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.74)',
     fontSize: 13.5,
     lineHeight: 19,
   },

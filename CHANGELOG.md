@@ -1,5 +1,13 @@
 # Changelog
 
+## beta 0.04.4
+
+- redesigned the app shell around a friendlier public-data-first market brief while preserving the darker analysis core
+- restored the bilingual switcher using US and Spain flags and reconnected the main screens to `EN / ES` state
+- upgraded the cash-flow snapshot to show a highlighted primary flow plus a secondary flow with separate confidence readings
+- added a dedicated confidence screen so free users can inspect how the confidence percentage is formed and premium can upsell deeper analysis and charts
+- expanded test coverage for the new language switcher behavior, confidence route, and the updated snapshot panel hierarchy
+
 ## beta 0.04.3
 
 - integrated `RevenueCat Test Store` into the native billing layer with a real subscription driver built on `react-native-purchases`

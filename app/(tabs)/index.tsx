@@ -1,19 +1,28 @@
-import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 import { FeatureGateCard } from '@/components/feature-gate-card';
 import { HistoryAccessPanel } from '@/components/history-access-panel';
+import { LanguageSwitcher } from '@/components/language-switcher';
 import { LiveSnapshotPanel } from '@/components/live-snapshot-panel';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
+import { IconSymbol } from '@/components/ui/icon-symbol';
 import {
-  accessTiers,
-  dashboardCards,
   legalBoundaryNotes,
   roadmapItems,
   shellPalette,
 } from '@/constants/shell';
 import { useDashboardPreview } from '@/hooks/use-dashboard-preview';
 import { useMonetization } from '@/hooks/use-monetization';
+import { useLanguage } from '@/lib/language';
+import {
+  formatBucketLabel,
+  formatConfidence,
+  formatCoverage,
+  formatFreshnessLocalized,
+  formatSourceMode,
+  localizeBriefText,
+} from '@/lib/dashboard-presenter';
 import {
   getFeatureDescriptor,
   getFeatureGateState,
@@ -21,16 +30,205 @@ import {
   type EntitlementFeature,
 } from '@/lib/monetization';
 
+function getGreetingLabel(date = new Date()) {
+  const hour = date.getHours();
+
+  if (hour < 12) {
+    return 'Good morning';
+  }
+
+  if (hour < 19) {
+    return 'Good afternoon';
+  }
+
+  return 'Good evening';
+}
+
 export default function HomeScreen() {
   const router = useRouter();
   const preview = useDashboardPreview();
   const monetization = useMonetization();
+  const { language } = useLanguage();
   const isPremium = monetization.accessTier === 'premium';
+  const snapshot = preview.snapshot;
+  const greetingLabel = getGreetingLabel();
+  const copy = language === 'es'
+      ? {
+        greeting: greetingLabel === 'Good morning'
+          ? 'Buenos dias'
+          : greetingLabel === 'Good afternoon'
+            ? 'Buenas tardes'
+            : 'Buenas noches',
+        title: 'Tu resumen de mercado',
+        subtitle: 'Inteligencia de mercado basada en snapshots y apoyada en fuentes publicas.',
+        latestBrief: 'Ultimo resumen de mercado',
+        overallConfidence: 'Confianza global',
+        premium: 'Premium',
+        free: 'Gratis',
+        waiting: 'Esperando el snapshot del backend. La app mantiene la interfaz lista incluso cuando la API no esta disponible.',
+        noLeader: 'Sin lider aun',
+        primaryFlow: 'Tendencia primaria',
+        secondaryFlow: 'Tendencia secundaria',
+        noSecondary: 'Sin tendencia secundaria clara',
+        score: 'Score',
+        confidence: 'Confianza',
+        explainConfidence: 'Como se calcula la confianza',
+        leadBasket: 'Cesta lider',
+        unavailable: 'No disponible',
+        snapshotMode: 'Modo snapshot',
+        metricsLeadBasket: 'Cesta lider',
+        metricsLeadBasketDetail: 'La cesta mas fuerte publicada por el ultimo snapshot guardado.',
+        coverage: 'Cobertura',
+        coverageDetail: 'Cuanta evidencia esperada cubrio el backend en esta lectura.',
+        freshness: 'Frescura',
+        freshnessDetail: 'Cuanto tiempo ha pasado desde la ultima actualizacion del snapshot en backend.',
+        pending: 'Pendiente',
+        premiumDepth: 'Profundidad premium',
+        premiumDepthTitle: 'La capa gratis sigue siendo util y premium anade mas profundidad',
+        premiumDepthBody: 'El lenguaje visual es mas amable, pero las reglas del producto no cambian: gratis demuestra valor y premium desbloquea mas contexto alrededor del mismo snapshot.',
+        reviewPremium: 'Revisar acceso premium',
+        trustRules: 'Reglas de confianza',
+        trustRulesTitle: 'El diseno puede sentirse mas amable sin debilitar la postura del producto',
+        trustRulesBody: 'Estas notas siguen visibles porque la app siempre debe explicar como se mantiene honesta en lo comercial y en lo legal.',
+        shipsNext: 'Siguiente envio',
+        shipsNextTitle: 'Fases cortas para mantener el producto manejable',
+        shipsNextBody: 'La ruta de lanzamiento sigue siendo incremental: mantener la capa gratis legible, anadir profundidad premium con cuidado y no fingir que ya existe un terminal completo.',
+        openRoadmap: 'Abrir roadmap',
+        freeVsPremium: 'Ver gratis vs premium',
+      }
+    : {
+        greeting: `${greetingLabel} - DineralFlow`,
+        title: 'Your market summary',
+        subtitle: 'Snapshot-first market intelligence built around public-data-backed briefs.',
+        latestBrief: 'Latest market brief',
+        overallConfidence: 'Overall confidence',
+        premium: 'Premium',
+        free: 'Free',
+        waiting: 'Waiting for the backend snapshot. The app keeps the design ready even when the API is unavailable.',
+        noLeader: 'No leader yet',
+        primaryFlow: 'Primary flow',
+        secondaryFlow: 'Secondary flow',
+        noSecondary: 'No clear secondary flow yet',
+        score: 'Score',
+        confidence: 'Confidence',
+        explainConfidence: 'How confidence works',
+        leadBasket: 'Lead basket',
+        unavailable: 'Unavailable',
+        snapshotMode: 'Snapshot mode',
+        metricsLeadBasket: 'Lead basket',
+        metricsLeadBasketDetail: 'The strongest basket published by the latest stored snapshot.',
+        coverage: 'Coverage',
+        coverageDetail: 'How much of the expected evidence the backend covered in this reading.',
+        freshness: 'Freshness',
+        freshnessDetail: 'How long ago the current snapshot was refreshed on the backend.',
+        pending: 'Pending',
+        premiumDepth: 'Premium depth',
+        premiumDepthTitle: 'Free stays useful, premium adds the deeper layers',
+        premiumDepthBody: 'The visual language is friendlier now, but the product rules stay the same: free proves value and premium unlocks more context around the same snapshot.',
+        reviewPremium: 'Review premium access',
+        trustRules: 'Trust rules',
+        trustRulesTitle: 'Design can feel softer without weakening the product stance',
+        trustRulesBody: 'These notes remain visible because the app should always explain how it stays commercially and legally honest.',
+        shipsNext: 'What ships next',
+        shipsNextTitle: 'Short phases that keep the product manageable',
+        shipsNextBody: 'The launch path remains incremental: keep the free tier readable, add premium depth carefully, and avoid pretending we already have a full terminal.',
+        openRoadmap: 'Open roadmap',
+        freeVsPremium: 'View free vs premium',
+      };
+  const tierCards = language === 'es'
+    ? [
+        {
+          key: 'free',
+          label: 'Gratis',
+          value: 'Snapshot util',
+          detail: 'Lectura principal y contexto corto para validar el producto.',
+        },
+        {
+          key: 'premium',
+          label: 'Premium',
+          value: 'Mas profundidad',
+          detail: 'Mas historia, mas detalle y experiencia sin anuncios.',
+        },
+      ]
+    : [
+        {
+          key: 'free',
+          label: 'Free',
+          value: 'Useful snapshot',
+          detail: 'Core reading and short context to prove the product.',
+        },
+        {
+          key: 'premium',
+          label: 'Premium',
+          value: 'Deeper context',
+          detail: 'More history, more detail, and an ad-free experience.',
+        },
+      ];
+  const trustNotes = language === 'es'
+    ? [
+        'No prometer cobertura en tiempo real de nivel terminal en v1.',
+        'No presentar Twelve Data o Alpha Vantage como base comercial del lanzamiento iOS.',
+        'Mostrar siempre frescura, procedencia y si la pantalla usa el ultimo snapshot guardado.',
+      ]
+    : legalBoundaryNotes;
+  const shippingItems = language === 'es'
+    ? [
+        'Lanzar una capa gratis util con el ultimo snapshot guardado, cestas seleccionadas e historico corto.',
+        'Anadir Premium como primera capa de monetizacion para drilldowns completos, mas historia, watchlists y alertas.',
+        'Mantener el posicionamiento comercial ligado a fuentes publicas y actualizaciones programadas del backend.',
+        'Dejar los anuncios native para mas adelante y solo en la capa gratis, en lugares claramente separados.',
+      ]
+    : roadmapItems;
+  const localizedFeatureCopy: Partial<
+    Record<
+      EntitlementFeature,
+      {
+        title: string;
+        freeValue: string;
+        freeDetail: string;
+        premiumValue: string;
+        premiumDetail: string;
+        ctaLabel: string;
+      }
+    >
+  > = language === 'es'
+    ? {
+        long_history: {
+          title: 'Mas historico',
+          freeValue: 'Vista previa de 7 dias',
+          freeDetail: 'La capa gratis se queda con el tramo reciente para contener costes y seguir siendo clara.',
+          premiumValue: 'Ventanas de 30 y 90 dias',
+          premiumDetail: 'Premium desbloquea arcos mas largos para poner el ultimo snapshot en contexto.',
+          ctaLabel: 'Desbloquear historico',
+        },
+        deeper_drilldowns: {
+          title: 'Drilldowns de cestas',
+          freeValue: 'Solo vista previa',
+          freeDetail: 'Gratis puede mostrar que existe evidencia mas profunda, pero la capa diagnostica completa se queda en premium.',
+          premiumValue: 'Drilldowns completos',
+          premiumDetail: 'Premium desbloquea mas contexto de impulsores, fricciones y evidencia por cesta.',
+          ctaLabel: 'Desbloquear detalle',
+        },
+        alerts: {
+          title: 'Alertas',
+          freeValue: 'Bloqueadas en gratis',
+          freeDetail: 'La capa gratis puede mostrar que las alertas existen, pero la configuracion debe quedarse en premium.',
+          premiumValue: 'Capa de alertas preparada',
+          premiumDetail: 'Premium es donde deben vivir las alertas programadas y las futuras acciones de watchlist.',
+          ctaLabel: 'Desbloquear alertas',
+        },
+      }
+    : {};
+  const primaryFlow = snapshot?.top_flows[0] ?? null;
+  const secondaryFlow = snapshot?.top_flows[1] ?? null;
   const openPaywallForFeature = (feature: EntitlementFeature) => {
     router.push({
       pathname: '/paywall',
       params: { feature },
     });
+  };
+  const openConfidence = () => {
+    router.push('/confidence');
   };
 
   return (
@@ -42,122 +240,133 @@ export default function HomeScreen() {
         <RefreshControl
           refreshing={preview.isRefreshing}
           onRefresh={preview.refresh}
-          tintColor={shellPalette.accent}
+          tintColor={shellPalette.accentStrong}
         />
       }>
-      <View style={styles.hero}>
-        <Pill label="DineralFlow iOS" tone="accent" />
-        <Pill label={isPremium ? 'Premium unlocked' : 'Free tier active'} tone={isPremium ? 'success' : 'info'} />
-        <Pill
-          label={
-            monetization.entitlementsContractState === 'backend_cached'
-              ? 'Access rules cached'
-              : monetization.entitlementsContractState === 'backend_live'
-                ? 'Access rules synced'
-                : 'Local access fallback'
-          }
-          tone={
-            monetization.entitlementsContractState === 'backend_cached'
-              ? 'warning'
-              : monetization.entitlementsContractState === 'backend_live'
-                ? 'success'
-                : 'soft'
-          }
-        />
-        <Text style={styles.kicker}>Snapshot-based finance app for iPhone</Text>
-        <Text style={styles.title}>Global capital regime with a free tier and premium depth.</Text>
-        <Text style={styles.body}>
-          The launch product is being redesigned around scheduled snapshots, public-data-first
-          sourcing, and a clear free versus premium model. The goal is to monetize without
-          pretending the app is a real-time terminal on day one.
-        </Text>
-        <Text style={styles.metaNote}>
-          Contract sync: {monetization.entitlementsSyncStatus}. Revision {monetization.entitlementsContractVersion}.
-        </Text>
-        <View style={styles.actions}>
-          <ActionButton
-            label="Open roadmap"
-            icon="arrow.right"
-            variant="primary"
+      <View style={styles.headerRow}>
+        <View style={styles.headerCopy}>
+          <Text style={styles.greeting}>{copy.greeting}</Text>
+          <Text style={styles.pageTitle}>{copy.title}</Text>
+          <Text style={styles.pageSubtitle}>{copy.subtitle}</Text>
+        </View>
+
+        <View style={styles.headerActions}>
+          <LanguageSwitcher />
+          <Pressable
+            accessibilityRole="button"
             onPress={() => router.push('/roadmap')}
-          />
-          <ActionButton
-            label="View free vs premium"
-            icon="folder.fill"
+            style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}>
+            <IconSymbol name="list.bullet.rectangle.fill" size={20} color={shellPalette.text} />
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
             onPress={() => router.push('/paywall')}
+            style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}>
+            <IconSymbol name="folder.fill" size={20} color={shellPalette.text} />
+          </Pressable>
+        </View>
+      </View>
+
+      <View style={styles.summaryCard}>
+        <View style={styles.summaryTopRow}>
+          <Text style={styles.summaryLabel}>{copy.latestBrief}</Text>
+          <Pill label={isPremium ? copy.premium : copy.free} tone={isPremium ? 'success' : 'soft'} />
+        </View>
+
+        <Text style={styles.summarySmallLabel}>{copy.overallConfidence}</Text>
+        <Text style={styles.summaryValue}>
+          {snapshot ? formatConfidence(snapshot.global_confidence) : '--'}
+        </Text>
+
+        <Text style={styles.summaryBody}>
+          {snapshot
+            ? localizeBriefText(snapshot.market_brief.summary, language)
+            : copy.waiting}
+        </Text>
+
+        <View style={styles.summaryFlowStack}>
+          <View style={[styles.summaryFlowCard, styles.summaryFlowPrimary]}>
+            <Text style={styles.summaryTrendLabel}>{copy.primaryFlow}</Text>
+            <Text style={styles.summaryFlowTitle}>
+              {primaryFlow ? formatBucketLabel(primaryFlow.bucket_key, language) : copy.noLeader}
+            </Text>
+            <View style={styles.summaryFlowMeta}>
+              <Text style={styles.summaryFlowMetaValue}>
+                {primaryFlow ? `${copy.score} ${primaryFlow.score > 0 ? '+' : ''}${primaryFlow.score.toFixed(1)}` : '--'}
+              </Text>
+              <Text style={styles.summaryFlowMetaValue}>
+                {primaryFlow ? `${formatConfidence(primaryFlow.confidence)} ${copy.confidence.toLowerCase()}` : '--'}
+              </Text>
+            </View>
+          </View>
+
+          <View style={styles.summaryFlowCard}>
+            <Text style={styles.summaryTrendLabel}>{copy.secondaryFlow}</Text>
+            <Text style={styles.summaryFlowTitleSecondary}>
+              {secondaryFlow
+                ? formatBucketLabel(secondaryFlow.bucket_key, language)
+                : copy.noSecondary}
+            </Text>
+            <View style={styles.summaryFlowMeta}>
+              <Text style={styles.summaryFlowMetaMuted}>
+                {secondaryFlow ? `${copy.score} ${secondaryFlow.score > 0 ? '+' : ''}${secondaryFlow.score.toFixed(1)}` : formatSourceMode(snapshot?.source_mode ?? 'unavailable', language)}
+              </Text>
+              <Text style={styles.summaryFlowMetaMuted}>
+                {secondaryFlow
+                  ? `${formatConfidence(secondaryFlow.confidence)} ${copy.confidence.toLowerCase()}`
+                  : snapshot ? copy.snapshotMode : copy.pending}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.summaryActionRow}>
+          <ActionButton
+            label={copy.explainConfidence}
+            icon="arrow.right"
+            variant="secondary"
+            onPress={openConfidence}
           />
+          <View style={styles.summaryModeChip}>
+            <Text style={styles.summaryModeValue}>
+              {snapshot ? formatSourceMode(snapshot.source_mode, language) : copy.unavailable}
+            </Text>
+          </View>
         </View>
       </View>
 
       <View style={styles.metricsRow}>
         <MetricCard
-          label="Launch mode"
-          value="Latest snapshot"
-          detail="The app should read the latest stored backend snapshot, not call data vendors on every open."
+          label={copy.metricsLeadBasket}
+          value={snapshot ? formatBucketLabel(snapshot.leading_bucket, language) : '--'}
+          detail={copy.metricsLeadBasketDetail}
         />
         <MetricCard
-          label="Access tier"
-          value={isPremium ? 'Premium' : 'Free'}
-          detail={
-            isPremium
-              ? 'Premium unlocks deeper drilldowns, longer history, and a clean ad-free posture.'
-              : 'Free keeps the main snapshot readable while premium adds depth and convenience.'
+          label={copy.coverage}
+          value={snapshot ? formatCoverage(snapshot.coverage) : '--'}
+          detail={copy.coverageDetail}
+        />
+        <MetricCard
+          label={copy.freshness}
+          value={
+            snapshot
+              ? formatFreshnessLocalized(snapshot.data_freshness.seconds_since_refresh, language)
+              : copy.pending
           }
+          detail={copy.freshnessDetail}
         />
       </View>
 
-      <SectionCard
-        eyebrow="Free and premium"
-        title="Monetize depth, not noisy raw feeds"
-        body="The free tier should prove the product clearly. Premium should unlock more history, deeper drilldowns, and future convenience features without turning the app into a licensing trap.">
-        <View style={styles.grid}>
-          {accessTiers.map((card) => (
-            <View key={card.key} style={styles.gridCard}>
-              <Text style={styles.gridTitle}>{card.label}</Text>
-              <Text style={styles.gridValue}>{card.value}</Text>
-              <Text style={styles.gridDetail}>{card.detail}</Text>
-            </View>
-          ))}
-        </View>
-      </SectionCard>
-
-      <SectionCard
-        eyebrow="Premium depth"
-        title="Free shows the shape, premium adds the extra layers"
-        body="The first paid workflow should be obvious on the home screen. Free keeps a credible preview. Premium unlocks deeper context around the same snapshot instead of inventing a separate product.">
-        <View style={styles.grid}>
-          {HOME_PREMIUM_FEATURES.map((feature) => {
-            const descriptor = getFeatureDescriptor(feature);
-            const gateState = getFeatureGateState(monetization.entitlements, feature);
-            const unlocked = gateState === 'unlocked';
-
-            return (
-              <FeatureGateCard
-                key={feature}
-                title={descriptor.title}
-                value={unlocked ? descriptor.premiumValue : descriptor.freeValue}
-                detail={unlocked ? descriptor.premiumDetail : descriptor.freeDetail}
-                status={gateState}
-                actionLabel={unlocked ? 'Review premium access' : descriptor.ctaLabel}
-                onPress={() => openPaywallForFeature(feature)}
-              />
-            );
-          })}
-        </View>
-      </SectionCard>
-
-      <SectionCard
-        eyebrow="Launch guardrails"
-        title="Rules that keep the first paid version defensible"
-        body="These are product and legal guardrails, not just engineering preferences. The app should look like a trustworthy analytics product, not an improvised market-feed wrapper.">
-        <View style={styles.guardrailList}>
-          {legalBoundaryNotes.map((item) => (
-            <Text key={item} style={styles.guardrailItem}>
-              - {item}
-            </Text>
-          ))}
-        </View>
-      </SectionCard>
+      <View style={styles.tierStrip}>
+        {tierCards.map((card) => (
+          <View key={card.key} style={styles.tierCard}>
+            <Text style={styles.tierLabel}>{card.label}</Text>
+            <Text style={styles.tierValue}>{card.value}</Text>
+            <Text style={styles.tierDetail}>{card.detail}</Text>
+          </View>
+        ))}
+      </View>
 
       <LiveSnapshotPanel
         state={preview}
@@ -166,7 +375,42 @@ export default function HomeScreen() {
         maxTopFlows={monetization.maxTopFlows}
         diagnosticsAccess={monetization.diagnosticsAccess}
         onOpenPaywall={openPaywallForFeature}
+        onOpenConfidence={openConfidence}
       />
+
+      <SectionCard
+        eyebrow={copy.premiumDepth}
+        title={copy.premiumDepthTitle}
+        body={copy.premiumDepthBody}>
+        <View style={styles.grid}>
+          {HOME_PREMIUM_FEATURES.map((feature) => {
+            const descriptor = getFeatureDescriptor(feature);
+            const localizedDescriptor = localizedFeatureCopy[feature];
+            const gateState = getFeatureGateState(monetization.entitlements, feature);
+            const unlocked = gateState === 'unlocked';
+
+            return (
+              <FeatureGateCard
+                key={feature}
+                title={localizedDescriptor?.title ?? descriptor.title}
+                value={
+                  unlocked
+                    ? localizedDescriptor?.premiumValue ?? descriptor.premiumValue
+                    : localizedDescriptor?.freeValue ?? descriptor.freeValue
+                }
+                detail={
+                  unlocked
+                    ? localizedDescriptor?.premiumDetail ?? descriptor.premiumDetail
+                    : localizedDescriptor?.freeDetail ?? descriptor.freeDetail
+                }
+                status={gateState}
+                actionLabel={unlocked ? copy.reviewPremium : localizedDescriptor?.ctaLabel ?? descriptor.ctaLabel}
+                onPress={() => openPaywallForFeature(feature)}
+              />
+            );
+          })}
+        </View>
+      </SectionCard>
 
       <HistoryAccessPanel
         entitlements={monetization.entitlements}
@@ -175,45 +419,43 @@ export default function HomeScreen() {
       />
 
       <SectionCard
-        eyebrow="Project status"
-        title="Short phases that keep the product commercially sane"
-        body="The mobile app now needs more than UI migration. Each phase must keep product scope, legal positioning, and monetization aligned before we add more depth.">
-        {roadmapItems.map((item, index) => (
-          <View
-            key={item}
-            style={[styles.roadmapLine, index === roadmapItems.length - 1 && styles.roadmapLastLine]}>
-            <Text style={styles.roadmapDot}>{String(index + 1).padStart(2, '0')}</Text>
-            <Text style={styles.roadmapText}>{item}</Text>
-          </View>
-        ))}
-      </SectionCard>
-
-      <SectionCard
-        eyebrow="Product map"
-        title="What the first monetizable release should contain"
-        body="The first paid-ready version should focus on a clear snapshot product, honest evidence, and a premium layer that adds depth rather than pretending to be exchange-grade real-time data.">
-        <View style={styles.grid}>
-          {dashboardCards.map((card) => (
-            <View key={card.key} style={styles.gridCard}>
-              <Text style={styles.gridTitle}>{card.title}</Text>
-              <Text style={styles.gridValue}>{card.value}</Text>
-              <Text style={styles.gridDetail}>{card.detail}</Text>
-            </View>
+        eyebrow={copy.trustRules}
+        title={copy.trustRulesTitle}
+        body={copy.trustRulesBody}>
+        <View style={styles.guardrailList}>
+          {trustNotes.map((item) => (
+            <Text key={item} style={styles.guardrailItem}>
+              - {item}
+            </Text>
           ))}
         </View>
       </SectionCard>
 
       <SectionCard
-        eyebrow="Platform note"
-        title="Windows is enough for product shaping, macOS is needed for release work"
-        body="We can shape the product, the paywall model, the gating rules, and the snapshot workflow on this PC. Final iOS simulator builds, signing, and App Store delivery still require macOS and Xcode.">
-        <View style={styles.notice}>
-          <Text style={styles.noticeTitle}>Current technical position</Text>
-          <Text style={styles.noticeBody}>
-            Expo Router, TypeScript, local unit tests, and a backend preview already exist. The
-            next product step is to make the app monetizable without depending on legally fragile
-            launch data sources.
-          </Text>
+        eyebrow={copy.shipsNext}
+        title={copy.shipsNextTitle}
+        body={copy.shipsNextBody}>
+        {shippingItems.map((item, index) => (
+          <View
+            key={item}
+            style={[styles.roadmapLine, index === shippingItems.length - 1 && styles.roadmapLastLine]}>
+            <Text style={styles.roadmapDot}>{String(index + 1).padStart(2, '0')}</Text>
+            <Text style={styles.roadmapText}>{item}</Text>
+          </View>
+        ))}
+        <View style={styles.bottomActions}>
+          <ActionButton
+            label={copy.openRoadmap}
+            icon="arrow.right"
+            variant="secondary"
+            onPress={() => router.push('/roadmap')}
+          />
+          <ActionButton
+            label={copy.freeVsPremium}
+            icon="folder.fill"
+            variant="primary"
+            onPress={() => router.push('/paywall')}
+          />
         </View>
       </SectionCard>
     </ScrollView>
@@ -226,53 +468,243 @@ const styles = StyleSheet.create({
     backgroundColor: shellPalette.bg,
   },
   content: {
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 32,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
+    paddingHorizontal: 18,
+    paddingTop: 22,
+    paddingBottom: 36,
     gap: 18,
   },
-  hero: {
-    borderRadius: 30,
-    padding: 22,
-    backgroundColor: shellPalette.panel,
-    borderWidth: 1,
-    borderColor: shellPalette.border,
-    gap: 12,
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
+    gap: 16,
   },
-  kicker: {
-    color: shellPalette.accentSoft,
-    textTransform: 'uppercase',
-    letterSpacing: 0.9,
-    fontSize: 12,
-    fontWeight: '800',
+  headerCopy: {
+    flex: 1,
+    gap: 6,
   },
-  title: {
+  greeting: {
+    color: shellPalette.textSoft,
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  pageTitle: {
     color: shellPalette.text,
     fontSize: 34,
     lineHeight: 38,
     fontWeight: '900',
-    letterSpacing: -0.5,
+    letterSpacing: -0.7,
   },
-  body: {
+  pageSubtitle: {
     color: shellPalette.textSoft,
-    fontSize: 15.5,
-    lineHeight: 23,
+    fontSize: 14.5,
+    lineHeight: 21,
+    maxWidth: 320,
   },
-  metaNote: {
-    color: shellPalette.textMuted,
+  headerActions: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'flex-end',
+    gap: 10,
+    paddingTop: 4,
+  },
+  iconButton: {
+    width: 46,
+    height: 46,
+    borderRadius: 18,
+    backgroundColor: shellPalette.panel,
+    borderWidth: 1,
+    borderColor: shellPalette.border,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: shellPalette.shadow,
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  iconButtonPressed: {
+    opacity: 0.84,
+    transform: [{ scale: 0.98 }],
+  },
+  summaryCard: {
+    borderRadius: 28,
+    padding: 22,
+    gap: 14,
+    backgroundColor: shellPalette.accent,
+    shadowColor: 'rgba(39, 105, 81, 0.24)',
+    shadowOpacity: 1,
+    shadowRadius: 18,
+    shadowOffset: { width: 0, height: 8 },
+    elevation: 6,
+  },
+  summaryTopRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    gap: 12,
+  },
+  summaryLabel: {
+    color: 'rgba(245,248,251,0.78)',
+    fontSize: 14,
+    fontWeight: '700',
+  },
+  summarySmallLabel: {
+    color: 'rgba(245,248,251,0.68)',
     fontSize: 12.5,
-    lineHeight: 18,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.8,
   },
-  actions: {
+  summaryValue: {
+    color: shellPalette.contrastText,
+    fontSize: 42,
+    lineHeight: 46,
+    fontWeight: '900',
+    letterSpacing: -0.8,
+  },
+  summaryBody: {
+    color: 'rgba(245,248,251,0.84)',
+    fontSize: 15,
+    lineHeight: 22,
+  },
+  summaryTrendRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-    paddingTop: 6,
+  },
+  summaryFlowStack: {
+    gap: 10,
+  },
+  summaryFlowCard: {
+    borderRadius: 18,
+    backgroundColor: 'rgba(245,248,251,0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 6,
+  },
+  summaryFlowPrimary: {
+    backgroundColor: 'rgba(245,248,251,0.18)',
+  },
+  summaryFlowTitle: {
+    color: shellPalette.contrastText,
+    fontSize: 22,
+    lineHeight: 26,
+    fontWeight: '900',
+    letterSpacing: -0.3,
+  },
+  summaryFlowTitleSecondary: {
+    color: shellPalette.contrastText,
+    fontSize: 17,
+    lineHeight: 21,
+    fontWeight: '800',
+  },
+  summaryFlowMeta: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+  },
+  summaryFlowMetaValue: {
+    color: shellPalette.contrastText,
+    fontSize: 13,
+    fontWeight: '800',
+  },
+  summaryFlowMetaMuted: {
+    color: 'rgba(245,248,251,0.74)',
+    fontSize: 12.5,
+    fontWeight: '700',
+  },
+  summaryTrendChip: {
+    flex: 1,
+    minWidth: 130,
+    borderRadius: 18,
+    backgroundColor: 'rgba(245,248,251,0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    gap: 4,
+  },
+  summaryTrendValue: {
+    color: shellPalette.contrastText,
+    fontSize: 15,
+    fontWeight: '800',
+  },
+  summaryTrendLabel: {
+    color: 'rgba(245,248,251,0.70)',
+    fontSize: 12.5,
+    fontWeight: '600',
+  },
+  summaryActionRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    alignItems: 'center',
+    gap: 10,
+  },
+  summaryModeChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 14,
+    backgroundColor: 'rgba(245,248,251,0.12)',
+  },
+  summaryModeValue: {
+    color: 'rgba(245,248,251,0.82)',
+    fontSize: 12.5,
+    fontWeight: '700',
   },
   metricsRow: {
     flexDirection: 'row',
     flexWrap: 'wrap',
+    gap: 10,
+  },
+  tierStrip: {
+    flexDirection: 'row',
+    gap: 10,
+  },
+  tierCard: {
+    flex: 1,
+    borderRadius: 22,
+    backgroundColor: shellPalette.panel,
+    borderWidth: 1,
+    borderColor: shellPalette.border,
+    padding: 16,
+    gap: 8,
+    shadowColor: shellPalette.shadow,
+    shadowOpacity: 1,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 4 },
+    elevation: 3,
+  },
+  tierLabel: {
+    color: shellPalette.textMuted,
+    fontSize: 12,
+    fontWeight: '800',
+    textTransform: 'uppercase',
+    letterSpacing: 0.7,
+  },
+  tierValue: {
+    color: shellPalette.text,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  tierDetail: {
+    color: shellPalette.textSoft,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: 12,
+  },
+  guardrailList: {
+    gap: 10,
+  },
+  guardrailItem: {
+    color: shellPalette.textSoft,
+    fontSize: 14,
+    lineHeight: 20,
   },
   roadmapLine: {
     flexDirection: 'row',
@@ -288,7 +720,7 @@ const styles = StyleSheet.create({
   },
   roadmapDot: {
     minWidth: 38,
-    color: shellPalette.accent,
+    color: shellPalette.accentStrong,
     fontSize: 11,
     fontWeight: '900',
     letterSpacing: 0.8,
@@ -301,63 +733,10 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 20,
   },
-  guardrailList: {
-    gap: 10,
-  },
-  guardrailItem: {
-    color: shellPalette.textSoft,
-    fontSize: 14,
-    lineHeight: 20,
-  },
-  grid: {
+  bottomActions: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: 12,
-  },
-  gridCard: {
-    flexBasis: '48%',
-    flexGrow: 1,
-    minWidth: 150,
-    borderRadius: 20,
-    backgroundColor: shellPalette.panelSoft,
-    borderWidth: 1,
-    borderColor: shellPalette.border,
-    padding: 16,
-    gap: 6,
-  },
-  gridTitle: {
-    color: shellPalette.text,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  gridValue: {
-    color: shellPalette.accentSoft,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  gridDetail: {
-    color: shellPalette.textSoft,
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  notice: {
-    borderRadius: 20,
-    backgroundColor: 'rgba(121,184,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(121,184,255,0.18)',
-    padding: 16,
-    gap: 8,
-  },
-  noticeTitle: {
-    color: shellPalette.text,
-    fontSize: 14,
-    fontWeight: '800',
-    textTransform: 'uppercase',
-    letterSpacing: 0.7,
-  },
-  noticeBody: {
-    color: shellPalette.textSoft,
-    fontSize: 14,
-    lineHeight: 20,
+    gap: 10,
+    paddingTop: 8,
   },
 });
