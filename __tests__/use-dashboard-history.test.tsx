@@ -9,6 +9,13 @@ jest.mock('@/lib/api-config', () => ({
   getApiBaseUrl: () => 'http://127.0.0.1:8000',
 }));
 
+jest.mock('@/hooks/use-auth', () => ({
+  useAuth: () => ({
+    providerMode: 'backend',
+    accessToken: 'test-auth-token',
+  }),
+}));
+
 jest.mock('@/lib/dashboard-api', () => ({
   fetchDashboardHistory: (...args: unknown[]) => mockFetchDashboardHistory(...args),
 }));
@@ -62,7 +69,7 @@ describe('useDashboardHistory', () => {
       expect(screen.getByTestId('history-window').props.children).toBe('30d');
     });
 
-    expect(mockFetchDashboardHistory).toHaveBeenNthCalledWith(1, '7d', 'http://127.0.0.1:8000');
-    expect(mockFetchDashboardHistory).toHaveBeenNthCalledWith(2, '30d', 'http://127.0.0.1:8000');
+    expect(mockFetchDashboardHistory).toHaveBeenNthCalledWith(1, '7d', 'http://127.0.0.1:8000', 'test-auth-token');
+    expect(mockFetchDashboardHistory).toHaveBeenNthCalledWith(2, '30d', 'http://127.0.0.1:8000', 'test-auth-token');
   });
 });

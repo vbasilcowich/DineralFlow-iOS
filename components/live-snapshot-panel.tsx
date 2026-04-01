@@ -9,6 +9,8 @@ import {
   formatDriverKey,
   formatFlowScore,
   formatFreshnessLocalized,
+  formatLocalizedDateTime,
+  formatLocalizedTime,
   formatLoadErrorLocalized,
   formatProviderIssueMessageLocalized,
   formatRiskTextLocalized,
@@ -30,10 +32,6 @@ type LiveSnapshotPanelProps = {
   onOpenPaywall?: (feature: EntitlementFeature) => void;
   onOpenConfidence?: () => void;
 };
-
-function formatBriefTimestamp(timestamp: string) {
-  return new Date(timestamp).toLocaleString();
-}
 
 export function LiveSnapshotPanel({
   state,
@@ -91,7 +89,7 @@ export function LiveSnapshotPanel({
         leadingBasket: 'Cesta lider',
         publicData: 'Postura de datos publicos',
         publicDataBody: 'Este lanzamiento se esta orientando alrededor de snapshots programados y fuentes mas faciles de usar comercialmente, como FRED y EIA, en lugar de feeds de mercado de pago.',
-        scoreboard: 'Marcador detras del brief',
+        scoreboard: 'Panel de flujos detras del brief',
         noDrivers: 'No se publicaron etiquetas de impulsores en esta fila.',
         noFlows: 'El backend no devolvio filas de flujo para esta lectura.',
         flowsHint: 'Gratis se mantiene conciso y muestra solo el flujo mas fuerte publicado. Premium desbloquea una lista mas amplia y los drilldowns profundos planificados para la fase 1.',
@@ -102,7 +100,7 @@ export function LiveSnapshotPanel({
         diagnosticsHint: 'Gratis muestra solo una vista previa de los diagnosticos del backend. Premium desbloquea la lista completa de incidencias de proveedor y la capa de evidencia mas profunda.',
         primaryFlow: 'Tendencia primaria',
         secondaryFlow: 'Tendencia secundaria',
-        score: 'Score',
+        flowStrength: 'Fuerza del flujo',
         explainConfidence: 'Como se calcula la confianza',
         confidencePreviewHint: 'La explicacion de confianza abre una pantalla separada con metodologia, preview del analisis y acceso premium al detalle.',
       }
@@ -111,7 +109,7 @@ export function LiveSnapshotPanel({
         title: 'Latest market brief',
         body: 'This is the central editorial block of the app. It is generated from the latest stored backend snapshot and keeps the source posture explicit instead of pretending to be real-time.',
         refresh: 'Refresh snapshot',
-        unavailable: 'Prototype snapshot unavailable',
+        unavailable: 'Snapshot unavailable',
         technicalDetail: 'Technical detail',
         phoneHint: 'If you are using Expo Go on a phone, switch `EXPO_PUBLIC_API_BASE_URL` from localhost to the backend LAN address.',
         cached: 'Cached snapshot',
@@ -136,7 +134,7 @@ export function LiveSnapshotPanel({
         leadingBasket: 'Leading basket',
         publicData: 'Public-data posture',
         publicDataBody: 'This launch path is being shaped around scheduled stored snapshots and sources that are easier to use commercially, such as FRED and EIA, rather than paid market feeds.',
-        scoreboard: 'Scoreboard behind the brief',
+        scoreboard: 'Flow board behind the brief',
         noDrivers: 'No driver labels were published in this row.',
         noFlows: 'No flow rows were returned by the backend.',
         flowsHint: 'Free stays concise and shows the strongest published flow first. Premium unlocks a wider flow list and the deeper basket drilldowns planned for phase 1.',
@@ -147,7 +145,7 @@ export function LiveSnapshotPanel({
         diagnosticsHint: 'Free shows only a preview of backend diagnostics. Premium unlocks the full provider issue list and the deeper evidence layer around it.',
         primaryFlow: 'Primary flow',
         secondaryFlow: 'Secondary flow',
-        score: 'Score',
+        flowStrength: 'Flow strength',
         explainConfidence: 'How confidence works',
         confidencePreviewHint: 'The confidence view opens a separate screen with methodology, analysis preview, and premium access to deeper detail.',
       };
@@ -176,7 +174,7 @@ export function LiveSnapshotPanel({
       </View>
 
       <View style={styles.connectionRow}>
-        <Text style={styles.connectionLabel}>{health?.app_name ?? 'Prototype API'}</Text>
+        <Text style={styles.connectionLabel}>{health?.app_name ?? 'Local backend'}</Text>
         <Text style={styles.connectionValue}>{state.apiBaseUrl}</Text>
       </View>
       <Text style={styles.connectionNote}>{getApiBaseUrlNote()}</Text>
@@ -185,7 +183,7 @@ export function LiveSnapshotPanel({
         <View style={styles.loadingCard}>
           <ActivityIndicator color={shellPalette.accent} />
           <Text style={styles.loadingTitle}>
-            {language === 'es' ? 'Conectando con el backend local...' : 'Connecting to the prototype backend...'}
+            {language === 'es' ? 'Conectando con el backend local...' : 'Connecting to the local backend...'}
           </Text>
           <Text style={styles.loadingBody}>
             {language === 'es'
@@ -222,7 +220,7 @@ export function LiveSnapshotPanel({
             {state.isRefreshing ? <Pill label={copy.refreshing} tone="info" /> : null}
             {state.lastLoadedAt ? (
               <Pill
-                label={`${copy.loaded} ${new Date(state.lastLoadedAt).toLocaleTimeString()}`}
+                label={`${copy.loaded} ${formatLocalizedTime(state.lastLoadedAt, language)}`}
                 tone="soft"
               />
             ) : null}
@@ -243,7 +241,7 @@ export function LiveSnapshotPanel({
               ) : null}
               {state.cacheSavedAt ? (
                 <Text style={styles.cacheHint}>
-                  {copy.cachedAt} {new Date(state.cacheSavedAt).toLocaleString()}.
+                  {copy.cachedAt} {formatLocalizedDateTime(state.cacheSavedAt, language)}.
                 </Text>
               ) : null}
             </View>
@@ -261,7 +259,7 @@ export function LiveSnapshotPanel({
                       </Text>
                       <View style={styles.flowMetaRow}>
                         <Text style={styles.flowMetaValue}>
-                          {copy.score} {formatFlowScore(primaryFlow.score)}
+                          {copy.flowStrength} {formatFlowScore(primaryFlow.score)}
                         </Text>
                         <Text style={styles.flowMetaValue}>
                           {formatConfidence(primaryFlow.confidence)} {copy.confidence.toLowerCase()}
@@ -278,7 +276,7 @@ export function LiveSnapshotPanel({
                       </Text>
                       <View style={styles.flowMetaRow}>
                         <Text style={styles.flowMetaValueMuted}>
-                          {copy.score} {formatFlowScore(secondaryFlow.score)}
+                          {copy.flowStrength} {formatFlowScore(secondaryFlow.score)}
                         </Text>
                         <Text style={styles.flowMetaValueMuted}>
                           {formatConfidence(secondaryFlow.confidence)} {copy.confidence.toLowerCase()}
@@ -302,7 +300,7 @@ export function LiveSnapshotPanel({
 
               <View style={styles.briefMetaRow}>
                 <Text style={styles.briefMetaText}>
-                  {copy.updated} {formatBriefTimestamp(brief.updated_at)}
+                  {copy.updated} {formatLocalizedDateTime(brief.updated_at, language)}
                 </Text>
                 <Text style={styles.briefMetaText}>
                   {copy.sources}: {brief.source_labels.join(', ') || 'Public dataset mix'}
@@ -330,7 +328,7 @@ export function LiveSnapshotPanel({
                     </View>
                     <Text style={styles.evidenceBody}>{localizeBriefText(item.summary, language)}</Text>
                     <Text style={styles.evidenceMeta}>
-                      {item.provider_label} - {formatBriefTimestamp(item.last_update_at)}
+                      {item.provider_label} - {formatLocalizedDateTime(item.last_update_at, language)}
                     </Text>
                   </View>
                 ))}
@@ -392,8 +390,8 @@ export function LiveSnapshotPanel({
               value={formatBucketLabel(snapshot.leading_bucket, language)}
               detail={
                 language === 'es'
-                  ? `Marca temporal del snapshot: ${new Date(snapshot.as_of).toLocaleString()}.`
-                  : `Snapshot timestamp: ${new Date(snapshot.as_of).toLocaleString()}.`
+                  ? `Marca temporal del snapshot: ${formatLocalizedDateTime(snapshot.as_of, language)}.`
+                  : `Snapshot timestamp: ${formatLocalizedDateTime(snapshot.as_of, language)}.`
               }
               tone="contrast"
             />

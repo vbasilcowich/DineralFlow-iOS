@@ -8,6 +8,7 @@ export type EntitlementFeature =
   | 'provenance'
   | 'deeper_drilldowns'
   | 'long_history'
+  | 'confidence_breakdown'
   | 'watchlists'
   | 'alerts'
   | 'ad_free';
@@ -49,6 +50,7 @@ export const ENTITLEMENT_FEATURES: EntitlementFeature[] = [
   'provenance',
   'deeper_drilldowns',
   'long_history',
+  'confidence_breakdown',
   'watchlists',
   'alerts',
   'ad_free',
@@ -57,6 +59,7 @@ export const ENTITLEMENT_FEATURES: EntitlementFeature[] = [
 export const PREMIUM_FEATURES: EntitlementFeature[] = [
   'deeper_drilldowns',
   'long_history',
+  'confidence_breakdown',
   'watchlists',
   'alerts',
   'ad_free',
@@ -144,6 +147,17 @@ const FEATURE_DESCRIPTORS: Record<EntitlementFeature, FeatureDescriptor> = {
     freeState: 'preview',
     ctaLabel: 'Unlock longer history',
   },
+  confidence_breakdown: {
+    title: 'Confidence breakdown',
+    freeValue: 'Preview only',
+    freeDetail: 'Free can explain the headline confidence at a high level without exposing the full evidence ledger.',
+    premiumValue: 'Full confidence methodology',
+    premiumDetail: 'Premium unlocks the weighting, evidence ordering, and conflicts behind each confidence reading.',
+    paywallTitle: 'Premium unlocks the deeper confidence breakdown.',
+    paywallBody: 'Free keeps the top-line confidence readable. Premium opens the methodology, evidence trail, and conflict handling behind that number.',
+    freeState: 'preview',
+    ctaLabel: 'Unlock confidence detail',
+  },
   watchlists: {
     title: 'Watchlists',
     freeValue: 'Not included yet',
@@ -202,6 +216,7 @@ function buildFeatureMap(tier: AccessTier): Record<EntitlementFeature, boolean> 
     provenance: true,
     deeper_drilldowns: premium,
     long_history: premium,
+    confidence_breakdown: premium,
     watchlists: premium,
     alerts: premium,
     ad_free: premium,

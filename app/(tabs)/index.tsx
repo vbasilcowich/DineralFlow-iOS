@@ -12,6 +12,7 @@ import {
   roadmapItems,
   shellPalette,
 } from '@/constants/shell';
+import { useAuth } from '@/hooks/use-auth';
 import { useDashboardPreview } from '@/hooks/use-dashboard-preview';
 import { useMonetization } from '@/hooks/use-monetization';
 import { useLanguage } from '@/lib/language';
@@ -47,6 +48,7 @@ function getGreetingLabel(date = new Date()) {
 export default function HomeScreen() {
   const router = useRouter();
   const preview = useDashboardPreview();
+  const auth = useAuth();
   const monetization = useMonetization();
   const { language } = useLanguage();
   const isPremium = monetization.accessTier === 'premium';
@@ -70,7 +72,7 @@ export default function HomeScreen() {
         primaryFlow: 'Tendencia primaria',
         secondaryFlow: 'Tendencia secundaria',
         noSecondary: 'Sin tendencia secundaria clara',
-        score: 'Score',
+        flowStrength: 'Fuerza del flujo',
         confidence: 'Confianza',
         explainConfidence: 'Como se calcula la confianza',
         leadBasket: 'Cesta lider',
@@ -109,7 +111,7 @@ export default function HomeScreen() {
         primaryFlow: 'Primary flow',
         secondaryFlow: 'Secondary flow',
         noSecondary: 'No clear secondary flow yet',
-        score: 'Score',
+        flowStrength: 'Flow strength',
         confidence: 'Confidence',
         explainConfidence: 'How confidence works',
         leadBasket: 'Lead basket',
@@ -167,7 +169,7 @@ export default function HomeScreen() {
   const trustNotes = language === 'es'
     ? [
         'No prometer cobertura en tiempo real de nivel terminal en v1.',
-        'No presentar Twelve Data o Alpha Vantage como base comercial del lanzamiento iOS.',
+        'No presentar feeds de mercado restringidos como base comercial del lanzamiento iOS.',
         'Mostrar siempre frescura, procedencia y si la pantalla usa el ultimo snapshot guardado.',
       ]
     : legalBoundaryNotes;
@@ -222,12 +224,28 @@ export default function HomeScreen() {
   const primaryFlow = snapshot?.top_flows[0] ?? null;
   const secondaryFlow = snapshot?.top_flows[1] ?? null;
   const openPaywallForFeature = (feature: EntitlementFeature) => {
+    if (auth.providerMode === 'backend' && !auth.isAuthenticated) {
+      router.push({
+        pathname: '/auth/login' as never,
+        params: { redirect: `/paywall?feature=${feature}` },
+      } as never);
+      return;
+    }
+
     router.push({
       pathname: '/paywall',
       params: { feature },
     });
   };
   const openConfidence = () => {
+    if (auth.providerMode === 'backend' && !auth.isAuthenticated) {
+      router.push({
+        pathname: '/auth/login' as never,
+        params: { redirect: '/confidence' },
+      } as never);
+      return;
+    }
+
     router.push('/confidence');
   };
 
@@ -254,14 +272,30 @@ export default function HomeScreen() {
           <LanguageSwitcher />
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={language === 'es' ? 'Cuenta' : 'Account'}
+            accessibilityHint={language === 'es' ? 'Abrir cuenta y sesion' : 'Open account and sign-in area'}
+            onPress={() => router.push('/auth' as never)}
+            testID="home-account-button"
+            style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}>
+            <IconSymbol name="person.crop.circle.fill" size={20} color={shellPalette.text} />
+          </Pressable>
+
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel={language === 'es' ? 'Roadmap' : 'Roadmap'}
+            accessibilityHint={language === 'es' ? 'Abrir plan de producto' : 'Open product roadmap'}
             onPress={() => router.push('/roadmap')}
+            testID="home-roadmap-button"
             style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}>
             <IconSymbol name="list.bullet.rectangle.fill" size={20} color={shellPalette.text} />
           </Pressable>
 
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={language === 'es' ? 'Premium' : 'Premium'}
+            accessibilityHint={language === 'es' ? 'Abrir paywall y gestion premium' : 'Open paywall and premium access'}
             onPress={() => router.push('/paywall')}
+            testID="home-paywall-button"
             style={({ pressed }) => [styles.iconButton, pressed && styles.iconButtonPressed]}>
             <IconSymbol name="folder.fill" size={20} color={shellPalette.text} />
           </Pressable>
@@ -293,7 +327,7 @@ export default function HomeScreen() {
             </Text>
             <View style={styles.summaryFlowMeta}>
               <Text style={styles.summaryFlowMetaValue}>
-                {primaryFlow ? `${copy.score} ${primaryFlow.score > 0 ? '+' : ''}${primaryFlow.score.toFixed(1)}` : '--'}
+                {primaryFlow ? `${copy.flowStrength} ${primaryFlow.score > 0 ? '+' : ''}${primaryFlow.score.toFixed(1)}` : '--'}
               </Text>
               <Text style={styles.summaryFlowMetaValue}>
                 {primaryFlow ? `${formatConfidence(primaryFlow.confidence)} ${copy.confidence.toLowerCase()}` : '--'}
@@ -310,7 +344,7 @@ export default function HomeScreen() {
             </Text>
             <View style={styles.summaryFlowMeta}>
               <Text style={styles.summaryFlowMetaMuted}>
-                {secondaryFlow ? `${copy.score} ${secondaryFlow.score > 0 ? '+' : ''}${secondaryFlow.score.toFixed(1)}` : formatSourceMode(snapshot?.source_mode ?? 'unavailable', language)}
+                {secondaryFlow ? `${copy.flowStrength} ${secondaryFlow.score > 0 ? '+' : ''}${secondaryFlow.score.toFixed(1)}` : formatSourceMode(snapshot?.source_mode ?? 'unavailable', language)}
               </Text>
               <Text style={styles.summaryFlowMetaMuted}>
                 {secondaryFlow

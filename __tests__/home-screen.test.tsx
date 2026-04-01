@@ -5,6 +5,7 @@ import HomeScreen from '@/app/(tabs)/index';
 const mockPush = jest.fn();
 const mockUseDashboardPreview = jest.fn();
 const mockUseMonetization = jest.fn();
+const mockUseAuth = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({
@@ -14,6 +15,10 @@ jest.mock('expo-router', () => ({
 
 jest.mock('@/hooks/use-dashboard-preview', () => ({
   useDashboardPreview: () => mockUseDashboardPreview(),
+}));
+
+jest.mock('@/hooks/use-auth', () => ({
+  useAuth: () => mockUseAuth(),
 }));
 
 jest.mock('@/hooks/use-monetization', () => ({
@@ -31,6 +36,23 @@ jest.mock('@/components/history-access-panel', () => ({
 describe('HomeScreen feature gating', () => {
   beforeEach(() => {
     mockPush.mockClear();
+    mockUseAuth.mockReturnValue({
+      providerMode: 'mock',
+      isAuthenticated: false,
+      accessToken: null,
+      verificationRequired: false,
+      pendingVerificationEmail: null,
+      userEmail: null,
+      status: 'signed_out',
+      lastError: null,
+      lastAction: null,
+      clearError: jest.fn(),
+      login: jest.fn(),
+      register: jest.fn(),
+      verifyEmail: jest.fn(),
+      logout: jest.fn(),
+      refreshSession: jest.fn(),
+    });
     mockUseDashboardPreview.mockReturnValue({
       status: 'ready',
       snapshot: null,
@@ -67,6 +89,7 @@ describe('HomeScreen feature gating', () => {
           provenance: true,
           deeper_drilldowns: false,
           long_history: false,
+          confidence_breakdown: false,
           watchlists: false,
           alerts: false,
           ad_free: false,
@@ -113,6 +136,7 @@ describe('HomeScreen feature gating', () => {
           provenance: true,
           deeper_drilldowns: true,
           long_history: true,
+          confidence_breakdown: true,
           watchlists: true,
           alerts: true,
           ad_free: true,

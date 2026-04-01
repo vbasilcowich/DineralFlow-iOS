@@ -17,6 +17,7 @@ export type PaywallConfigState = {
 export function usePaywallConfig(
   feature: EntitlementFeature | null,
   entitlements: EntitlementsSnapshot,
+  authToken: string | null = null,
 ): PaywallConfigState {
   const [state, setState] = useState<PaywallConfigState>(() => ({
     status: 'loading',
@@ -38,7 +39,7 @@ export function usePaywallConfig(
 
     async function load() {
       try {
-        const config = await fetchMobilePaywall(feature);
+        const config = await fetchMobilePaywall(feature, authToken);
 
         if (!mounted) {
           return;
@@ -69,7 +70,7 @@ export function usePaywallConfig(
     return () => {
       mounted = false;
     };
-  }, [entitlements, feature]);
+  }, [authToken, entitlements, feature]);
 
   return state;
 }

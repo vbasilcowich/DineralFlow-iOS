@@ -8,6 +8,14 @@
 - added a dedicated confidence screen so free users can inspect how the confidence percentage is formed and premium can upsell deeper analysis and charts
 - expanded test coverage for the new language switcher behavior, confidence route, and the updated snapshot panel hierarchy
 
+## beta 0.04.5
+
+- aligned the app with the authenticated backend contract for register, login, verify-email, logout, entitlements, and paywall
+- added account auth flows plus local legal screens for terms, privacy, sources, and the financial disclaimer
+- improved accessibility with shared button semantics, stable `testID`s, selected-state language flags, and accessible history window controls
+- replaced visible `Score` copy with `Flow strength`, removed prototype wording from the main brief panel, and localized timestamps by app language
+- expanded the paywall to expose all backend legal links and prepared the app config with an iOS `bundleIdentifier`
+
 ## beta 0.04.3
 
 - integrated `RevenueCat Test Store` into the native billing layer with a real subscription driver built on `react-native-purchases`

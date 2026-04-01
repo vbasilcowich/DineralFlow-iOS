@@ -162,6 +162,9 @@ type ActionButtonProps = {
   onPress: () => void;
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
+  accessibilityLabel?: string;
+  accessibilityHint?: string;
+  testID?: string;
 };
 
 export function ActionButton({
@@ -170,13 +173,21 @@ export function ActionButton({
   onPress,
   variant = 'secondary',
   disabled = false,
+  accessibilityLabel,
+  accessibilityHint,
+  testID,
 }: ActionButtonProps) {
   const isPrimary = variant === 'primary';
 
   return (
     <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel ?? label}
+      accessibilityHint={accessibilityHint}
+      accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
+      testID={testID}
       style={({ pressed }) => [
         styles.actionButton,
         isPrimary ? styles.actionPrimary : styles.actionSecondary,

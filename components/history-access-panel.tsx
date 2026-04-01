@@ -9,6 +9,7 @@ import {
   formatBucketLabel,
   formatConfidence,
   formatHistorySummaryLocalized,
+  formatLocalizedDate,
   formatLoadErrorLocalized,
 } from '@/lib/dashboard-presenter';
 
@@ -95,6 +96,18 @@ export function HistoryAccessPanel({
           return (
             <Pressable
               key={window}
+              accessibilityRole="button"
+              accessibilityLabel={language === 'es' ? `Ventana ${window}` : `${window} window`}
+              accessibilityHint={
+                locked
+                  ? language === 'es'
+                    ? 'Abre el paywall premium'
+                    : 'Opens the premium paywall'
+                  : language === 'es'
+                    ? 'Carga esta ventana historica'
+                    : 'Loads this history window'
+              }
+              accessibilityState={{ selected: active, disabled: locked }}
               onPress={() => {
                 if (locked) {
                   onOpenPaywall('long_history');
@@ -103,6 +116,7 @@ export function HistoryAccessPanel({
 
                 historyState.setWindow(window);
               }}
+              testID={`history-window-${window}`}
               style={({ pressed }) => [
                 styles.windowPill,
                 active && styles.windowPillActive,
@@ -169,7 +183,7 @@ export function HistoryAccessPanel({
                   <View style={styles.listMeta}>
                     <Text style={styles.listValue}>{formatConfidence(point.global_confidence)}</Text>
                     <Text style={styles.listDate}>
-                      {new Date(point.timestamp).toLocaleDateString()}
+                      {formatLocalizedDate(point.timestamp, language)}
                     </Text>
                   </View>
                 </View>

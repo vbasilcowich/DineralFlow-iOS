@@ -46,6 +46,7 @@ export type MarketBriefEvidence = {
 };
 
 export type MarketBrief = {
+  version: string;
   title: string;
   summary: string;
   confidence: number;
@@ -74,6 +75,8 @@ export type DashboardHistoryPoint = {
 
 export type DashboardSnapshot = {
   as_of: string;
+  generated_at?: string | null;
+  audience_tier?: string;
   source_mode: string;
   effective_providers: string[];
   headline: string;
@@ -93,18 +96,37 @@ export type DashboardHistoryResponse = {
   points: DashboardHistoryPoint[];
 };
 
-async function fetchJson<T>(path: string, apiBaseUrl: string): Promise<T> {
+type FetchOptions = {
+  authToken?: string | null;
+};
+
+async function fetchJson<T>(path: string, apiBaseUrl: string, options: FetchOptions = {}): Promise<T> {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
 
   try {
+    const headers: Record<string, string> = {};
+    if (options.authToken) {
+      headers.Authorization = `Bearer ${options.authToken}`;
+    }
+
     const response = await fetch(`${apiBaseUrl}${path}`, {
       cache: 'no-store',
+      headers,
       signal: controller.signal,
     });
 
     if (!response.ok) {
-      throw new Error(`http_${response.status}`);
+      let detail = `http_${response.status}`;
+      try {
+        const payload = (await response.json()) as { detail?: string };
+        if (typeof payload.detail === 'string' && payload.detail.trim().length > 0) {
+          detail = payload.detail.trim();
+        }
+      } catch {
+        // Keep the status fallback when the response body is not JSON.
+      }
+      throw new Error(detail);
     }
 
     return (await response.json()) as T;
@@ -113,8 +135,11 @@ async function fetchJson<T>(path: string, apiBaseUrl: string): Promise<T> {
   }
 }
 
-export async function fetchDashboardSnapshot(apiBaseUrl = getApiBaseUrl()): Promise<DashboardSnapshot> {
-  return fetchJson<DashboardSnapshot>('/api/dashboard/snapshot', apiBaseUrl);
+export async function fetchDashboardSnapshot(
+  apiBaseUrl = getApiBaseUrl(),
+  authToken: string | null = null,
+): Promise<DashboardSnapshot> {
+  return fetchJson<DashboardSnapshot>('/api/dashboard/snapshot', apiBaseUrl, { authToken });
 }
 
 export async function fetchDashboardHealth(apiBaseUrl = getApiBaseUrl()): Promise<DashboardHealth> {
@@ -124,6 +149,7 @@ export async function fetchDashboardHealth(apiBaseUrl = getApiBaseUrl()): Promis
 export async function fetchDashboardHistory(
   window: HistoryWindow,
   apiBaseUrl = getApiBaseUrl(),
+  authToken: string | null = null,
 ): Promise<DashboardHistoryResponse> {
-  return fetchJson<DashboardHistoryResponse>(`/api/dashboard/history?window=${window}`, apiBaseUrl);
+  return fetchJson<DashboardHistoryResponse>(`/api/dashboard/history?window=${window}`, apiBaseUrl, { authToken });
 }

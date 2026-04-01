@@ -28,7 +28,7 @@ export default function RoadmapScreen() {
         launchTitle: 'El producto debe decir ultimo snapshot, no tiempo real',
         launchBody: 'El posicionamiento inicial debe evitar sugerir cobertura en tiempo real de nivel mercado. Debemos publicar el ultimo snapshot disponible, explicar su frescura y mantener la postura de datos honesta en cada pantalla.',
         guardrail: 'Guardarrail comercial',
-        guardrailBody: 'Twelve Data y Alpha Vantage pueden seguir existiendo en entornos de prototipo, pero no deben definir la historia comercial del lanzamiento iOS mientras optimizamos seguridad legal y costes bajos.',
+        guardrailBody: 'Algunos feeds de mercado restringidos pueden seguir existiendo en entornos internos, pero no deben definir la historia comercial del lanzamiento iOS mientras optimizamos seguridad legal y costes bajos.',
       }
     : {
         roadmap: 'Roadmap',
@@ -45,7 +45,7 @@ export default function RoadmapScreen() {
         launchTitle: 'The product should say latest snapshot, not real-time',
         launchBody: 'The launch positioning should avoid suggesting exchange-grade real-time coverage. We should publish the latest available snapshot, explain how fresh it is, and keep the data stance honest on every screen.',
         guardrail: 'Commercial guardrail',
-        guardrailBody: 'Twelve Data and Alpha Vantage may still exist in prototype environments, but they should not define the commercial iOS launch story while we are optimizing for low-cost legal safety.',
+        guardrailBody: 'Some restricted market feeds may still exist in internal environments, but they should not define the commercial iOS launch story while we are optimizing for low-cost legal safety.',
       };
   const phases = language === 'es'
     ? [

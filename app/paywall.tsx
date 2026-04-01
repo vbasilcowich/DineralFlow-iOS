@@ -1,12 +1,14 @@
 import { useEffect, useRef } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { ActionButton, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
+import { useAuth } from '@/hooks/use-auth';
 import { useMonetization } from '@/hooks/use-monetization';
 import { usePaywallConfig } from '@/hooks/use-paywall-config';
+import { formatLocalizedDateTime } from '@/lib/dashboard-presenter';
 import { useLanguage } from '@/lib/language';
 import {
   getFeatureDescriptor,
@@ -15,9 +17,12 @@ import {
 } from '@/lib/monetization';
 
 export default function PaywallScreen() {
+  const router = useRouter();
+  const auth = useAuth();
   const monetization = useMonetization();
   const { language } = useLanguage();
   const isPremium = monetization.accessTier === 'premium';
+  const requiresAuthenticatedBackend = auth.providerMode === 'backend' && !auth.isAuthenticated;
   const usingMockBilling = monetization.billingProvider === 'mock';
   const usingRevenueCatBilling = monetization.billingProvider === 'revenuecat';
   const didSyncOnOpenRef = useRef(false);
@@ -25,7 +30,11 @@ export default function PaywallScreen() {
   const featureParam = Array.isArray(params.feature) ? params.feature[0] : params.feature;
   const focusedFeature = featureParam && isEntitlementFeature(featureParam) ? featureParam : null;
   const focusedDescriptor = focusedFeature ? getFeatureDescriptor(focusedFeature) : null;
-  const paywallConfig = usePaywallConfig(focusedFeature, monetization.entitlements);
+  const paywallConfig = usePaywallConfig(
+    focusedFeature,
+    monetization.entitlements,
+    auth.providerMode === 'backend' ? auth.accessToken : null,
+  );
   const localizePaywallText = (text: string) => {
     if (language === 'en') {
       return text;
@@ -182,6 +191,15 @@ export default function PaywallScreen() {
   }, [monetization]);
 
   const openLegalLink = (url: string) => {
+    if (url.startsWith('/')) {
+      router.push(url as never);
+      return;
+    }
+
+    if (!/^https?:\/\//i.test(url)) {
+      return;
+    }
+
     void Linking.openURL(url);
   };
 
@@ -240,7 +258,7 @@ export default function PaywallScreen() {
         </Text>
         {monetization.entitlementsLastSyncAt ? (
           <Text style={styles.metaText}>
-            {copy.lastAccessSync}: {new Date(monetization.entitlementsLastSyncAt).toLocaleString()}
+            {copy.lastAccessSync}: {formatLocalizedDateTime(monetization.entitlementsLastSyncAt, language)}
           </Text>
         ) : null}
         {monetization.entitlementsSyncMessage ? (
@@ -257,6 +275,47 @@ export default function PaywallScreen() {
           <Text style={styles.errorText}>{copy.error}: {monetization.errorMessage}</Text>
         ) : null}
       </SectionCard>
+
+      {requiresAuthenticatedBackend ? (
+        <SectionCard
+          eyebrow={language === 'es' ? 'Cuenta necesaria' : 'Account required'}
+          title={language === 'es' ? 'Inicia sesion para usar el backend autenticado' : 'Sign in to use the authenticated backend'}
+          body={language === 'es'
+            ? 'El acceso premium y la sincronizacion de estado se apoyan en la sesion autenticada cuando esta disponible.'
+            : 'Premium access and state sync rely on the authenticated session when available.'}>
+          <View style={styles.buttonRow}>
+            <ActionButton
+              label={language === 'es' ? 'Entrar' : 'Sign in'}
+              icon="arrow.right"
+              variant="primary"
+              onPress={() => router.push('/auth/login' as never)}
+            />
+            <ActionButton
+              label={language === 'es' ? 'Crear cuenta' : 'Create account'}
+              icon="arrow.right"
+              variant="secondary"
+              onPress={() => router.push('/auth/register' as never)}
+            />
+          </View>
+          {auth.verificationRequired ? (
+            <ActionButton
+              label={language === 'es' ? 'Verificar email' : 'Verify email'}
+              icon="arrow.right"
+              variant="secondary"
+              onPress={() =>
+                router.push({
+                  pathname: '/auth/verify-email' as never,
+                  params: {
+                    email: auth.pendingVerificationEmail ?? auth.userEmail ?? '',
+                    token: auth.pendingVerificationToken ?? '',
+                    verificationUrl: auth.pendingVerificationUrl ?? '',
+                  },
+                } as never)
+              }
+            />
+          ) : null}
+        </SectionCard>
+      ) : null}
 
       <SectionCard
         eyebrow={copy.premiumAdds}
@@ -302,8 +361,19 @@ export default function PaywallScreen() {
                 }
                 icon="arrow.right"
                 variant="primary"
-                disabled={!monetization.canStartPurchase || monetization.isProcessing}
-                onPress={() => void monetization.purchasePremium(plan.key)}
+                testID={`paywall-plan-${plan.key}`}
+                disabled={
+                  (!monetization.canStartPurchase && !requiresAuthenticatedBackend) ||
+                  monetization.isProcessing
+                }
+                onPress={() => {
+                if (requiresAuthenticatedBackend) {
+                    router.push('/auth/login' as never);
+                    return;
+                  }
+
+                  void monetization.purchasePremium(plan.key);
+                }}
               />
             </View>
           ))}
@@ -318,12 +388,26 @@ export default function PaywallScreen() {
           <ActionButton
             label={copy.openTerms}
             icon="arrow.right"
+            testID="paywall-open-terms"
             onPress={() => openLegalLink(paywallConfig.config.legal_links.terms_url)}
           />
           <ActionButton
             label={copy.openPrivacy}
             icon="arrow.right"
+            testID="paywall-open-privacy"
             onPress={() => openLegalLink(paywallConfig.config.legal_links.privacy_url)}
+          />
+          <ActionButton
+            label={language === 'es' ? 'Abrir fuentes' : 'Open sources'}
+            icon="arrow.right"
+            testID="paywall-open-sources"
+            onPress={() => openLegalLink(paywallConfig.config.legal_links.data_sources_url)}
+          />
+          <ActionButton
+            label={language === 'es' ? 'Abrir disclaimer' : 'Open disclaimer'}
+            icon="arrow.right"
+            testID="paywall-open-disclaimer"
+            onPress={() => openLegalLink(paywallConfig.config.legal_links.financial_disclaimer_url)}
           />
         </View>
       </SectionCard>
@@ -337,28 +421,45 @@ export default function PaywallScreen() {
             : copy.restoreBodyReal
         }>
         <View style={styles.buttonRow}>
-          <ActionButton
-            label={copy.refreshAccess}
-            icon="arrow.clockwise"
-            disabled={monetization.isProcessing}
-            onPress={() => void monetization.syncEntitlements()}
-          />
-          <ActionButton
-            label={copy.restorePurchases}
-            icon="arrow.clockwise"
-            disabled={monetization.isProcessing}
-            onPress={() => void monetization.restorePurchases()}
-          />
-          {usingMockBilling ? (
             <ActionButton
-              label={copy.resetToFree}
-              icon="folder.fill"
+              label={copy.refreshAccess}
+              icon="arrow.clockwise"
+              testID="paywall-refresh-access"
               disabled={monetization.isProcessing}
-              onPress={() => void monetization.resetToFree()}
+              onPress={() => {
+                if (requiresAuthenticatedBackend) {
+                  router.push('/auth/login' as never);
+                  return;
+                }
+
+                void monetization.syncEntitlements();
+              }}
             />
-          ) : null}
-        </View>
-      </SectionCard>
+            <ActionButton
+              label={copy.restorePurchases}
+              icon="arrow.clockwise"
+              testID="paywall-restore-purchases"
+              disabled={monetization.isProcessing}
+              onPress={() => {
+                if (requiresAuthenticatedBackend) {
+                  router.push('/auth/login' as never);
+                  return;
+                }
+
+                void monetization.restorePurchases();
+              }}
+            />
+            {usingMockBilling ? (
+              <ActionButton
+                label={copy.resetToFree}
+                icon="folder.fill"
+                testID="paywall-reset-free"
+                disabled={monetization.isProcessing}
+                onPress={() => void monetization.resetToFree()}
+              />
+            ) : null}
+          </View>
+        </SectionCard>
     </ScrollView>
   );
 }

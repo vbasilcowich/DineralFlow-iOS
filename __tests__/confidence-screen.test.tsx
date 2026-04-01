@@ -6,6 +6,7 @@ const mockPush = jest.fn();
 const mockBack = jest.fn();
 const mockUseDashboardPreview = jest.fn();
 const mockUseMonetization = jest.fn();
+const mockUseAuth = jest.fn();
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({
@@ -18,6 +19,10 @@ jest.mock('@/hooks/use-dashboard-preview', () => ({
   useDashboardPreview: () => mockUseDashboardPreview(),
 }));
 
+jest.mock('@/hooks/use-auth', () => ({
+  useAuth: () => mockUseAuth(),
+}));
+
 jest.mock('@/hooks/use-monetization', () => ({
   useMonetization: () => mockUseMonetization(),
 }));
@@ -26,6 +31,23 @@ describe('ConfidenceScreen', () => {
   beforeEach(() => {
     mockPush.mockClear();
     mockBack.mockClear();
+    mockUseAuth.mockReturnValue({
+      providerMode: 'mock',
+      isAuthenticated: false,
+      accessToken: null,
+      verificationRequired: false,
+      pendingVerificationEmail: null,
+      userEmail: null,
+      status: 'signed_out',
+      lastError: null,
+      lastAction: null,
+      clearError: jest.fn(),
+      login: jest.fn(),
+      register: jest.fn(),
+      verifyEmail: jest.fn(),
+      logout: jest.fn(),
+      refreshSession: jest.fn(),
+    });
     mockUseDashboardPreview.mockReturnValue({
       status: 'ready',
       snapshot: {

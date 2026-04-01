@@ -83,7 +83,7 @@ export const dashboardCards = [
     title: 'Commercial posture',
     value: 'Public-data-first',
     detail:
-      'The commercial iOS plan should avoid leaning on Twelve Data and Alpha Vantage until rights and economics are solved.',
+      'The commercial iOS plan should avoid leaning on restricted third-party market feeds until rights and economics are solved.',
   },
 ] as const;
 
@@ -151,6 +151,6 @@ export const operatingPrinciples = [
 
 export const legalBoundaryNotes = [
   'Do not promise exchange-grade real-time coverage in v1.',
-  'Do not position Twelve Data or Alpha Vantage as part of the commercial iOS source mix for now.',
+  'Do not position restricted third-party market feeds as part of the commercial iOS source mix for now.',
   'Do show freshness, provenance, and whether a screen is reading the latest stored snapshot.',
 ] as const;

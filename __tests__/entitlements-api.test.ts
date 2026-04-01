@@ -30,6 +30,7 @@ describe('entitlements api helpers', () => {
         provenance: true,
         deeper_drilldowns: false,
         long_history: false,
+        confidence_breakdown: false,
         watchlists: false,
         alerts: false,
         ad_free: false,

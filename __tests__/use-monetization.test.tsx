@@ -13,6 +13,7 @@ import type { HistoryWindow } from '@/lib/monetization';
 const mockFetchMobileEntitlements = jest.fn();
 const mockRefreshMobileEntitlements = jest.fn();
 const appStateListeners: Array<(state: AppStateStatus) => void> = [];
+const mockUseAuth = jest.fn();
 
 jest.mock('@/lib/entitlements-api', () => {
   const actual = jest.requireActual('@/lib/entitlements-api');
@@ -22,6 +23,10 @@ jest.mock('@/lib/entitlements-api', () => {
     refreshMobileEntitlements: (...args: unknown[]) => mockRefreshMobileEntitlements(...args),
   };
 });
+
+jest.mock('@/hooks/use-auth', () => ({
+  useAuth: () => mockUseAuth(),
+}));
 
 function createFreeBackendContract(
   overrides: Partial<BackendEntitlementsResponse> = {},
@@ -50,6 +55,7 @@ function createFreeBackendContract(
       provenance: true,
       deeper_drilldowns: false,
       long_history: false,
+      confidence_breakdown: false,
       watchlists: false,
       alerts: false,
       ad_free: false,
@@ -81,6 +87,7 @@ function createPremiumBackendContract(
       ...base.features,
       deeper_drilldowns: true,
       long_history: true,
+      confidence_breakdown: true,
       ad_free: true,
     },
     limits: {
@@ -128,6 +135,25 @@ describe('useMonetization provider', () => {
   beforeEach(() => {
     appStateListeners.length = 0;
     jest.restoreAllMocks();
+    mockUseAuth.mockReturnValue({
+      providerMode: 'mock',
+      isAuthenticated: false,
+      accessToken: null,
+      verificationRequired: false,
+      pendingVerificationEmail: null,
+      pendingVerificationToken: null,
+      pendingVerificationUrl: null,
+      userEmail: null,
+      status: 'signed_out',
+      lastError: null,
+      lastAction: null,
+      clearError: jest.fn(),
+      login: jest.fn(),
+      register: jest.fn(),
+      verifyEmail: jest.fn(),
+      logout: jest.fn(),
+      refreshSession: jest.fn(),
+    });
     jest.spyOn(AppState, 'addEventListener').mockImplementation((_type, listener) => {
       appStateListeners.push(listener);
       return { remove: jest.fn() };

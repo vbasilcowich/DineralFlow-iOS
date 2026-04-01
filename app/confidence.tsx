@@ -4,6 +4,7 @@ import { useRouter } from 'expo-router';
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
+import { useAuth } from '@/hooks/use-auth';
 import { useDashboardPreview } from '@/hooks/use-dashboard-preview';
 import { useMonetization } from '@/hooks/use-monetization';
 import {
@@ -13,6 +14,7 @@ import {
   formatFreshnessLocalized,
   formatProviderIssueMessageLocalized,
   formatSourceMode,
+  formatFlowScore,
   localizeBriefText,
 } from '@/lib/dashboard-presenter';
 import { useLanguage } from '@/lib/language';
@@ -39,6 +41,7 @@ function ConfidenceBar({
 
 export default function ConfidenceScreen() {
   const router = useRouter();
+  const auth = useAuth();
   const preview = useDashboardPreview();
   const monetization = useMonetization();
   const { language } = useLanguage();
@@ -201,10 +204,9 @@ export default function ConfidenceScreen() {
                 label={`${copy.confidence} - ${formatBucketLabel(primaryFlow.bucket_key, language)}`}
                 value={primaryFlow.confidence}
               />
-              <Text style={styles.readMeta}>
-                Score {primaryFlow.score > 0 ? '+' : ''}
-                {primaryFlow.score.toFixed(1)}
-              </Text>
+                <Text style={styles.readMeta}>
+                {(language === 'es' ? 'Fuerza del flujo' : 'Flow strength')} {formatFlowScore(primaryFlow.score)}
+                </Text>
             </View>
 
             {secondaryFlow ? (
@@ -218,8 +220,7 @@ export default function ConfidenceScreen() {
                   value={secondaryFlow.confidence}
                 />
                 <Text style={styles.readMeta}>
-                  Score {secondaryFlow.score > 0 ? '+' : ''}
-                  {secondaryFlow.score.toFixed(1)}
+                  {(language === 'es' ? 'Fuerza del flujo' : 'Flow strength')} {formatFlowScore(secondaryFlow.score)}
                 </Text>
               </View>
             ) : null}
@@ -265,18 +266,26 @@ export default function ConfidenceScreen() {
           title={copy.premiumLockedTitle}
           body={copy.premiumLockedBody}>
           <View style={styles.buttonRow}>
-            <ActionButton
-              label={copy.openPremium}
-              icon="arrow.right"
-              variant="primary"
-              onPress={() =>
-                router.push({
-                  pathname: '/paywall',
-                  params: { feature: 'deeper_drilldowns' },
-                })
-              }
-            />
-          </View>
+        <ActionButton
+          label={copy.openPremium}
+          icon="arrow.right"
+          variant="primary"
+          onPress={() => {
+            if (auth.providerMode === 'backend' && !auth.isAuthenticated) {
+              router.push({
+                pathname: '/auth/login' as never,
+                params: { redirect: '/paywall?feature=deeper_drilldowns' },
+              } as never);
+              return;
+            }
+
+            router.push({
+              pathname: '/paywall',
+              params: { feature: 'deeper_drilldowns' },
+            });
+          }}
+        />
+      </View>
         </SectionCard>
       ) : null}
 

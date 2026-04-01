@@ -5,9 +5,10 @@ import {
 } from '@/lib/dashboard-cache';
 
 const sampleRecord: DashboardPreviewCacheRecord = {
-  version: 1,
+  version: 2,
   savedAt: '2026-03-30T10:00:00.000Z',
   apiBaseUrl: 'http://127.0.0.1:8000',
+  viewerKey: 'backend:test@example.com',
   snapshot: {
     as_of: '2026-03-30T00:00:00+00:00',
     source_mode: 'partial_live',
@@ -25,6 +26,7 @@ const sampleRecord: DashboardPreviewCacheRecord = {
     risks: [],
     provider_issues: [],
     market_brief: {
+      version: 'market_brief.public_data.v1',
       title: 'Defensive tone is building',
       summary: 'The latest public-data snapshot leans more cautious than supportive for risk assets.',
       confidence: 71.4,

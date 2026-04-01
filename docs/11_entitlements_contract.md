@@ -69,8 +69,10 @@ The app can keep a local fallback during development, but the commercial path sh
     "Ad-free experience"
   ],
   "legal_links": {
-    "terms_url": "https://example.com/terms",
-    "privacy_url": "https://example.com/privacy"
+    "terms_url": "http://127.0.0.1:8000/api/legal/terms",
+    "privacy_url": "http://127.0.0.1:8000/api/legal/privacy",
+    "data_sources_url": "http://127.0.0.1:8000/api/legal/sources",
+    "financial_disclaimer_url": "http://127.0.0.1:8000/api/legal/disclaimer"
   }
 }
 ```
@@ -97,8 +99,8 @@ Reason:
 
 ## Current local bridge
 
-While the backend contract is not live yet, the app mirrors the same shape locally in:
+While the backend contract is still being developed, the app mirrors the same shape locally in:
 
 - [entitlements-contract.ts](E:/VsCodeApps/DineralFlow-iOS/lib/entitlements-contract.ts)
 
-That bridge keeps the UI aligned with the future backend contract while we still use local mock billing.
+That bridge keeps the UI aligned with the backend contract while we still use local mock billing during development.

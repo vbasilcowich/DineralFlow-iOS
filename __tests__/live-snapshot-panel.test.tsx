@@ -50,6 +50,7 @@ function createPreviewState(): DashboardPreviewState {
         },
       ],
       market_brief: {
+        version: 'market_brief.public_data.v1',
         title: 'Defensive tone with persistent energy pressure',
         summary: 'The latest public-data snapshot is leaning defensive while the energy signal remains tight.',
         confidence: 71.4,

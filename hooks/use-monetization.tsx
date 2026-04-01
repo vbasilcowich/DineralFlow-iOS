@@ -2,7 +2,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useRef, use
 import { AppState, type AppStateStatus } from 'react-native';
 
 import type { BillingProvider, BillingStatus } from '@/lib/billing-config';
+import { useAuth } from '@/hooks/use-auth';
 import {
+  type BillingMirrorState,
   createLocalEntitlementsFallback,
   fetchMobileEntitlements,
   getEntitlementsSyncErrorMessage,
@@ -13,6 +15,7 @@ import {
 import type { BackendEntitlementsResponse } from '@/lib/entitlements-contract';
 import {
   isCachedBackendContractStale,
+  clearEntitlementsContractCache,
   readEntitlementsContractCache,
   type CachedBackendEntitlementsContract,
   writeEntitlementsContractCache,
@@ -102,7 +105,47 @@ function getCachedSyncMessage(
     : 'Using the last stored backend access rules.';
 }
 
+function buildBillingMirrorState(
+  entitlements: EntitlementsSnapshot,
+  billingProvider: BillingProvider,
+  mode: 'purchase' | 'restore' | 'reset',
+): BillingMirrorState | null {
+  if (mode === 'reset') {
+      return {
+        access_tier: 'free',
+        plan: null,
+        source: 'mock_reset',
+        billing_provider: 'mock',
+        purchased_at: entitlements.updatedAt,
+        expires_at: null,
+    };
+  }
+
+  if (billingProvider !== 'mock' && billingProvider !== 'revenuecat') {
+    return null;
+  }
+
+  const source =
+    mode === 'purchase'
+      ? billingProvider === 'mock'
+        ? 'mock_purchase'
+        : 'revenuecat_purchase'
+      : billingProvider === 'mock'
+        ? 'mock_restore'
+        : 'revenuecat_restore';
+
+  return {
+    access_tier: entitlements.tier,
+    plan: entitlements.plan,
+    source,
+    billing_provider: billingProvider,
+    purchased_at: entitlements.updatedAt,
+    expires_at: null,
+  };
+}
+
 export function MonetizationProvider({ children }: { children: ReactNode }) {
+  const auth = useAuth();
   const driver = useMemo(
     () =>
       createSubscriptionDriver({
@@ -122,6 +165,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
   const [backendContractCache, setBackendContractCache] = useState<CachedBackendEntitlementsContract | null>(null);
   const entitlementsRef = useRef(entitlements);
   const backendContractCacheRef = useRef<CachedBackendEntitlementsContract | null>(null);
+  const backendAuthToken = auth.providerMode === 'backend' ? auth.accessToken : null;
 
   useEffect(() => {
     entitlementsRef.current = entitlements;
@@ -131,14 +175,36 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
     backendContractCacheRef.current = backendContractCache;
   }, [backendContractCache]);
 
+  useEffect(() => {
+    if (auth.providerMode !== 'backend' || backendAuthToken) {
+      return;
+    }
+
+    setBackendContractCache(null);
+    setEntitlements(createFallbackSubscriptionState());
+    setEntitlementsSyncStatus('idle');
+    setEntitlementsSyncMessage('Authenticate to sync backend entitlements.');
+
+    void clearEntitlementsContractCache();
+    void clearEntitlementsCache();
+  }, [auth.providerMode, backendAuthToken]);
+
   const syncEntitlementsFromBackend = useCallback(async (
     localEntitlements: EntitlementsSnapshot,
     options: {
       force?: boolean;
       reason?: EntitlementsRefreshReason;
       cachedContract?: CachedBackendEntitlementsContract | null;
+      billingState?: BillingMirrorState | null;
     } = {},
   ) => {
+    if (auth.providerMode === 'backend' && !backendAuthToken) {
+      setEntitlementsSyncStatus('idle');
+      setEntitlementsSyncMessage('Authenticate to sync backend entitlements.');
+      setBackendContractCache(null);
+      return;
+    }
+
     const cachedContract = options.cachedContract ?? backendContractCacheRef.current ?? (await readEntitlementsContractCache());
 
     if (cachedContract && backendContractCacheRef.current === null) {
@@ -166,8 +232,8 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
 
     try {
       const remoteEntitlements = options.reason
-        ? await refreshMobileEntitlements(options.reason)
-        : await fetchMobileEntitlements();
+        ? await refreshMobileEntitlements(options.reason, backendAuthToken, undefined, options.billingState ?? null)
+        : await fetchMobileEntitlements(backendAuthToken);
       const normalizedRemote = normalizeBackendEntitlements(remoteEntitlements);
       const cachedRemote = await writeEntitlementsContractCache(remoteEntitlements);
 
@@ -203,7 +269,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
       setEntitlementsSyncMessage(syncErrorMessage);
       setBackendContractCache(null);
     }
-  }, [driver.billing.provider]);
+  }, [auth.providerMode, backendAuthToken, driver.billing.provider]);
 
   useEffect(() => {
     let mounted = true;
@@ -223,7 +289,12 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
 
       setLastAction(result.lastAction);
 
-      if (cachedContract) {
+      if (auth.providerMode === 'backend' && !backendAuthToken) {
+        setEntitlements(createFallbackSubscriptionState());
+        setBackendContractCache(null);
+        setEntitlementsSyncStatus('idle');
+        setEntitlementsSyncMessage('Authenticate to sync backend entitlements.');
+      } else if (cachedContract) {
         const normalizedCached = normalizeBackendEntitlements(cachedContract.contract);
 
         setBackendContractCache(cachedContract);
@@ -242,6 +313,16 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
 
       setIsReady(true);
 
+      if (preserveLocalPremium) {
+        void syncEntitlementsFromBackend(hydratedEntitlements, {
+          force: true,
+          reason: 'manual_retry',
+          cachedContract,
+          billingState: buildBillingMirrorState(hydratedEntitlements, driver.billing.provider, 'restore'),
+        });
+        return;
+      }
+
       if (!cachedContract || isCachedBackendContractStale(cachedContract)) {
         void syncEntitlementsFromBackend(hydratedEntitlements, {
           force: true,
@@ -255,7 +336,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [driver, syncEntitlementsFromBackend]);
+  }, [auth.providerMode, backendAuthToken, driver, syncEntitlementsFromBackend]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (nextState: AppStateStatus) => {
@@ -288,6 +369,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
         force: true,
         reason: 'manual_retry',
         cachedContract: backendContractCacheRef.current,
+        billingState: buildBillingMirrorState(result.entitlements, driver.billing.provider, 'purchase'),
       });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'purchase_failed');
@@ -308,6 +390,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
         force: true,
         reason: 'restore_attempted',
         cachedContract: backendContractCacheRef.current,
+        billingState: buildBillingMirrorState(result.entitlements, driver.billing.provider, 'restore'),
       });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'restore_failed');
@@ -328,6 +411,7 @@ export function MonetizationProvider({ children }: { children: ReactNode }) {
         force: true,
         reason: 'manual_retry',
         cachedContract: backendContractCacheRef.current,
+        billingState: buildBillingMirrorState(result.entitlements, driver.billing.provider, 'reset'),
       });
     } catch (error) {
       setErrorMessage(error instanceof Error ? error.message : 'reset_to_free_failed');

@@ -2,13 +2,14 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { DashboardHealth, DashboardSnapshot } from '@/lib/dashboard-api';
 
-const DASHBOARD_PREVIEW_CACHE_KEY = 'dineralflow.dashboard.preview.v1';
-const DASHBOARD_PREVIEW_CACHE_VERSION = 1;
+const DASHBOARD_PREVIEW_CACHE_KEY = 'dineralflow.dashboard.preview.v2';
+const DASHBOARD_PREVIEW_CACHE_VERSION = 2;
 
 export type DashboardPreviewCacheRecord = {
   version: number;
   savedAt: string;
   apiBaseUrl: string;
+  viewerKey: string;
   snapshot: DashboardSnapshot;
   health: DashboardHealth | null;
 };
@@ -26,6 +27,7 @@ function isDashboardPreviewCacheRecord(value: unknown): value is DashboardPrevie
     typeof value.version === 'number' &&
     typeof value.savedAt === 'string' &&
     typeof value.apiBaseUrl === 'string' &&
+    typeof value.viewerKey === 'string' &&
     isObject(value.snapshot) &&
     (value.health === null || isObject(value.health))
   );
@@ -57,7 +59,10 @@ export function parseDashboardPreviewCache(rawValue: string | null): DashboardPr
   }
 }
 
-export async function readDashboardPreviewCache(apiBaseUrl: string): Promise<DashboardPreviewCacheRecord | null> {
+export async function readDashboardPreviewCache(
+  apiBaseUrl: string,
+  viewerKey: string,
+): Promise<DashboardPreviewCacheRecord | null> {
   const storedValue = await AsyncStorage.getItem(DASHBOARD_PREVIEW_CACHE_KEY);
   const parsedValue = parseDashboardPreviewCache(storedValue);
 
@@ -65,7 +70,7 @@ export async function readDashboardPreviewCache(apiBaseUrl: string): Promise<Das
     return null;
   }
 
-  if (parsedValue.apiBaseUrl !== apiBaseUrl) {
+  if (parsedValue.apiBaseUrl !== apiBaseUrl || parsedValue.viewerKey !== viewerKey) {
     return null;
   }
 
@@ -74,6 +79,7 @@ export async function readDashboardPreviewCache(apiBaseUrl: string): Promise<Das
 
 export async function writeDashboardPreviewCache(params: {
   apiBaseUrl: string;
+  viewerKey: string;
   snapshot: DashboardSnapshot;
   health: DashboardHealth | null;
   savedAt: string;
@@ -82,6 +88,7 @@ export async function writeDashboardPreviewCache(params: {
     version: DASHBOARD_PREVIEW_CACHE_VERSION,
     savedAt: params.savedAt,
     apiBaseUrl: params.apiBaseUrl,
+    viewerKey: params.viewerKey,
     snapshot: params.snapshot,
     health: params.health,
   };

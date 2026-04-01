@@ -1,6 +1,10 @@
 import type { DashboardHealth, DashboardHistoryPoint, ProviderIssue } from '@/lib/dashboard-api';
 import type { AppLanguage } from '@/lib/language';
 
+function getLocale(language: AppLanguage): string {
+  return language === 'es' ? 'es-ES' : 'en-US';
+}
+
 const BUCKET_LABELS: Record<AppLanguage, Record<string, string>> = {
   en: {
     risk_on: 'Equities',
@@ -164,8 +168,8 @@ export function formatFreshnessLocalized(
 
 export function formatProviderName(providerKey: string): string {
   const providerMap: Record<string, string> = {
-    alpha_vantage: 'Alpha Vantage',
-    twelve_data: 'Twelve Data',
+    alpha_vantage: 'Restricted market feed',
+    twelve_data: 'Restricted market feed',
     fred: 'FRED',
     ecb: 'ECB',
     world_bank: 'World Bank',
@@ -287,6 +291,61 @@ export function formatProviderIssueMessageLocalized(
 
 export function localizeBriefText(text: string, language: AppLanguage = 'en'): string {
   return BRIEF_TEXT_MAP[language][text] ?? text;
+}
+
+export function formatLocalizedDateTime(
+  timestamp: string | null | undefined,
+  language: AppLanguage = 'en',
+): string {
+  if (!timestamp) {
+    return '--';
+  }
+
+  const parsed = new Date(timestamp);
+  if (Number.isNaN(parsed.getTime())) {
+    return '--';
+  }
+
+  return new Intl.DateTimeFormat(getLocale(language), {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  }).format(parsed);
+}
+
+export function formatLocalizedDate(
+  timestamp: string | null | undefined,
+  language: AppLanguage = 'en',
+): string {
+  if (!timestamp) {
+    return '--';
+  }
+
+  const parsed = new Date(timestamp);
+  if (Number.isNaN(parsed.getTime())) {
+    return '--';
+  }
+
+  return new Intl.DateTimeFormat(getLocale(language), {
+    dateStyle: 'medium',
+  }).format(parsed);
+}
+
+export function formatLocalizedTime(
+  timestamp: string | null | undefined,
+  language: AppLanguage = 'en',
+): string {
+  if (!timestamp) {
+    return '--';
+  }
+
+  const parsed = new Date(timestamp);
+  if (Number.isNaN(parsed.getTime())) {
+    return '--';
+  }
+
+  return new Intl.DateTimeFormat(getLocale(language), {
+    timeStyle: 'short',
+  }).format(parsed);
 }
 
 export function hasRestrictedCommercialProvider(providerKeys: string[]): boolean {

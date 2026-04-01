@@ -4,8 +4,8 @@ import { shellPalette } from '@/constants/shell';
 import { useLanguage, type AppLanguage } from '@/lib/language';
 
 const OPTIONS: { key: AppLanguage; label: string; flag: string }[] = [
-  { key: 'en', label: 'English', flag: '🇺🇸' },
-  { key: 'es', label: 'Español', flag: '🇪🇸' },
+  { key: 'en', label: 'English', flag: '\u{1F1FA}\u{1F1F8}' },
+  { key: 'es', label: 'Espa\u00f1ol', flag: '\u{1F1EA}\u{1F1F8}' },
 ];
 
 export function LanguageSwitcher() {
@@ -21,7 +21,9 @@ export function LanguageSwitcher() {
             key={option.key}
             accessibilityRole="button"
             accessibilityLabel={option.label}
+            accessibilityState={{ selected: active }}
             onPress={() => setLanguage(option.key)}
+            testID={`language-${option.key}`}
             style={({ pressed }) => [
               styles.option,
               active && styles.optionActive,

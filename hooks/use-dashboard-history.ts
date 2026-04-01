@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { useAuth } from '@/hooks/use-auth';
 import { getApiBaseUrl } from '@/lib/api-config';
 import {
   fetchDashboardHistory,
@@ -34,7 +35,9 @@ const INITIAL_STATE: Omit<InternalHistoryState, 'apiBaseUrl'> = {
 };
 
 export function useDashboardHistory(initialWindow: HistoryWindow): DashboardHistoryState {
+  const auth = useAuth();
   const apiBaseUrl = getApiBaseUrl();
+  const authToken = auth.providerMode === 'backend' ? auth.accessToken : null;
   const [selectedWindow, setSelectedWindow] = useState<HistoryWindow>(initialWindow);
   const [state, setState] = useState<InternalHistoryState>({
     ...INITIAL_STATE,
@@ -56,7 +59,7 @@ export function useDashboardHistory(initialWindow: HistoryWindow): DashboardHist
     }));
 
     try {
-      const history = await fetchDashboardHistory(selectedWindow, apiBaseUrl);
+      const history = await fetchDashboardHistory(selectedWindow, apiBaseUrl, authToken);
       setState({
         status: 'ready',
         history,
@@ -74,7 +77,7 @@ export function useDashboardHistory(initialWindow: HistoryWindow): DashboardHist
         apiBaseUrl,
       }));
     }
-  }, [apiBaseUrl, selectedWindow]);
+  }, [apiBaseUrl, authToken, selectedWindow]);
 
   useEffect(() => {
     void loadHistory('initial');

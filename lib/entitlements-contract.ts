@@ -48,6 +48,8 @@ export type BackendPaywallResponse = {
   legal_links: {
     terms_url: string;
     privacy_url: string;
+    data_sources_url: string;
+    financial_disclaimer_url: string;
   };
 };
 

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 
+import { useAuth } from '@/hooks/use-auth';
 import { getApiBaseUrl } from '@/lib/api-config';
 import { fetchDashboardHealth, fetchDashboardSnapshot, type DashboardHealth, type DashboardSnapshot } from '@/lib/dashboard-api';
 import { readDashboardPreviewCache, writeDashboardPreviewCache } from '@/lib/dashboard-cache';
@@ -33,7 +34,15 @@ const INITIAL_STATE: Omit<DashboardPreviewState, 'apiBaseUrl'> = {
 };
 
 export function useDashboardPreview(): DashboardPreviewState & { refresh: () => void } {
+  const auth = useAuth();
   const apiBaseUrl = getApiBaseUrl();
+  const authToken = auth.providerMode === 'backend' ? auth.accessToken : null;
+  const viewerKey =
+    auth.providerMode === 'backend'
+      ? auth.userEmail
+        ? `backend:${auth.userEmail.toLowerCase()}`
+        : 'backend:anonymous'
+      : 'mock:local';
   const [state, setState] = useState<DashboardPreviewState>({
     ...INITIAL_STATE,
     apiBaseUrl,
@@ -50,7 +59,7 @@ export function useDashboardPreview(): DashboardPreviewState & { refresh: () => 
     }));
 
     const [snapshotResult, healthResult] = await Promise.allSettled([
-      fetchDashboardSnapshot(apiBaseUrl),
+      fetchDashboardSnapshot(apiBaseUrl, authToken),
       fetchDashboardHealth(apiBaseUrl),
     ]);
 
@@ -60,6 +69,7 @@ export function useDashboardPreview(): DashboardPreviewState & { refresh: () => 
 
       void writeDashboardPreviewCache({
         apiBaseUrl,
+        viewerKey,
         snapshot: snapshotResult.value,
         health,
         savedAt,
@@ -95,10 +105,10 @@ export function useDashboardPreview(): DashboardPreviewState & { refresh: () => 
       lastRefreshFailed: true,
       apiBaseUrl,
     }));
-  }, [apiBaseUrl]);
+  }, [apiBaseUrl, authToken, viewerKey]);
 
   const hydrateFromCacheAndLoad = useCallback(async () => {
-    const cachedRecord = await readDashboardPreviewCache(apiBaseUrl);
+    const cachedRecord = await readDashboardPreviewCache(apiBaseUrl, viewerKey);
 
     if (cachedRecord) {
       setState((previousState) => ({
@@ -117,7 +127,7 @@ export function useDashboardPreview(): DashboardPreviewState & { refresh: () => 
     }
 
     await loadPreview('initial');
-  }, [apiBaseUrl, loadPreview]);
+  }, [apiBaseUrl, loadPreview, viewerKey]);
 
   useEffect(() => {
     void hydrateFromCacheAndLoad();
