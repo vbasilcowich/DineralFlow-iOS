@@ -1,5 +1,13 @@
 # Changelog
 
+## beta 0.04.6
+
+- rebuilt the top utility controls as a floating glass dock integrated into the home screen instead of a brittle inline header row
+- fixed missing account and premium icons on web by adding the new symbol mappings and turning the controls into labeled actions
+- prepared Google and Apple sign-in UX on login and register screens, with honest setup-required states when provider credentials are still missing
+- added Expo social-auth dependencies, Apple Sign In capability wiring, and rollout documentation for enabling real provider credentials later
+- expanded auth client coverage with social-login tests while keeping the app green on `typecheck`, `lint`, and `jest`
+
 ## beta 0.04.4
 
 - redesigned the app shell around a friendlier public-data-first market brief while preserving the darker analysis core

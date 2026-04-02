@@ -194,7 +194,7 @@ export function formatRiskText(risk: string): string {
     return 'Some leading signals are pulling in opposite directions.';
   }
   if (risk.includes('dispersion')) {
-    return 'Internal dispersion is reducing conviction inside the leading basket.';
+    return 'Internal dispersion is reducing conviction inside the leading theme.';
   }
   if (risk.includes('cripto')) {
     return 'Crypto beta is improving, but it is not steering the overall reading yet.';
@@ -210,7 +210,7 @@ export function formatRiskTextLocalized(risk: string, language: AppLanguage = 'e
   const translated = {
     'Coverage is partial for this stored snapshot.': 'La cobertura es parcial para este snapshot guardado.',
     'Some leading signals are pulling in opposite directions.': 'Algunas senales principales tiran en direcciones opuestas.',
-    'Internal dispersion is reducing conviction inside the leading basket.': 'La dispersion interna reduce la conviccion dentro de la cesta lider.',
+    'Internal dispersion is reducing conviction inside the leading theme.': 'La dispersion interna reduce la conviccion dentro del tema dominante.',
     'Crypto beta is improving, but it is not steering the overall reading yet.': 'La beta cripto mejora, pero todavia no dirige la lectura general.',
   } as const;
   return translated[english as keyof typeof translated] ?? english;

@@ -8,11 +8,23 @@ const OPTIONS: { key: AppLanguage; label: string; flag: string }[] = [
   { key: 'es', label: 'Espa\u00f1ol', flag: '\u{1F1EA}\u{1F1F8}' },
 ];
 
-export function LanguageSwitcher() {
+export function LanguageSwitcher({
+  stretch = false,
+  variant = 'panel',
+}: {
+  stretch?: boolean;
+  variant?: 'panel' | 'dock';
+} = {}) {
   const { language, setLanguage } = useLanguage();
+  const isDock = variant === 'dock';
 
   return (
-    <View style={styles.container}>
+    <View
+      style={[
+        styles.container,
+        stretch && styles.containerStretch,
+        isDock && styles.containerDock,
+      ]}>
       {OPTIONS.map((option) => {
         const active = option.key === language;
 
@@ -26,6 +38,8 @@ export function LanguageSwitcher() {
             testID={`language-${option.key}`}
             style={({ pressed }) => [
               styles.option,
+              stretch && styles.optionStretch,
+              isDock && styles.optionDock,
               active && styles.optionActive,
               pressed && styles.optionPressed,
             ]}>
@@ -41,6 +55,7 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'center',
     gap: 8,
     borderRadius: 18,
     backgroundColor: shellPalette.panel,
@@ -48,12 +63,31 @@ const styles = StyleSheet.create({
     borderColor: shellPalette.border,
     padding: 4,
   },
+  containerStretch: {
+    width: '100%',
+  },
+  containerDock: {
+    backgroundColor: 'transparent',
+    borderWidth: 0,
+    padding: 0,
+    gap: 6,
+  },
   option: {
     alignItems: 'center',
     justifyContent: 'center',
     width: 42,
     height: 42,
     borderRadius: 14,
+  },
+  optionStretch: {
+    flex: 1,
+    width: undefined,
+  },
+  optionDock: {
+    minHeight: 40,
+    borderWidth: 1,
+    borderColor: 'rgba(27,39,61,0.08)',
+    backgroundColor: 'rgba(255,255,255,0.42)',
   },
   optionActive: {
     backgroundColor: shellPalette.accentSoft,

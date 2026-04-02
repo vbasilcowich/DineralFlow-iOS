@@ -3,6 +3,7 @@ import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import { LanguageSwitcher } from '@/components/language-switcher';
+import { SocialAuthButtons } from '@/components/social-auth-buttons';
 import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
@@ -80,6 +81,10 @@ export default function RegisterScreen() {
     router.replace((redirectParam ?? '/auth/login') as never);
   };
 
+  const handleSocialAuthenticated = () => {
+    router.replace((redirectParam ?? '/auth') as never);
+  };
+
   return (
     <ScrollView
       style={styles.screen}
@@ -90,6 +95,8 @@ export default function RegisterScreen() {
       </View>
 
       <SectionCard eyebrow={copy.eyebrow} title={copy.title} body={copy.body} variant="contrast">
+        <SocialAuthButtons mode="register" onAuthenticated={handleSocialAuthenticated} />
+
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>{copy.email}</Text>
           <TextInput

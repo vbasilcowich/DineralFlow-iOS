@@ -27,6 +27,16 @@ export type AuthCredentials = {
   password: string;
 };
 
+export type SocialAuthProvider = 'google' | 'apple';
+
+export type SocialAuthCredentials = {
+  provider: SocialAuthProvider;
+  idToken: string;
+  email?: string | null;
+  displayName?: string | null;
+  authorizationCode?: string | null;
+};
+
 export type AuthVerificationRequest = {
   token: string;
 };

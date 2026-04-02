@@ -21,12 +21,14 @@ import {
   resolveAuthProviderMode,
   type AuthCredentials,
   type AuthProviderMode,
+  type SocialAuthCredentials,
   type AuthSession,
   type AuthState,
   type AuthVerificationRequest,
 } from '@/lib/auth';
 import {
   fetchCurrentAccount,
+  loginWithSocialAccount,
   loginAccount,
   logoutAccount,
   registerAccount,
@@ -50,6 +52,7 @@ type AuthContextValue = AuthState & {
   verificationRequired: boolean;
   clearError: () => void;
   login: (credentials: AuthCredentials) => Promise<AuthActionResult>;
+  loginWithSocial: (credentials: SocialAuthCredentials) => Promise<AuthActionResult>;
   register: (credentials: AuthCredentials) => Promise<AuthActionResult>;
   verifyEmail: (request: AuthVerificationRequest) => Promise<AuthActionResult>;
   logout: () => Promise<AuthActionResult>;
@@ -286,6 +289,66 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [applySession, providerMode]);
 
+  const loginWithSocial = useCallback(async (credentials: SocialAuthCredentials) => {
+    setState((previous) => ({
+      ...previous,
+      status: 'loading',
+      lastError: null,
+      lastAction: `Signing in with ${credentials.provider}`,
+    }));
+
+    try {
+      if (providerMode === 'backend') {
+        const response = await loginWithSocialAccount(credentials.provider, {
+          idToken: credentials.idToken,
+          email: credentials.email ?? null,
+          displayName: credentials.displayName ?? null,
+          authorizationCode: credentials.authorizationCode ?? null,
+        });
+        const session: AuthSession = {
+          provider: 'backend',
+          accessToken: response.token,
+          refreshToken: response.refreshToken,
+          user: {
+            id: response.user.id,
+            email: response.user.email,
+            emailVerified: response.emailVerified,
+            displayName: response.user.displayName,
+            createdAt: response.user.createdAt,
+            updatedAt: response.user.updatedAt,
+          },
+          verificationStatus: response.verificationStatus,
+          updatedAt: new Date().toISOString(),
+        };
+
+        return await applySession(session, {
+          pendingVerificationEmail: null,
+          pendingVerificationToken: null,
+          pendingVerificationUrl: null,
+          lastAction: `Signed in with ${credentials.provider}`,
+        });
+      }
+
+      const session = createMockAuthSession(
+        credentials.email ?? `${credentials.provider}@example.com`,
+        true,
+      );
+      return await applySession(session, {
+        pendingVerificationEmail: null,
+        lastAction: `Signed in locally with ${credentials.provider}`,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'auth_social_failed';
+      setState((previous) => ({
+        ...previous,
+        status: 'signed_out',
+        lastError: message,
+        lastAction: `Social sign-in failed for ${credentials.provider}`,
+      }));
+      return buildActionResult(null);
+    }
+  }, [applySession, providerMode]);
+
   const register = useCallback(async (credentials: AuthCredentials) => {
     setState((previous) => ({
       ...previous,
@@ -477,12 +540,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setState((previous) => ({ ...previous, lastError: null }));
       },
       login,
+      loginWithSocial,
       register,
       verifyEmail,
       logout,
       refreshSession,
     };
-  }, [login, logout, providerMode, register, refreshSession, state, verifyEmail]);
+  }, [login, loginWithSocial, logout, providerMode, register, refreshSession, state, verifyEmail]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

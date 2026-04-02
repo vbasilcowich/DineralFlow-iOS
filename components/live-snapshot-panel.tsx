@@ -1,7 +1,6 @@
 import { ActivityIndicator, StyleSheet, Text, View } from 'react-native';
 
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
-import { getApiBaseUrlNote } from '@/lib/api-config';
 import {
   formatBucketLabel,
   formatConfidence,
@@ -43,7 +42,7 @@ export function LiveSnapshotPanel({
   onOpenConfidence,
 }: LiveSnapshotPanelProps) {
   const { language } = useLanguage();
-  const { snapshot, health } = state;
+  const { snapshot } = state;
   const showingCachedSnapshot = state.snapshotOrigin === 'cached';
   const isPremium = accessTier === 'premium';
   const topFlowLimit = maxTopFlows;
@@ -61,8 +60,8 @@ export function LiveSnapshotPanel({
   const copy = language === 'es'
     ? {
         eyebrow: 'Analisis de mercado',
-        title: 'Ultimo resumen de mercado',
-        body: 'Este es el bloque editorial central de la app. Se genera a partir del ultimo snapshot guardado por el backend y deja clara la postura de las fuentes en lugar de fingir tiempo real.',
+        title: 'Lo mas importante ahora mismo',
+        body: 'Una lectura clara del mercado construida con el ultimo snapshot guardado. Resume que fuerza domina, cuanto convence y que frena la lectura.',
         refresh: 'Actualizar snapshot',
         unavailable: 'Snapshot no disponible',
         technicalDetail: 'Detalle tecnico',
@@ -86,13 +85,13 @@ export function LiveSnapshotPanel({
         snapshotConfidence: 'Confianza del snapshot',
         coverage: 'Cobertura',
         freshness: 'Frescura',
-        leadingBasket: 'Cesta lider',
+        leadingBasket: 'Tema dominante',
         publicData: 'Postura de datos publicos',
         publicDataBody: 'Este lanzamiento se esta orientando alrededor de snapshots programados y fuentes mas faciles de usar comercialmente, como FRED y EIA, en lugar de feeds de mercado de pago.',
-        scoreboard: 'Panel de flujos detras del brief',
+        scoreboard: 'Temas que estan moviendo la lectura',
         noDrivers: 'No se publicaron etiquetas de impulsores en esta fila.',
         noFlows: 'El backend no devolvio filas de flujo para esta lectura.',
-        flowsHint: 'Gratis se mantiene conciso y muestra solo el flujo mas fuerte publicado. Premium desbloquea una lista mas amplia y los drilldowns profundos planificados para la fase 1.',
+        flowsHint: 'Gratis se mantiene conciso y muestra solo la parte principal. Premium desbloquea mas temas, mas contexto y el desglose profundo planificado para la fase 1.',
         frictions: 'Fricciones y matices',
         premiumRisks: 'Premium mantiene visible el resto de fricciones publicadas alrededor de este mismo snapshot.',
         diagnostics: 'Diagnosticos del backend',
@@ -106,8 +105,8 @@ export function LiveSnapshotPanel({
       }
     : {
         eyebrow: 'Market analysis',
-        title: 'Latest market brief',
-        body: 'This is the central editorial block of the app. It is generated from the latest stored backend snapshot and keeps the source posture explicit instead of pretending to be real-time.',
+        title: 'What matters most right now',
+        body: 'A clear market read built from the latest stored snapshot. It shows which force is leading, how confident the read is, and what is holding it back.',
         refresh: 'Refresh snapshot',
         unavailable: 'Snapshot unavailable',
         technicalDetail: 'Technical detail',
@@ -131,13 +130,13 @@ export function LiveSnapshotPanel({
         snapshotConfidence: 'Snapshot confidence',
         coverage: 'Coverage',
         freshness: 'Freshness',
-        leadingBasket: 'Leading basket',
+        leadingBasket: 'Leading theme',
         publicData: 'Public-data posture',
         publicDataBody: 'This launch path is being shaped around scheduled stored snapshots and sources that are easier to use commercially, such as FRED and EIA, rather than paid market feeds.',
-        scoreboard: 'Flow board behind the brief',
+        scoreboard: 'Themes shaping the read',
         noDrivers: 'No driver labels were published in this row.',
         noFlows: 'No flow rows were returned by the backend.',
-        flowsHint: 'Free stays concise and shows the strongest published flow first. Premium unlocks a wider flow list and the deeper basket drilldowns planned for phase 1.',
+        flowsHint: 'Free stays concise and shows the core read first. Premium unlocks more themes, more context, and the deeper drilldowns planned for phase 1.',
         frictions: 'Friction and caveats',
         premiumRisks: 'Premium keeps the rest of the published friction list visible around the same snapshot.',
         diagnostics: 'Backend diagnostics',
@@ -172,12 +171,6 @@ export function LiveSnapshotPanel({
           />
         ) : null}
       </View>
-
-      <View style={styles.connectionRow}>
-        <Text style={styles.connectionLabel}>{health?.app_name ?? 'Local backend'}</Text>
-        <Text style={styles.connectionValue}>{state.apiBaseUrl}</Text>
-      </View>
-      <Text style={styles.connectionNote}>{getApiBaseUrlNote()}</Text>
 
       {state.status === 'loading' && !snapshot ? (
         <View style={styles.loadingCard}>
@@ -489,29 +482,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: 10,
-  },
-  connectionRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    gap: 12,
-  },
-  connectionLabel: {
-    color: shellPalette.contrastText,
-    fontSize: 15,
-    fontWeight: '800',
-  },
-  connectionValue: {
-    flex: 1,
-    textAlign: 'right',
-    color: 'rgba(245,248,251,0.72)',
-    fontSize: 13,
-    lineHeight: 18,
-  },
-  connectionNote: {
-    color: 'rgba(245,248,251,0.56)',
-    fontSize: 12.5,
-    lineHeight: 18,
   },
   loadingCard: {
     borderRadius: 20,

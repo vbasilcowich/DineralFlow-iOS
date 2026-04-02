@@ -74,6 +74,15 @@ export type VerifyEmailResult = {
   verified: boolean;
 };
 
+export type SocialAuthProvider = 'google' | 'apple';
+
+export type SocialLoginPayload = {
+  idToken: string;
+  email?: string | null;
+  displayName?: string | null;
+  authorizationCode?: string | null;
+};
+
 function cleanText(value: string | null | undefined, fallback = ''): string {
   if (!value) {
     return fallback;
@@ -236,6 +245,30 @@ export async function registerAccount(
     developmentVerificationToken: cleanText(response.development_verification_token, '') || null,
     developmentVerificationUrl: cleanText(response.development_verification_url, '') || null,
   };
+}
+
+export async function loginWithSocialAccount(
+  provider: SocialAuthProvider,
+  payload: SocialLoginPayload,
+  apiBaseUrl = getAuthApiBaseUrl(),
+): Promise<AuthSessionRecord> {
+  const response = await fetchJson<BackendAuthSessionResponse>(
+    `/api/mobile/auth/social/${provider}`,
+    {
+      method: 'POST',
+      body: {
+        id_token: payload.idToken,
+        email: payload.email ?? null,
+        display_name: payload.displayName ?? null,
+        authorization_code: payload.authorizationCode ?? null,
+      },
+    },
+    apiBaseUrl,
+  );
+
+  return normalizeAuthSession(response, {
+    fallbackEmail: payload.email ?? `${provider}@example.com`,
+  });
 }
 
 export async function verifyEmailAccount(

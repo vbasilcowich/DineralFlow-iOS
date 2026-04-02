@@ -1,5 +1,6 @@
 import {
   fetchCurrentAccount,
+  loginWithSocialAccount,
   loginAccount,
   logoutAccount,
   normalizeAuthUser,
@@ -103,6 +104,7 @@ describe('auth api helpers', () => {
     await loginAccount({ email: 'test@example.com', password: 'secret' });
     const registerResult = await registerAccount({ email: 'test@example.com', password: 'secret' });
     await verifyEmailAccount({ token: 'dev-token' });
+    await loginWithSocialAccount('google', { idToken: 'google-token', email: 'test@example.com' });
     await logoutAccount('access-token');
 
     expect(registerResult.developmentVerificationToken).toBe('dev-token');
@@ -117,6 +119,10 @@ describe('auth api helpers', () => {
     );
     expect(fetchSpy).toHaveBeenCalledWith(
       expect.stringContaining('/api/mobile/auth/verify-email'),
+      expect.objectContaining({ method: 'POST' }),
+    );
+    expect(fetchSpy).toHaveBeenCalledWith(
+      expect.stringContaining('/api/mobile/auth/social/google'),
       expect.objectContaining({ method: 'POST' }),
     );
     expect(fetchSpy).toHaveBeenCalledWith(

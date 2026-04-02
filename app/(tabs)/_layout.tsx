@@ -44,15 +44,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <IconSymbol size={24} name="chart.bar.fill" color={color} />,
         }}
       />
-      <Tabs.Screen
-        name="roadmap"
-        options={{
-          title: language === 'es' ? 'Plan' : 'Roadmap',
-          tabBarIcon: ({ color }) => (
-            <IconSymbol size={24} name="list.bullet.rectangle.fill" color={color} />
-          ),
-        }}
-      />
     </Tabs>
   );
 }

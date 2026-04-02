@@ -58,8 +58,8 @@ export function HistoryAccessPanel({
         pointsDetail: 'Numero de snapshots del backend devueltos para esta ventana.',
         averageConfidence: 'Confianza media',
         confidenceDetail: 'Confianza media a lo largo de la ventana cargada.',
-        latestLeader: 'Lider mas reciente',
-        latestLeaderDetail: 'Cesta lider en el ultimo punto de esta ventana.',
+        latestLeader: 'Tema mas reciente',
+        latestLeaderDetail: 'Tema dominante en el ultimo punto de esta ventana.',
         noHistory: 'El backend todavia no devolvio suficientes puntos historicos reales para esta ventana.',
         upsell: 'Premium desbloquea las ventanas de 30 y 90 dias mientras la capa gratis se mantiene anclada a 7 dias.',
       }
@@ -77,8 +77,8 @@ export function HistoryAccessPanel({
         pointsDetail: 'Number of backend snapshots currently returned for this window.',
         averageConfidence: 'Average confidence',
         confidenceDetail: 'Average confidence across the loaded history window.',
-        latestLeader: 'Latest leader',
-        latestLeaderDetail: 'Leading basket in the latest point of this window.',
+        latestLeader: 'Latest theme',
+        latestLeaderDetail: 'Leading theme in the latest point of this window.',
         noHistory: 'The backend did not return enough real history points for this window yet.',
         upsell: 'Premium unlocks the 30-day and 90-day windows while the free tier stays anchored to 7 days.',
       };
@@ -87,7 +87,8 @@ export function HistoryAccessPanel({
     <SectionCard
       eyebrow={copy.eyebrow}
       title={copy.title}
-      body={copy.body}>
+      body={copy.body}
+      variant="contrast">
       <View style={styles.windowRow}>
         {HISTORY_WINDOWS.map((window) => {
           const locked = !allowedHistoryWindows.includes(window);
@@ -212,15 +213,15 @@ const styles = StyleSheet.create({
     minWidth: 86,
     borderRadius: 18,
     borderWidth: 1,
-    borderColor: shellPalette.border,
-    backgroundColor: shellPalette.panelMuted,
+    borderColor: 'rgba(245,248,251,0.10)',
+    backgroundColor: shellPalette.contrastSoft,
     paddingHorizontal: 14,
     paddingVertical: 12,
     gap: 2,
   },
   windowPillActive: {
     borderColor: 'rgba(62,157,120,0.22)',
-    backgroundColor: shellPalette.accentSoft,
+    backgroundColor: 'rgba(62,157,120,0.18)',
   },
   windowPillLocked: {
     opacity: 0.72,
@@ -229,15 +230,15 @@ const styles = StyleSheet.create({
     opacity: 0.88,
   },
   windowLabel: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 14,
     fontWeight: '800',
   },
   windowLabelActive: {
-    color: shellPalette.accentStrong,
+    color: '#A7F0CF',
   },
   windowLock: {
-    color: shellPalette.textMuted,
+    color: 'rgba(245,248,251,0.58)',
     fontSize: 11,
     fontWeight: '700',
     textTransform: 'uppercase',
@@ -254,16 +255,16 @@ const styles = StyleSheet.create({
     gap: 12,
   },
   helperText: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.72)',
     fontSize: 14,
     lineHeight: 20,
   },
   list: {
     gap: 2,
-    backgroundColor: shellPalette.panelMuted,
+    backgroundColor: shellPalette.contrastSoft,
     borderRadius: 20,
     borderWidth: 1,
-    borderColor: shellPalette.border,
+    borderColor: 'rgba(245,248,251,0.08)',
     paddingHorizontal: 14,
   },
   listRow: {
@@ -272,19 +273,19 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     paddingVertical: 12,
     borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: shellPalette.border,
+    borderTopColor: 'rgba(245,248,251,0.10)',
   },
   listCopy: {
     flex: 1,
     gap: 4,
   },
   listTitle: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 15,
     fontWeight: '800',
   },
   listBody: {
-    color: shellPalette.textSoft,
+    color: 'rgba(245,248,251,0.72)',
     fontSize: 13.5,
     lineHeight: 19,
   },
@@ -293,12 +294,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   listValue: {
-    color: shellPalette.text,
+    color: shellPalette.contrastText,
     fontSize: 15,
     fontWeight: '800',
   },
   listDate: {
-    color: shellPalette.textMuted,
+    color: 'rgba(245,248,251,0.54)',
     fontSize: 12.5,
     fontWeight: '700',
   },

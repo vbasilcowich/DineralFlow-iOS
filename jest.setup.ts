@@ -5,6 +5,35 @@ jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
 
+jest.mock('expo-web-browser', () => ({
+  maybeCompleteAuthSession: jest.fn(),
+}));
+
+jest.mock('expo-auth-session/providers/google', () => ({
+  useAuthRequest: jest.fn(() => [
+    { type: 'request' },
+    null,
+    jest.fn(async () => ({ type: 'dismiss' })),
+  ]),
+}));
+
+jest.mock('expo-apple-authentication', () => ({
+  isAvailableAsync: jest.fn(async () => true),
+  signInAsync: jest.fn(async () => ({
+    identityToken: 'apple-id-token',
+    authorizationCode: 'apple-auth-code',
+    email: 'apple@example.com',
+    fullName: {
+      givenName: 'Apple',
+      familyName: 'User',
+    },
+  })),
+  AppleAuthenticationScope: {
+    EMAIL: 'EMAIL',
+    FULL_NAME: 'FULL_NAME',
+  },
+}));
+
 jest.mock('react-native-purchases', () => {
   const mockPurchases = {
     setLogLevel: jest.fn(async () => undefined),

@@ -74,7 +74,7 @@ export const HOME_PREMIUM_FEATURES: EntitlementFeature[] = [
 export const HISTORY_WINDOWS: HistoryWindow[] = ['7d', '30d', '90d'];
 
 export const PREMIUM_FEATURE_COPY = [
-  'Full basket drilldowns and deeper detail',
+  'Full theme drilldowns and deeper detail',
   'Longer history windows',
   'Watchlists and alerting later in phase 1+',
   'Always ad-free',
@@ -93,12 +93,12 @@ const FEATURE_DESCRIPTORS: Record<EntitlementFeature, FeatureDescriptor> = {
     ctaLabel: 'Review premium depth',
   },
   selected_baskets: {
-    title: 'Selected baskets',
+    title: 'Selected themes',
     freeValue: 'Included in free',
-    freeDetail: 'Free keeps the key baskets visible so the product remains understandable on first open.',
+    freeDetail: 'Free keeps the key themes visible so the product remains understandable on first open.',
     premiumValue: 'Included in premium',
-    premiumDetail: 'Premium keeps the same core baskets and adds richer follow-through around them.',
-    paywallTitle: 'Selected baskets stay visible in free.',
+    premiumDetail: 'Premium keeps the same core themes and adds richer follow-through around them.',
+    paywallTitle: 'Selected themes stay visible in free.',
     paywallBody: 'Premium should monetize deeper interpretation, not hide the basic product outline.',
     freeState: 'preview',
     ctaLabel: 'Review premium depth',
@@ -126,12 +126,12 @@ const FEATURE_DESCRIPTORS: Record<EntitlementFeature, FeatureDescriptor> = {
     ctaLabel: 'Review premium depth',
   },
   deeper_drilldowns: {
-    title: 'Basket drilldowns',
+    title: 'Theme drilldowns',
     freeValue: 'Preview only',
-    freeDetail: 'Free can preview that deeper basket evidence exists, but the full diagnostic layer stays premium.',
-    premiumValue: 'Full basket drilldowns',
-    premiumDetail: 'Premium unlocks fuller driver, friction, and evidence context around each basket.',
-    paywallTitle: 'Premium unlocks the deeper basket drilldowns.',
+    freeDetail: 'Free can preview that deeper theme evidence exists, but the full diagnostic layer stays premium.',
+    premiumValue: 'Full theme drilldowns',
+    premiumDetail: 'Premium unlocks fuller driver, friction, and evidence context around each theme.',
+    paywallTitle: 'Premium unlocks the deeper theme drilldowns.',
     paywallBody: 'The free tier should show that deeper evidence exists. Premium unlocks the full drilldown layer, not just a teaser headline.',
     freeState: 'preview',
     ctaLabel: 'Unlock drilldowns',

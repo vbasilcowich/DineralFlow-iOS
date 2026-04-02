@@ -42,12 +42,12 @@ export default function PaywallScreen() {
 
     const translations: Record<string, string> = {
       'Premium unlocks the deeper workflow.': 'Premium desbloquea el flujo mas profundo.',
-      'Free keeps the short recent arc. Premium unlocks longer history windows, deeper basket drilldowns, and later alerts.':
-        'La capa gratis mantiene visible el tramo corto reciente. Premium desbloquea mas historico, drilldowns de cestas y futuras alertas.',
+      'Free keeps the short recent arc. Premium unlocks longer history windows, deeper theme drilldowns, and later alerts.':
+        'La capa gratis mantiene visible el tramo corto reciente. Premium desbloquea mas historico, desglose por temas y futuras alertas.',
       'Premium is already active in this build.':
         'Premium ya esta activo en este build.',
       '30 and 90-day windows': 'Ventanas de 30 y 90 dias',
-      'Deeper basket drilldowns': 'Drilldowns de cestas mas profundos',
+      'Deeper theme drilldowns': 'Desglose por temas mas profundo',
       'Alerts later in phase 1': 'Alertas mas adelante en la fase 1',
       'Ad-free experience': 'Experiencia sin anuncios',
       'Monthly': 'Mensual',
@@ -57,7 +57,7 @@ export default function PaywallScreen() {
       'Lower-friction long-term access once the premium workflow is stable.':
         'Acceso de largo plazo con menos friccion cuando el flujo premium sea estable.',
       'Longer history': 'Mas historico',
-      'Basket drilldowns': 'Drilldowns de cestas',
+      'Theme drilldowns': 'Desglose por temas',
       'Alerts': 'Alertas',
     };
 

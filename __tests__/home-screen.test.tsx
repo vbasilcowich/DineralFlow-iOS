@@ -102,7 +102,7 @@ describe('HomeScreen feature gating', () => {
     expect(view.getByLabelText('English')).toBeTruthy();
     expect(view.getByLabelText('Español')).toBeTruthy();
     expect(screen.getByText('Longer history')).toBeTruthy();
-    expect(screen.getByText('Basket drilldowns')).toBeTruthy();
+    expect(screen.getByText('Theme drilldowns')).toBeTruthy();
     expect(screen.getByText('Alerts')).toBeTruthy();
     expect(screen.getByText('Unlock longer history')).toBeTruthy();
     expect(screen.getByText('Unlock drilldowns')).toBeTruthy();
@@ -147,7 +147,7 @@ describe('HomeScreen feature gating', () => {
     render(<HomeScreen />);
 
     expect(screen.getByText('30 and 90-day windows')).toBeTruthy();
-    expect(screen.getByText('Full basket drilldowns')).toBeTruthy();
+    expect(screen.getByText('Full theme drilldowns')).toBeTruthy();
     expect(screen.getByText('Alert layer enabled later')).toBeTruthy();
     expect(screen.queryByText('Unlock alerts')).toBeNull();
     expect(screen.getAllByText('Review premium access')).toHaveLength(3);

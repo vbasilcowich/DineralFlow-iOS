@@ -212,12 +212,12 @@ export function createLocalPaywallFallback(
         : descriptor?.paywallTitle ?? 'Premium unlocks the deeper workflow.',
     body:
       descriptor?.paywallBody ??
-      'Free keeps the core snapshot readable. Premium unlocks longer history, deeper drilldowns, and later alerts without pretending the app is a real-time terminal.',
+      'Free keeps the core snapshot readable. Premium unlocks longer history, deeper theme drilldowns, and later alerts without pretending the app is a real-time terminal.',
     highlights: descriptor
       ? [descriptor.premiumValue, descriptor.premiumDetail]
-      : [
+        : [
           '30 and 90-day windows',
-          'Deeper basket drilldowns',
+          'Deeper theme drilldowns',
           'Alerts later in phase 1',
           'Ad-free experience',
         ],

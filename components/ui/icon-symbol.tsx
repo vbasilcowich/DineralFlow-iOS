@@ -23,6 +23,8 @@ const MAPPING = {
   'arrow.right': 'arrow-forward',
   'folder.fill': 'folder',
   'arrow.clockwise': 'refresh',
+  'person.fill': 'person',
+  'crown.fill': 'workspace-premium',
 } as IconMapping;
 
 /**

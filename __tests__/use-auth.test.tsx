@@ -42,6 +42,17 @@ function AuthProbe() {
         register
       </Text>
       <Text
+        testID="login-social"
+        onPress={() =>
+          void auth.loginWithSocial({
+            provider: 'google',
+            idToken: 'social-token',
+            email: 'social@example.com',
+          })
+        }>
+        login-social
+      </Text>
+      <Text
         testID="verify"
         onPress={() =>
           void auth.verifyEmail({
@@ -129,5 +140,27 @@ describe('AuthProvider', () => {
       const stored = await AsyncStorage.getItem('dineralflow:auth:session');
       expect(stored).not.toBeNull();
     });
+  });
+
+  it('supports the social sign-in helper in local mode', async () => {
+    render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => {
+      expect(screen.getByTestId('status').props.children).toBe('signed_out');
+    });
+
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('login-social'));
+    });
+
+    await waitFor(() => {
+      expect(screen.getByTestId('status').props.children).toBe('signed_in');
+    });
+
+    expect(screen.getByTestId('email').props.children).toBe('social@example.com');
   });
 });

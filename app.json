@@ -9,6 +9,7 @@
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "ios": {
+      "usesAppleSignIn": true,
       "bundleIdentifier": "com.dineralflow.ios",
       "supportsTablet": true
     },
@@ -27,6 +28,7 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "expo-apple-authentication",
       "expo-dev-client",
       "expo-router",
       [
