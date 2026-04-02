@@ -1,5 +1,12 @@
 # Changelog
 
+## beta 0.04.7
+
+- extracted the floating utility dock into a shared app-level component so `Home`, `Auth`, `Premium`, `Confidence`, and legal screens all expose the same navigation layer
+- added a dedicated `Home` shortcut to the dock and removed duplicated top-of-screen language controls from the secondary routes
+- redesigned the premium plan cards with stronger contrast and more saturated purchase CTAs so the paywall reads like a buying surface instead of a muted settings panel
+- updated screen spacing and tests to reflect the new global dock behavior while keeping `typecheck`, `lint`, and `jest` green
+
 ## beta 0.04.6
 
 - rebuilt the top utility controls as a floating glass dock integrated into the home screen instead of a brittle inline header row

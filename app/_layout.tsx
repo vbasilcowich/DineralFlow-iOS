@@ -3,6 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
+import { FloatingAppDock } from '@/components/floating-app-dock';
 import { AuthProvider } from '@/hooks/use-auth';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { LanguageProvider } from '@/lib/language';
@@ -28,6 +29,7 @@ export default function RootLayout() {
               <Stack.Screen name="paywall" options={{ presentation: 'modal', title: 'Premium' }} />
               <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
             </Stack>
+            <FloatingAppDock />
             <StatusBar style="auto" />
           </MonetizationProvider>
         </AuthProvider>

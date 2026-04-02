@@ -1,12 +1,11 @@
-import { Pressable, RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { RefreshControl, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
+import { APP_DOCK_TAB_SPACER } from '@/components/floating-app-dock';
 import { FeatureGateCard } from '@/components/feature-gate-card';
 import { HistoryAccessPanel } from '@/components/history-access-panel';
-import { LanguageSwitcher } from '@/components/language-switcher';
 import { LiveSnapshotPanel } from '@/components/live-snapshot-panel';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
-import { IconSymbol } from '@/components/ui/icon-symbol';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
 import { useDashboardPreview } from '@/hooks/use-dashboard-preview';
@@ -405,38 +404,6 @@ export default function HomeScreen() {
           onOpenPaywall={openPaywallForFeature}
         />
       </ScrollView>
-
-      <View pointerEvents="box-none" style={styles.dockLayer}>
-        <View style={styles.dockWrap}>
-          <View style={styles.dockBar}>
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={language === 'es' ? 'Cuenta' : 'Account'}
-              accessibilityHint={language === 'es' ? 'Abrir cuenta y sesion' : 'Open account and sign-in area'}
-              onPress={() => router.push('/auth' as never)}
-              testID="home-account-button"
-              style={({ pressed }) => [styles.dockItemButton, styles.userButton, pressed && styles.iconButtonPressed]}>
-              <IconSymbol name="person.fill" size={18} color={shellPalette.text} />
-              <Text style={styles.headerChipLabel}>{copy.account}</Text>
-            </Pressable>
-
-            <View style={styles.dockItemStatic}>
-              <LanguageSwitcher stretch variant="dock" />
-            </View>
-
-            <Pressable
-              accessibilityRole="button"
-              accessibilityLabel={language === 'es' ? 'Premium' : 'Premium'}
-              accessibilityHint={language === 'es' ? 'Abrir paywall y gestion premium' : 'Open paywall and premium access'}
-              onPress={() => router.push('/paywall')}
-              testID="home-paywall-button"
-              style={({ pressed }) => [styles.dockItemButton, styles.premiumButton, pressed && styles.iconButtonPressed]}>
-              <IconSymbol name="crown.fill" size={18} color={shellPalette.contrastText} />
-              <Text style={[styles.headerChipLabel, styles.headerChipLabelPremium]}>{copy.premium}</Text>
-            </Pressable>
-          </View>
-        </View>
-      </View>
     </View>
   );
 }
@@ -455,71 +422,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 18,
     paddingTop: 18,
-    paddingBottom: 210,
+    paddingBottom: APP_DOCK_TAB_SPACER,
     gap: 18,
-  },
-  dockLayer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
-    bottom: 96,
-  },
-  dockWrap: {
-    width: '100%',
-    maxWidth: 480,
-    alignSelf: 'center',
-    paddingHorizontal: 18,
-  },
-  dockBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 10,
-    padding: 8,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.62)',
-    backgroundColor: 'rgba(248,250,252,0.74)',
-    shadowColor: 'rgba(27,39,61,0.18)',
-    shadowOpacity: 1,
-    shadowRadius: 20,
-    shadowOffset: { width: 0, height: 8 },
-    elevation: 3,
-  },
-  dockItemButton: {
-    flex: 1,
-    minHeight: 48,
-    paddingHorizontal: 14,
-    paddingVertical: 10,
-    borderRadius: 18,
-    borderWidth: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-  },
-  dockItemStatic: {
-    flex: 1,
-  },
-  userButton: {
-    backgroundColor: shellPalette.panel,
-    borderColor: shellPalette.border,
-  },
-  premiumButton: {
-    backgroundColor: shellPalette.contrast,
-    borderColor: 'rgba(245,248,251,0.10)',
-  },
-  headerChipLabel: {
-    color: shellPalette.text,
-    fontSize: 13.5,
-    fontWeight: '800',
-  },
-  headerChipLabelPremium: {
-    color: shellPalette.contrastText,
-  },
-  iconButtonPressed: {
-    opacity: 0.84,
-    transform: [{ scale: 0.98 }],
   },
   summaryCard: {
     borderRadius: 28,

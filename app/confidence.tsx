@@ -1,7 +1,7 @@
 import { ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { APP_DOCK_SCREEN_SPACER } from '@/components/floating-app-dock';
 import { ActionButton, MetricCard, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
@@ -122,10 +122,6 @@ export default function ConfidenceScreen() {
       style={styles.screen}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
-      <View style={styles.topRow}>
-        <LanguageSwitcher />
-      </View>
-
       <SectionCard
         eyebrow={copy.methodology}
         title={copy.title}
@@ -312,12 +308,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 18,
     paddingTop: 22,
-    paddingBottom: 36,
+    paddingBottom: APP_DOCK_SCREEN_SPACER,
     gap: 18,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
   heroMeta: {
     flexDirection: 'row',

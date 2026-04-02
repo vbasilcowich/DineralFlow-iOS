@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Linking, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { APP_DOCK_SCREEN_SPACER } from '@/components/floating-app-dock';
 import { ActionButton, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
@@ -101,6 +101,11 @@ export default function PaywallScreen() {
         plansBodyBlocked: 'El inicio de billing esta desactivado hasta que se configure el proveedor actual.',
         activate: 'Activar',
         start: 'Empezar',
+        planNoteNative: 'Necesita un build nativo de iPhone o iPad para iniciar el checkout real.',
+        planNoteSignIn: 'Primero necesitamos tu cuenta para vincular el acceso premium al backend.',
+        planNoteMock: 'Esta ruta sigue siendo de desarrollo, pero ya modela el alta premium.',
+        planNoteReady: 'Listo para iniciar el flujo premium configurado para esta build.',
+        bestValue: 'Mejor valor',
         legalLinks: 'Enlaces legales',
         legalLinksTitle: 'Usar los destinos legales del backend desde el contrato actual del paywall',
         legalLinksBody: 'El copy del paywall y los enlaces legales deben venir del mismo contrato para que la capa comercial siga siendo auditable.',
@@ -152,6 +157,11 @@ export default function PaywallScreen() {
         plansBodyBlocked: 'Billing start is disabled until the current provider is configured.',
         activate: 'Activate',
         start: 'Start',
+        planNoteNative: 'A native iPhone or iPad build is still required before real checkout can start.',
+        planNoteSignIn: 'We need your account first so premium access can be linked to the backend.',
+        planNoteMock: 'This path is still for development, but it already models the premium upgrade flow.',
+        planNoteReady: 'Ready to start the premium flow configured for this build.',
+        bestValue: 'Best value',
         legalLinks: 'Legal links',
         legalLinksTitle: 'Use the backend legal destinations from the current paywall contract',
         legalLinksBody: 'The paywall copy and legal links should come from the same contract so the commercial layer stays auditable.',
@@ -208,9 +218,6 @@ export default function PaywallScreen() {
       style={styles.screen}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
-      <View style={styles.switcherRow}>
-        <LanguageSwitcher />
-      </View>
       <View style={styles.hero}>
         <Pill label={copy.premium} tone={isPremium ? 'success' : 'accent'} />
         <Pill
@@ -347,12 +354,35 @@ export default function PaywallScreen() {
             : monetization.requiresNativeBillingBuild
               ? copy.plansBodyNativeBlocked
               : copy.plansBodyBlocked
-        }>
+        }
+        variant="contrast">
         <View style={styles.planGrid}>
-          {PAYWALL_PLAN_COPY.map((plan) => (
-            <View key={plan.key} style={styles.planCard}>
-              <Text style={styles.planTitle}>{localizePaywallText(plan.title)}</Text>
-              <Text style={styles.planDetail}>{localizePaywallText(plan.detail)}</Text>
+          {PAYWALL_PLAN_COPY.map((plan) => {
+            const isAnnual = plan.key === 'annual';
+            const planActionNote = requiresAuthenticatedBackend
+              ? copy.planNoteSignIn
+              : monetization.requiresNativeBillingBuild && usingRevenueCatBilling
+                ? copy.planNoteNative
+                : usingMockBilling
+                  ? copy.planNoteMock
+                  : copy.planNoteReady;
+
+            return (
+            <View
+              key={plan.key}
+              style={[
+                styles.planCard,
+                isAnnual ? styles.planCardAnnual : styles.planCardMonthly,
+              ]}>
+              <View style={styles.planHeader}>
+                <Text style={[styles.planTitle, isAnnual && styles.planTitleAnnual]}>
+                  {localizePaywallText(plan.title)}
+                </Text>
+                {isAnnual ? <Pill label={copy.bestValue} tone="info" /> : null}
+              </View>
+              <Text style={[styles.planDetail, isAnnual && styles.planDetailAnnual]}>
+                {localizePaywallText(plan.detail)}
+              </Text>
               <ActionButton
                 label={
                   usingMockBilling
@@ -360,7 +390,7 @@ export default function PaywallScreen() {
                     : `${copy.start} ${localizePaywallText(plan.title)}`
                 }
                 icon="arrow.right"
-                variant="primary"
+                variant={isAnnual ? 'purchaseAlt' : 'purchase'}
                 testID={`paywall-plan-${plan.key}`}
                 disabled={
                   (!monetization.canStartPurchase && !requiresAuthenticatedBackend) ||
@@ -375,8 +405,11 @@ export default function PaywallScreen() {
                   void monetization.purchasePremium(plan.key);
                 }}
               />
+              <Text style={[styles.planNote, isAnnual && styles.planNoteAnnual]}>
+                {planActionNote}
+              </Text>
             </View>
-          ))}
+          )})}
         </View>
       </SectionCard>
 
@@ -475,12 +508,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 18,
     paddingTop: 22,
-    paddingBottom: 36,
+    paddingBottom: APP_DOCK_SCREEN_SPACER,
     gap: 18,
-  },
-  switcherRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
   hero: {
     borderRadius: 28,
@@ -539,22 +568,48 @@ const styles = StyleSheet.create({
     flexBasis: '48%',
     flexGrow: 1,
     minWidth: 150,
-    borderRadius: 22,
-    backgroundColor: shellPalette.panelMuted,
+    borderRadius: 24,
     borderWidth: 1,
-    borderColor: shellPalette.border,
-    padding: 16,
+    padding: 18,
+    gap: 12,
+  },
+  planCardMonthly: {
+    backgroundColor: '#ECF8F2',
+    borderColor: 'rgba(45,126,97,0.28)',
+  },
+  planCardAnnual: {
+    backgroundColor: '#223146',
+    borderColor: 'rgba(90,136,229,0.34)',
+  },
+  planHeader: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    justifyContent: 'space-between',
     gap: 10,
   },
   planTitle: {
     color: shellPalette.text,
-    fontSize: 15,
+    fontSize: 18,
     fontWeight: '800',
+  },
+  planTitleAnnual: {
+    color: shellPalette.contrastText,
   },
   planDetail: {
     color: shellPalette.textSoft,
-    fontSize: 13,
+    fontSize: 13.5,
+    lineHeight: 20,
+  },
+  planDetailAnnual: {
+    color: 'rgba(245,248,251,0.80)',
+  },
+  planNote: {
+    color: shellPalette.textSoft,
+    fontSize: 12.5,
     lineHeight: 18,
+  },
+  planNoteAnnual: {
+    color: 'rgba(245,248,251,0.68)',
   },
   buttonRow: {
     flexDirection: 'row',

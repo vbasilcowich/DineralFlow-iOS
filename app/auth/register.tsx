@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { APP_DOCK_SCREEN_SPACER } from '@/components/floating-app-dock';
 import { SocialAuthButtons } from '@/components/social-auth-buttons';
 import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
@@ -90,10 +90,6 @@ export default function RegisterScreen() {
       style={styles.screen}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
-      <View style={styles.topRow}>
-        <LanguageSwitcher />
-      </View>
-
       <SectionCard eyebrow={copy.eyebrow} title={copy.title} body={copy.body} variant="contrast">
         <SocialAuthButtons mode="register" onAuthenticated={handleSocialAuthenticated} />
 
@@ -190,12 +186,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 18,
     paddingTop: 22,
-    paddingBottom: 36,
+    paddingBottom: APP_DOCK_SCREEN_SPACER,
     gap: 18,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
   fieldGroup: {
     gap: 8,

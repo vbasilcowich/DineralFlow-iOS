@@ -160,7 +160,7 @@ type ActionButtonProps = {
   label: string;
   icon: 'arrow.right' | 'folder.fill' | 'arrow.clockwise';
   onPress: () => void;
-  variant?: 'primary' | 'secondary';
+  variant?: 'primary' | 'secondary' | 'purchase' | 'purchaseAlt';
   disabled?: boolean;
   accessibilityLabel?: string;
   accessibilityHint?: string;
@@ -178,6 +178,16 @@ export function ActionButton({
   testID,
 }: ActionButtonProps) {
   const isPrimary = variant === 'primary';
+  const isPurchase = variant === 'purchase';
+  const isPurchaseAlt = variant === 'purchaseAlt';
+  const usesContrastLabel = isPrimary || isPurchase || isPurchaseAlt;
+  const iconColor = disabled
+    ? usesContrastLabel
+      ? shellPalette.contrastText
+      : shellPalette.textMuted
+    : usesContrastLabel
+      ? shellPalette.contrastText
+      : shellPalette.text;
 
   return (
     <Pressable
@@ -191,19 +201,24 @@ export function ActionButton({
       style={({ pressed }) => [
         styles.actionButton,
         isPrimary ? styles.actionPrimary : styles.actionSecondary,
+        isPurchase && styles.actionPurchase,
+        isPurchaseAlt && styles.actionPurchaseAlt,
         disabled && styles.actionDisabled,
+        disabled && isPurchase && styles.actionDisabledPurchase,
+        disabled && isPurchaseAlt && styles.actionDisabledPurchaseAlt,
         pressed && !disabled && styles.actionPressed,
       ]}>
       <IconSymbol
         name={icon}
         size={18}
-        color={disabled ? shellPalette.textMuted : isPrimary ? shellPalette.contrastText : shellPalette.text}
+        color={iconColor}
       />
       <Text
         style={[
           styles.actionLabel,
-          isPrimary && styles.actionLabelPrimary,
+          usesContrastLabel && styles.actionLabelPrimary,
           disabled && styles.actionLabelDisabled,
+          disabled && usesContrastLabel && styles.actionLabelDisabledContrast,
         ]}>
         {label}
       </Text>
@@ -371,12 +386,30 @@ const styles = StyleSheet.create({
     backgroundColor: shellPalette.panelMuted,
     borderColor: shellPalette.border,
   },
+  actionPurchase: {
+    backgroundColor: '#27B874',
+    borderColor: '#209A62',
+  },
+  actionPurchaseAlt: {
+    backgroundColor: '#4C78FF',
+    borderColor: '#3D63D8',
+  },
   actionPressed: {
     opacity: 0.86,
     transform: [{ scale: 0.98 }],
   },
   actionDisabled: {
     opacity: 0.52,
+  },
+  actionDisabledPurchase: {
+    opacity: 1,
+    backgroundColor: '#7FD5AF',
+    borderColor: '#68BF9A',
+  },
+  actionDisabledPurchaseAlt: {
+    opacity: 1,
+    backgroundColor: '#8CA8FF',
+    borderColor: '#758FD8',
   },
   actionLabel: {
     color: shellPalette.text,
@@ -388,6 +421,9 @@ const styles = StyleSheet.create({
   },
   actionLabelDisabled: {
     color: shellPalette.textMuted,
+  },
+  actionLabelDisabledContrast: {
+    color: shellPalette.contrastText,
   },
   phaseRow: {
     flexDirection: 'row',

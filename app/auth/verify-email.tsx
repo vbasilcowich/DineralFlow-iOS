@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ScrollView, StyleSheet, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 
-import { LanguageSwitcher } from '@/components/language-switcher';
+import { APP_DOCK_SCREEN_SPACER } from '@/components/floating-app-dock';
 import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
@@ -81,10 +81,6 @@ export default function VerifyEmailScreen() {
       style={styles.screen}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}>
-      <View style={styles.topRow}>
-        <LanguageSwitcher />
-      </View>
-
       <SectionCard eyebrow={copy.eyebrow} title={copy.title} body={copy.body} variant="contrast">
         <View style={styles.fieldGroup}>
           <Text style={styles.label}>{copy.email}</Text>
@@ -171,12 +167,8 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     paddingHorizontal: 18,
     paddingTop: 22,
-    paddingBottom: 36,
+    paddingBottom: APP_DOCK_SCREEN_SPACER,
     gap: 18,
-  },
-  topRow: {
-    flexDirection: 'row',
-    justifyContent: 'flex-end',
   },
   fieldGroup: {
     gap: 8,
