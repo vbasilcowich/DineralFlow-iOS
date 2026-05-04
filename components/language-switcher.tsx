@@ -70,7 +70,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'transparent',
     borderWidth: 0,
     padding: 0,
-    gap: 6,
+    gap: 5,
   },
   option: {
     alignItems: 'center',
@@ -84,10 +84,11 @@ const styles = StyleSheet.create({
     width: undefined,
   },
   optionDock: {
-    minHeight: 40,
+    height: 52,
     borderWidth: 1,
     borderColor: 'rgba(27,39,61,0.08)',
     backgroundColor: 'rgba(255,255,255,0.42)',
+    borderRadius: 16,
   },
   optionActive: {
     backgroundColor: shellPalette.accentSoft,

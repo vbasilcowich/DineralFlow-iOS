@@ -223,12 +223,22 @@ export default function HomeScreen() {
         }>
         <View style={styles.summaryCard}>
         <View style={styles.summaryTopRow}>
-          <Text style={styles.summaryLabel}>{copy.latestBrief}</Text>
+          <Text
+            numberOfLines={2}
+            adjustsFontSizeToFit
+            minimumFontScale={0.78}
+            style={styles.summaryLabel}>
+            {copy.latestBrief}
+          </Text>
           <Pill label={isPremium ? copy.premium : copy.free} tone={isPremium ? 'success' : 'soft'} />
         </View>
 
         <Text style={styles.summarySmallLabel}>{copy.overallConfidence}</Text>
-        <Text style={styles.summaryValue}>
+        <Text
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.72}
+          style={styles.summaryValue}>
           {snapshot ? formatConfidence(snapshot.global_confidence) : '--'}
         </Text>
 
@@ -241,7 +251,11 @@ export default function HomeScreen() {
         <View style={styles.summaryFlowStack}>
           <View style={[styles.summaryFlowCard, styles.summaryFlowPrimary]}>
             <Text style={styles.summaryTrendLabel}>{copy.primaryFlow}</Text>
-            <Text style={styles.summaryFlowTitle}>
+            <Text
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
+              style={styles.summaryFlowTitle}>
               {primaryFlow ? formatBucketLabel(primaryFlow.bucket_key, language) : copy.noLeader}
             </Text>
             <View style={styles.summaryFlowMeta}>
@@ -256,7 +270,11 @@ export default function HomeScreen() {
 
           <View style={styles.summaryFlowCard}>
             <Text style={styles.summaryTrendLabel}>{copy.secondaryFlow}</Text>
-            <Text style={styles.summaryFlowTitleSecondary}>
+            <Text
+              numberOfLines={2}
+              adjustsFontSizeToFit
+              minimumFontScale={0.76}
+              style={styles.summaryFlowTitleSecondary}>
               {secondaryFlow
                 ? formatBucketLabel(secondaryFlow.bucket_key, language)
                 : copy.noSecondary}
@@ -446,6 +464,8 @@ const styles = StyleSheet.create({
     color: 'rgba(245,248,251,0.78)',
     fontSize: 14,
     fontWeight: '700',
+    flex: 1,
+    minWidth: 0,
   },
   summarySmallLabel: {
     color: 'rgba(245,248,251,0.68)',
@@ -459,7 +479,7 @@ const styles = StyleSheet.create({
     fontSize: 42,
     lineHeight: 46,
     fontWeight: '900',
-    letterSpacing: -0.8,
+    letterSpacing: 0,
   },
   summaryBody: {
     color: 'rgba(245,248,251,0.84)',
@@ -489,7 +509,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 26,
     fontWeight: '900',
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
   summaryFlowTitleSecondary: {
     color: shellPalette.contrastText,

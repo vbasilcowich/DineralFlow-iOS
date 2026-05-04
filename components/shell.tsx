@@ -54,7 +54,13 @@ export function Pill({ label, tone = 'soft' }: PillProps) {
           borderColor: toneStyle.borderColor,
         },
       ]}>
-      <Text style={[styles.pillText, { color: toneStyle.textColor }]}>{label}</Text>
+      <Text
+        numberOfLines={1}
+        adjustsFontSizeToFit
+        minimumFontScale={0.76}
+        style={[styles.pillText, { color: toneStyle.textColor }]}>
+        {label}
+      </Text>
     </View>
   );
 }
@@ -83,6 +89,9 @@ export function MetricCard({
         tone === 'contrast' && styles.metricCard_contrast,
       ]}>
       <Text
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.78}
         style={[
           styles.metricLabel,
           (isAccent || isContrast) && styles.metricLabelStrong,
@@ -90,7 +99,13 @@ export function MetricCard({
         ]}>
         {label}
       </Text>
-      <Text style={[styles.metricValue, isContrast && styles.metricValueContrast]}>{value}</Text>
+      <Text
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.62}
+        style={[styles.metricValue, isContrast && styles.metricValueContrast]}>
+        {value}
+      </Text>
       <Text
         style={[
           styles.metricDetail,
@@ -137,6 +152,9 @@ export function SectionCard({
         {eyebrow}
       </Text>
       <Text
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.82}
         style={[
           styles.sectionTitle,
           (isAccent || isContrast) && styles.sectionTitleContrast,
@@ -214,6 +232,9 @@ export function ActionButton({
         color={iconColor}
       />
       <Text
+        numberOfLines={2}
+        adjustsFontSizeToFit
+        minimumFontScale={0.76}
         style={[
           styles.actionLabel,
           usesContrastLabel && styles.actionLabelPrimary,
@@ -255,16 +276,19 @@ const styles = StyleSheet.create({
     paddingVertical: 7,
     borderWidth: 1,
     alignSelf: 'flex-start',
+    maxWidth: '100%',
   },
   pillText: {
     fontSize: 11.5,
     fontWeight: '800',
     letterSpacing: 0.65,
     textTransform: 'uppercase',
+    flexShrink: 1,
   },
   metricCard: {
     flex: 1,
-    minWidth: 100,
+    flexBasis: '45%',
+    minWidth: 150,
     padding: 16,
     borderRadius: 18,
     backgroundColor: shellPalette.panelMuted,
@@ -296,8 +320,10 @@ const styles = StyleSheet.create({
   metricValue: {
     color: shellPalette.text,
     fontSize: 22,
+    lineHeight: 26,
     fontWeight: '900',
-    letterSpacing: -0.3,
+    letterSpacing: 0,
+    flexShrink: 1,
   },
   metricValueContrast: {
     color: shellPalette.contrastText,
@@ -352,7 +378,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     lineHeight: 33,
     fontWeight: '900',
-    letterSpacing: -0.5,
+    letterSpacing: 0,
   },
   sectionTitleContrast: {
     color: shellPalette.contrastText,
@@ -377,6 +403,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
+    maxWidth: '100%',
   },
   actionPrimary: {
     backgroundColor: shellPalette.accent,
@@ -415,6 +442,7 @@ const styles = StyleSheet.create({
     color: shellPalette.text,
     fontSize: 14,
     fontWeight: '800',
+    flexShrink: 1,
   },
   actionLabelPrimary: {
     color: shellPalette.contrastText,

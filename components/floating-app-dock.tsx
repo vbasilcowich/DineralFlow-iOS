@@ -1,5 +1,6 @@
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 import { usePathname, useRouter } from 'expo-router';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { LanguageSwitcher } from '@/components/language-switcher';
 import { IconSymbol } from '@/components/ui/icon-symbol';
@@ -7,8 +8,8 @@ import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/lib/language';
 
-export const APP_DOCK_TAB_SPACER = 220;
-export const APP_DOCK_SCREEN_SPACER = 150;
+export const APP_DOCK_TAB_SPACER = 28;
+export const APP_DOCK_SCREEN_SPACER = 28;
 
 function isDockVisible(pathname: string) {
   return true;
@@ -19,6 +20,7 @@ export function FloatingAppDock() {
   const router = useRouter();
   const auth = useAuth();
   const { language } = useLanguage();
+  const insets = useSafeAreaInsets();
 
   if (!isDockVisible(pathname)) {
     return null;
@@ -27,7 +29,7 @@ export function FloatingAppDock() {
   const onHome = pathname === '/' || pathname === '/index';
   const onPremium = pathname.startsWith('/paywall');
   const onAccount = pathname.startsWith('/auth');
-  const bottomOffset = onHome ? 96 : 24;
+  const bottomPadding = Math.max(insets.bottom, 8);
 
   const copy =
     language === 'es'
@@ -49,7 +51,7 @@ export function FloatingAppDock() {
         };
 
   return (
-    <View style={[styles.layer, styles.layerPointerEvents, { bottom: bottomOffset }]}>
+    <View style={[styles.layer, styles.layerPointerEvents, { paddingBottom: bottomPadding }]}>
       <View style={styles.wrap}>
         <View style={styles.bar}>
           <Pressable
@@ -69,7 +71,13 @@ export function FloatingAppDock() {
               size={18}
               color={onHome ? shellPalette.accentStrong : shellPalette.text}
             />
-            <Text style={[styles.itemLabel, onHome && styles.itemLabelActive]}>{copy.home}</Text>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.74}
+              style={[styles.itemLabel, onHome && styles.itemLabelActive]}>
+              {copy.home}
+            </Text>
           </Pressable>
 
           <Pressable
@@ -89,7 +97,13 @@ export function FloatingAppDock() {
               size={18}
               color={onAccount ? shellPalette.accentStrong : shellPalette.text}
             />
-            <Text style={[styles.itemLabel, onAccount && styles.itemLabelActive]}>{copy.account}</Text>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.74}
+              style={[styles.itemLabel, onAccount && styles.itemLabelActive]}>
+              {copy.account}
+            </Text>
           </Pressable>
 
           <View style={styles.languageSlot}>
@@ -109,7 +123,13 @@ export function FloatingAppDock() {
               pressed && styles.itemPressed,
             ]}>
             <IconSymbol name="crown.fill" size={18} color={shellPalette.contrastText} />
-            <Text style={styles.premiumLabel}>{copy.premium}</Text>
+            <Text
+              numberOfLines={1}
+              adjustsFontSizeToFit
+              minimumFontScale={0.72}
+              style={styles.premiumLabel}>
+              {copy.premium}
+            </Text>
           </Pressable>
         </View>
       </View>
@@ -119,9 +139,8 @@ export function FloatingAppDock() {
 
 const styles = StyleSheet.create({
   layer: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
+    backgroundColor: shellPalette.bg,
+    paddingTop: 8,
   },
   layerPointerEvents: {
     pointerEvents: 'box-none',
@@ -130,17 +149,17 @@ const styles = StyleSheet.create({
     width: '100%',
     maxWidth: 480,
     alignSelf: 'center',
-    paddingHorizontal: 18,
+    paddingHorizontal: 14,
   },
   bar: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 10,
-    padding: 8,
-    borderRadius: 26,
+    gap: 6,
+    padding: 6,
+    borderRadius: 22,
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.62)',
-    backgroundColor: 'rgba(248,250,252,0.76)',
+    backgroundColor: '#F8FAFC',
     shadowColor: 'rgba(27,39,61,0.18)',
     shadowOpacity: 1,
     shadowRadius: 22,
@@ -149,15 +168,16 @@ const styles = StyleSheet.create({
   },
   itemButton: {
     flex: 1,
-    minHeight: 48,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    borderRadius: 18,
+    minWidth: 0,
+    minHeight: 52,
+    paddingHorizontal: 6,
+    paddingVertical: 7,
+    borderRadius: 16,
     borderWidth: 1,
-    flexDirection: 'row',
+    flexDirection: 'column',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 4,
   },
   lightButton: {
     backgroundColor: shellPalette.panel,
@@ -175,20 +195,27 @@ const styles = StyleSheet.create({
     backgroundColor: '#24344A',
   },
   languageSlot: {
-    flex: 1,
+    width: 82,
+    flexShrink: 0,
   },
   itemLabel: {
     color: shellPalette.text,
-    fontSize: 13.5,
+    width: '100%',
+    fontSize: 11,
+    lineHeight: 12,
     fontWeight: '800',
+    textAlign: 'center',
   },
   itemLabelActive: {
     color: shellPalette.accentStrong,
   },
   premiumLabel: {
     color: shellPalette.contrastText,
-    fontSize: 13.5,
+    width: '100%',
+    fontSize: 11,
+    lineHeight: 12,
     fontWeight: '800',
+    textAlign: 'center',
   },
   itemPressed: {
     opacity: 0.88,
