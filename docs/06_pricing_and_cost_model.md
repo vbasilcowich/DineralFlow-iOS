@@ -45,21 +45,24 @@ For planning, split costs into:
 
 ## 3. Hosting and backend
 
-### Railway
+### Cloudflare Workers + D1
 
-- `Hobby`: `5 USD` minimum usage
-- `Pro`: `20 USD` minimum usage
-- public API, healthchecks, domains, secrets, cron jobs, private networking
+- `Workers Free`: `0 USD / month` within limits
+- `D1 Free`: `0 USD / month` within limits
+- `Workers Paid`: first upgrade around `5 USD / month`
+- public HTTPS, secrets, cron triggers, D1 database, and zero local hosting
 
-### Vercel
+### Fly.io + Neon Free fallback
 
-- `Hobby`: personal non-commercial use only
-- `Pro`: `20 USD / month + usage`
+- `Fly.io` small always-on machines can start around `3-6 USD / month`
+- `Neon Free` can cover early Postgres usage with limits
+- useful if we must deploy the existing FastAPI backend instead of the Worker backend
 
 ## Practical recommendation
 
-- for the iOS product backend, use `Railway Pro` first
-- keep `Vercel Pro` optional for the web frontend only
+- start with `Cloudflare Workers Free + D1 Free`
+- upgrade to `Workers Paid` before moving to a heavier PaaS
+- keep Railway/Render/Supabase Pro as later convenience options, not the first spend
 
 ## 4. Market data costs
 
@@ -127,7 +130,7 @@ The expensive part is commercial market data with external display rights.
 ## Stage A: prototype / internal pilot
 
 - Apple Developer Program: `~8.25 USD / month` if annualized
-- Railway Pro: `20 USD / month`
+- Cloudflare Workers/D1: `0 USD / month` while within free limits
 - RevenueCat: `0 USD` if under threshold
 - Expo: `0 to 19 USD / month`
 - Market data: keep current test setup, but do not treat it as final commercial licensing
@@ -135,7 +138,7 @@ The expensive part is commercial market data with external display rights.
 ## Stage B: first paid release
 
 - Apple Developer Program: `99 USD / year`
-- Railway Pro: `20 USD / month`
+- Cloudflare Workers Paid if needed: around `5 USD / month`
 - RevenueCat: `0 USD` to low variable cost
 - Expo Starter optional: `19 USD / month`
 - Twelve Data commercial plan likely becomes the dominant cost
@@ -143,7 +146,7 @@ The expensive part is commercial market data with external display rights.
 ## Stage C: scaled paid product
 
 - Apple Developer Program
-- Railway Pro or higher
+- Cloudflare Workers Paid, Fly.io/Neon, Railway, or another managed backend depending on real usage
 - RevenueCat variable fee
 - Twelve Data commercial plan
 - observability and support tools
@@ -268,9 +271,11 @@ This is cheaper, safer, and easier to defend legally than claiming real-time int
 - RevenueCat pricing: https://www.revenuecat.com/pricing/
 - Expo pricing: https://expo.dev/pricing
 - Expo plans: https://docs.expo.dev/billing/plans/
+- Cloudflare Workers pricing: https://developers.cloudflare.com/workers/platform/pricing/
+- Cloudflare D1 pricing: https://developers.cloudflare.com/d1/platform/pricing/
+- Fly.io pricing: https://fly.io/docs/about/pricing/
+- Neon pricing: https://neon.com/pricing
 - Railway pricing: https://railway.com/pricing
-- Railway Public API: https://docs.railway.com/integrations/api
-- Vercel pricing: https://vercel.com/pricing
 - Twelve Data business pricing: https://twelvedata.com/pricing-business
 - Twelve Data terms: https://twelvedata.com/terms
 - ECB statistics reuse policy: https://www.ecb.europa.eu/stats/ecb_statistics/governance_and_quality_framework/html/usage_policy.en.html

@@ -13,7 +13,12 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest --runInBand",
-    "doctor": "npx expo-doctor"
+    "doctor": "npx expo-doctor",
+    "backend:cf:test": "npm --prefix backend-cloudflare test",
+    "backend:cf:dev": "npm --prefix backend-cloudflare run dev",
+    "backend:cf:deploy": "npm --prefix backend-cloudflare run deploy",
+    "backend:cf:migrate:local": "npm --prefix backend-cloudflare run db:migrate:local",
+    "backend:cf:migrate:remote": "npm --prefix backend-cloudflare run db:migrate:remote"
   },
   "dependencies": {
     "@expo/vector-icons": "^15.0.3",

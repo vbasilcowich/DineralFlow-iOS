@@ -1,5 +1,19 @@
 # Changelog
 
+## beta 0.04.9
+
+- deployed the Cloudflare Worker backend to production at `https://dineralflow-api.v-basilcowich.workers.dev` and applied D1 remote migrations
+- fixed `PUBLIC_BASE_URL` in the Worker environment so auth verification links resolve to the real deployed domain
+- introduced a lean instruction system with `.instructions.md` plus `docs/ai_lookup.md` to reduce prompt size, context load, and token consumption
+- updated backend, pricing, and setup documentation to prioritize the zero-cost deployment path and low-cost fallback path
+
+## beta 0.04.8
+
+- added a zero-cost Cloudflare Workers/D1 backend package with mobile-compatible snapshot, history, auth, entitlements, paywall, and RevenueCat webhook endpoints
+- added D1 migrations, scheduled snapshot refresh behavior, seed data, and contract tests for the Worker backend
+- documented the cheapest deployment path using Workers Free, D1 Free, Cron Triggers, and Resend Free, with Fly.io + Neon Free as the low-cost fallback
+- updated environment guidance so the iOS app can point at a deployed `workers.dev` API and switch auth into backend mode
+
 ## beta 0.04.7
 
 - extracted the floating utility dock into a shared app-level component so `Home`, `Auth`, `Premium`, `Confidence`, and legal screens all expose the same navigation layer

@@ -58,12 +58,17 @@ npm run lint
 npm run typecheck
 npm run test
 npm run doctor
+npm run backend:cf:test
 ```
 
-## Configuracion de API local
+## Configuracion de API y backend barato
 
 - por defecto la app usa `http://127.0.0.1:8000`
+- se incluye un backend Cloudflare Workers/D1 en [backend-cloudflare](backend-cloudflare)
+- la ruta de coste minimo usa Workers Free, D1 Free, Cron Triggers y Resend Free
+- tras desplegarlo, apunta la app a `https://dineralflow-api.<subdomain>.workers.dev`
 - para probarla en `Expo Go` sobre un iPhone, define `EXPO_PUBLIC_API_BASE_URL` con la IP LAN del backend, por ejemplo `http://192.168.1.20:8000`
+- para probar auth real contra backend, define `EXPO_PUBLIC_AUTH_PROVIDER=backend`
 - la home puede conservar el ultimo `snapshot` valido en cache local para mostrarlo si falla el refresco en vivo
 - la monetizacion de fase 1 usa `EXPO_PUBLIC_BILLING_PROVIDER=mock`
 - para el salto posterior a `RevenueCat`, la app ya reconoce:
@@ -76,6 +81,25 @@ npm run doctor
   - `EXPO_PUBLIC_REVENUECAT_ENTITLEMENT_ID=premium`
   - `EXPO_PUBLIC_REVENUECAT_OFFERING_ID=default`
 - se incluye una plantilla en [ .env.example](E:/VsCodeApps/DineralFlow-iOS/.env.example)
+
+## Backend Cloudflare
+
+```bash
+cd backend-cloudflare
+npm install
+npm run db:create
+# copia el database_id en wrangler.toml
+npm run db:migrate:remote
+npm run deploy
+```
+
+Configura secrets solo en Cloudflare, no en la app:
+
+```bash
+npx wrangler secret put JWT_SECRET
+npx wrangler secret put RESEND_API_KEY
+npx wrangler secret put REVENUECAT_WEBHOOK_SECRET
+```
 
 ## RevenueCat Test Store e iPad
 

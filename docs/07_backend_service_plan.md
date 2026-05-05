@@ -44,34 +44,36 @@ Use the iOS app as a client of the DineralFlow backend.
 
 ### Phase A
 
-- host the API on `Railway Pro`
-- host PostgreSQL on Railway as well
-- use cron jobs on Railway for refresh jobs
+- host the first public API on `Cloudflare Workers Free`
+- store mobile contract state in `Cloudflare D1 Free`
+- use Cloudflare Cron Triggers for scheduled snapshot refreshes
+- use `Resend Free` for low-volume verification email
 
 ### Phase B
 
-- keep the backend on Railway
-- if needed, keep the web frontend on Vercel
-- iOS and web both call the same backend
+- upgrade to `Cloudflare Workers Paid` only if the free limits become tight
+- fallback to `Fly.io + Neon Free` if the existing FastAPI backend must be deployed as-is
+- keep Railway Pro as a later convenience option, not the first spend
 
-## Why Railway first
+## Why Cloudflare first
 
-- it has a public API
-- it supports GitHub deployment
-- it supports cron jobs
-- it supports healthcheck endpoints
-- it is cheap enough for an early commercial stage
+- it can start at `0 USD/month`
+- Workers are public HTTPS by default
+- D1 covers the current lightweight contract state
+- Cron Triggers match the scheduled-snapshot product posture
+- the first paid step is small: Workers Paid around `5 USD/month`
+- the app reads stored snapshots instead of causing per-user vendor calls
 
 ## Minimum service map
 
 ### api
 
-- FastAPI app
+- Cloudflare Worker
 - public HTTPS endpoint
-- rate limits
-- auth
+- mobile auth endpoints
+- dashboard snapshot/history endpoints
 
-### postgres
+### d1
 
 - user and entitlement state
 - snapshots
@@ -81,7 +83,8 @@ Use the iOS app as a client of the DineralFlow backend.
 
 ### cron-refresh
 
-- pulls data from providers
+- initially refreshes stored derived snapshots without paid provider calls
+- later pulls data from providers when licensing is confirmed
 - updates normalized series
 - updates snapshots and cached derived views
 
@@ -96,16 +99,18 @@ Use the iOS app as a client of the DineralFlow backend.
 
 ## Minimum endpoints for iOS
 
-- `GET /v1/health`
-- `GET /v1/dashboard/snapshot`
-- `GET /v1/dashboard/history`
-- `GET /v1/assets/{assetKey}`
-- `GET /v1/me`
-- `GET /v1/entitlements`
-- `GET /v1/paywall`
-- `GET /v1/ads/config`
-- `GET /v1/feature-flags`
-- `POST /v1/webhooks/revenuecat`
+- `GET /health`
+- `GET /api/dashboard/snapshot`
+- `GET /api/dashboard/history?window=7d|30d|90d`
+- `POST /api/mobile/auth/register`
+- `POST /api/mobile/auth/login`
+- `POST /api/mobile/auth/verify-email`
+- `GET /api/mobile/auth/me`
+- `POST /api/mobile/auth/logout`
+- `GET /api/mobile/entitlements`
+- `POST /api/mobile/entitlements/refresh`
+- `GET /api/mobile/paywall`
+- `POST /api/mobile/webhooks/revenuecat`
 
 ## Recommended subscription flow
 
@@ -216,8 +221,12 @@ We should treat free vendor market data as prototyping material unless the exter
 
 ## Official sources
 
+- Cloudflare Workers pricing: https://developers.cloudflare.com/workers/platform/pricing/
+- Cloudflare D1 pricing: https://developers.cloudflare.com/d1/platform/pricing/
+- Fly.io pricing: https://fly.io/docs/about/pricing/
+- Neon pricing: https://neon.com/pricing
+- Resend pricing: https://resend.com/pricing
 - Railway pricing: https://railway.com/pricing
-- Railway Public API: https://docs.railway.com/integrations/api
 - Apple App Review Guidelines: https://developer.apple.com/app-store/review/guidelines/
 - RevenueCat pricing: https://www.revenuecat.com/pricing/
 - RevenueCat webhooks and platform docs: https://www.revenuecat.com/docs
