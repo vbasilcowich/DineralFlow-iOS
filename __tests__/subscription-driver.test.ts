@@ -97,7 +97,14 @@ describe('subscription driver', () => {
   });
 
   it('provides a free fallback state for bootstrapping', () => {
-    expect(createFallbackSubscriptionState()).toEqual(createDefaultEntitlements());
+    const fallback = createFallbackSubscriptionState();
+    const expected = createDefaultEntitlements();
+
+    expect(fallback).toEqual({
+      ...expected,
+      updatedAt: expect.any(String),
+    });
+    expect(Number.isNaN(new Date(fallback.updatedAt).getTime())).toBe(false);
   });
 
   it('uses RevenueCat purchases when the billing mode is ready on native', async () => {

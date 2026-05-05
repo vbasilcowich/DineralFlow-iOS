@@ -1,5 +1,13 @@
 # Changelog
 
+## beta 0.04.10
+
+- localized backend snapshot, paywall, monetization, auth, and technical status copy so the visible app follows the selected EN/ES language consistently
+- hardened button flows for legal links, social auth, and back navigation so missing URLs or provider failures show controlled UI feedback instead of raw errors
+- improved compact iOS text handling across premium cards, social buttons, plan titles, and touched analysis headings
+- added regression coverage for Cloudflare seed translations, status/error localization, and incomplete paywall legal-link contracts
+- validated Home, Premium, Account, Login, Register, and Confidence on iPhone 17 in EN/ES against the live Cloudflare backend
+
 ## beta 0.04.9
 
 - deployed the Cloudflare Worker backend to production at `https://dineralflow-api.v-basilcowich.workers.dev` and applied D1 remote migrations

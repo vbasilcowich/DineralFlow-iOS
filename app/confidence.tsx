@@ -18,6 +18,7 @@ import {
   localizeBriefText,
 } from '@/lib/dashboard-presenter';
 import { useLanguage } from '@/lib/language';
+import { backOrReplace } from '@/lib/router-safe';
 
 function ConfidenceBar({
   label,
@@ -63,19 +64,19 @@ export default function ConfidenceScreen() {
         signalAgreement: 'Acuerdo entre senales',
         signalAgreementDetail: 'Miramos si la tendencia principal y la secundaria apuntan a una historia parecida o si tiran en direcciones distintas.',
         coverage: 'Cobertura',
-        coverageDetail: 'Cuanta evidencia esperada ha conseguido cubrir el backend en este snapshot.',
+        coverageDetail: 'Cuanta evidencia esperada ha conseguido cubrir el backend en esta lectura.',
         freshness: 'Frescura',
         freshnessDetail: 'Cuanto tiempo ha pasado desde la ultima actualizacion guardada.',
         friction: 'Friccion',
         frictionDetail: 'Numero de alertas, riesgos o incidencias activas alrededor de la lectura actual.',
         currentRead: 'Lectura actual',
         currentReadTitle: 'Tendencia primaria y secundaria publicadas',
-        currentReadBody: 'Estas son las dos corrientes que mejor explican el snapshot actual. La tendencia primaria sigue siendo la mas destacada, pero ahora dejamos visible tambien la secundaria para que el mercado se vea menos binario.',
+        currentReadBody: 'Estas son las dos corrientes que mejor explican la lectura actual. La tendencia primaria sigue siendo la mas destacada, pero ahora dejamos visible tambien la secundaria para que el mercado se vea menos binario.',
         noPrimary: 'Todavia no hay una tendencia primaria publicada.',
         currentEvidence: 'Evidencia actual',
         currentEvidenceTitle: 'De donde sale la confianza de esta lectura',
         currentEvidenceBody: 'En gratis mostramos una vista previa metodologica y una parte de la evidencia real. Premium desbloquea mas prueba, mas conflictos y la capa detallada de analisis.',
-        sourceMode: 'Modo del snapshot',
+        sourceMode: 'Modo de lectura',
         premiumLocked: 'Detalle premium',
         premiumLockedTitle: 'El analisis profundo y las graficas viven aqui',
         premiumLockedBody: 'La capa premium debe abrir el desglose completo de confianza: mas evidencia, mas conflictos, mas historico y graficas dedicadas por tema.',
@@ -290,7 +291,7 @@ export default function ConfidenceScreen() {
           label={copy.backHome}
           icon="arrow.right"
           variant="secondary"
-          onPress={() => router.back()}
+          onPress={() => backOrReplace(router, '/')}
         />
       </View>
     </ScrollView>
@@ -348,7 +349,7 @@ const styles = StyleSheet.create({
     fontSize: 24,
     lineHeight: 28,
     fontWeight: '900',
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
   readTitleSecondary: {
     color: shellPalette.text,

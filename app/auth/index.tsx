@@ -7,6 +7,8 @@ import { ActionButton, Pill, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/lib/language';
+import { localizeErrorMessage } from '@/lib/localized-copy';
+import { backOrReplace } from '@/lib/router-safe';
 
 export default function AuthHubScreen() {
   const router = useRouter();
@@ -133,7 +135,7 @@ export default function AuthHubScreen() {
             <ActionButton
               label={copy.backHome}
               icon="arrow.right"
-              onPress={() => router.back()}
+              onPress={() => backOrReplace(router, '/')}
             />
           </View>
         </SectionCard>
@@ -141,7 +143,7 @@ export default function AuthHubScreen() {
 
       {auth.lastError ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorText}>{auth.lastError}</Text>
+          <Text style={styles.errorText}>{localizeErrorMessage(auth.lastError, language)}</Text>
         </View>
       ) : null}
     </ScrollView>

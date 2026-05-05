@@ -5,6 +5,7 @@ import { APP_DOCK_SCREEN_SPACER } from '@/components/floating-app-dock';
 import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useLanguage } from '@/lib/language';
+import { backOrReplace } from '@/lib/router-safe';
 
 export default function SourcesScreen() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function SourcesScreen() {
     ? {
         eyebrow: 'Legal',
         title: 'Fuentes y atribucion',
-        body: 'La app prioriza snapshots programados apoyados en fuentes publicas o faciles de atribuir. La mezcla puede cambiar con el tiempo y siempre debe mostrarse junto con frescura y procedencia.',
+        body: 'La app prioriza lecturas programadas apoyadas en fuentes publicas o faciles de atribuir. La mezcla puede cambiar con el tiempo y siempre debe mostrarse junto con frescura y procedencia.',
         points: [
           'FRED aporta series macroeconomicas y exige enlazar sus terminos cuando se redistribuye una app basada en su API.',
           'EIA aporta datos publicos de energia reutilizados con atribucion de fuente.',
@@ -44,7 +45,7 @@ export default function SourcesScreen() {
             </Text>
           ))}
         </View>
-        <ActionButton label={copy.back} icon="arrow.right" onPress={() => router.back()} />
+        <ActionButton label={copy.back} icon="arrow.right" onPress={() => backOrReplace(router, '/paywall')} />
       </SectionCard>
     </ScrollView>
   );

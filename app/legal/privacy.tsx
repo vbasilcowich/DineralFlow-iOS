@@ -5,6 +5,7 @@ import { APP_DOCK_SCREEN_SPACER } from '@/components/floating-app-dock';
 import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useLanguage } from '@/lib/language';
+import { backOrReplace } from '@/lib/router-safe';
 
 export default function PrivacyScreen() {
   const router = useRouter();
@@ -17,7 +18,7 @@ export default function PrivacyScreen() {
         body: 'La app guarda en el dispositivo el idioma, la sesion autenticada y la ultima informacion de acceso para no perder contexto. Cuando el backend esta disponible, la cuenta y el estado premium se sincronizan de forma segura con la API autenticada.',
         points: [
           'No vendemos los datos personales del usuario.',
-          'Guardamos localmente la sesion, el estado del paywall y la cache de lectura para mejorar la experiencia.',
+          'Guardamos localmente la sesion, el estado premium y la memoria de lectura para mejorar la experiencia.',
           'En backend almacenamos el minimo necesario para operar la cuenta: email, hash de password, verificacion, sesiones y estado de acceso.',
           'Las herramientas analiticas o de email futuras se documentaran antes de activarlas.',
         ],
@@ -46,7 +47,7 @@ export default function PrivacyScreen() {
             </Text>
           ))}
         </View>
-        <ActionButton label={copy.back} icon="arrow.right" onPress={() => router.back()} />
+        <ActionButton label={copy.back} icon="arrow.right" onPress={() => backOrReplace(router, '/paywall')} />
       </SectionCard>
     </ScrollView>
   );

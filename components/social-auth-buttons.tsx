@@ -12,6 +12,8 @@ import { getGoogleSocialAuthConfig, isAppleSocialAuthVisible } from '@/lib/socia
 
 WebBrowser.maybeCompleteAuthSession();
 
+const DISABLED_IOS_CLIENT_ID = 'dineralflow-disabled-ios-client-id';
+
 type SocialAuthButtonsProps = {
   mode: 'login' | 'register';
   onAuthenticated: () => void;
@@ -21,12 +23,14 @@ export function SocialAuthButtons({ mode, onAuthenticated }: SocialAuthButtonsPr
   const auth = useAuth();
   const { language } = useLanguage();
   const googleConfig = useMemo(getGoogleSocialAuthConfig, []);
+  const hasGoogleConfig = Boolean(googleConfig.iosClientId);
   const [localError, setLocalError] = useState<string | null>(null);
   const [isAppleAvailable, setIsAppleAvailable] = useState(false);
   const [isAppleBusy, setIsAppleBusy] = useState(false);
 
   const [googleRequest, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    iosClientId: googleConfig.iosClientId ?? undefined,
+    iosClientId: googleConfig.iosClientId ?? DISABLED_IOS_CLIENT_ID,
+    clientId: googleConfig.expoClientId ?? undefined,
     webClientId: googleConfig.webClientId ?? undefined,
     scopes: ['openid', 'email', 'profile'],
     responseType: 'id_token',
@@ -37,9 +41,10 @@ export function SocialAuthButtons({ mode, onAuthenticated }: SocialAuthButtonsPr
         divider: 'o continua con',
         google: mode === 'login' ? 'Continuar con Google' : 'Registrarme con Google',
         apple: mode === 'login' ? 'Continuar con Apple' : 'Registrarme con Apple',
-        googleUnavailable: 'Google login necesita los client IDs del proyecto.',
-        appleUnavailable: 'Apple login se activa en una build nativa de iPhone o iPad.',
+        googleUnavailable: 'El acceso con Google necesita los client IDs del proyecto.',
+        appleUnavailable: 'El acceso con Apple se activa en una compilacion nativa de iPhone o iPad.',
         missingToken: 'La respuesta del proveedor no incluyo un token valido.',
+        providerFailed: 'El proveedor de acceso no pudo completar la accion.',
       }
     : {
         divider: 'or continue with',
@@ -48,6 +53,7 @@ export function SocialAuthButtons({ mode, onAuthenticated }: SocialAuthButtonsPr
         googleUnavailable: 'Google login needs the project client IDs first.',
         appleUnavailable: 'Apple login becomes available in a native iPhone or iPad build.',
         missingToken: 'The provider response did not include a valid token.',
+        providerFailed: 'The sign-in provider could not complete the action.',
       };
 
   useEffect(() => {
@@ -106,17 +112,23 @@ export function SocialAuthButtons({ mode, onAuthenticated }: SocialAuthButtonsPr
       if (result.session) {
         onAuthenticated();
       }
+    }).catch(() => {
+      setLocalError(copy.providerFailed);
     });
-  }, [auth, copy.missingToken, googleResponse, onAuthenticated]);
+  }, [auth, copy.missingToken, copy.providerFailed, googleResponse, onAuthenticated]);
 
   const triggerGoogle = async () => {
-    if (!googleConfig.iosClientId && !googleConfig.webClientId && !googleConfig.expoClientId) {
+    if (!hasGoogleConfig) {
       setLocalError(copy.googleUnavailable);
       return;
     }
 
     setLocalError(null);
-    await promptGoogleAsync();
+    try {
+      await promptGoogleAsync();
+    } catch {
+      setLocalError(copy.providerFailed);
+    }
   };
 
   const triggerApple = async () => {
@@ -156,12 +168,8 @@ export function SocialAuthButtons({ mode, onAuthenticated }: SocialAuthButtonsPr
       if (result.session) {
         onAuthenticated();
       }
-    } catch (error) {
-      if (error instanceof Error) {
-        setLocalError(error.message);
-      } else {
-        setLocalError(copy.appleUnavailable);
-      }
+    } catch {
+      setLocalError(copy.providerFailed);
     } finally {
       setIsAppleBusy(false);
     }
@@ -179,14 +187,18 @@ export function SocialAuthButtons({ mode, onAuthenticated }: SocialAuthButtonsPr
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={copy.google}
-          accessibilityState={{ disabled: !googleRequest }}
+          accessibilityState={{ disabled: !hasGoogleConfig || !googleRequest }}
+          disabled={!hasGoogleConfig || !googleRequest}
           onPress={() => void triggerGoogle()}
           style={({ pressed }) => [
             styles.socialButton,
+            (!hasGoogleConfig || !googleRequest) && styles.socialButtonDisabled,
             pressed && styles.socialButtonPressed,
           ]}>
           <Text style={styles.socialButtonPrimary}>G</Text>
-          <Text style={styles.socialButtonLabel}>{copy.google}</Text>
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78} style={styles.socialButtonLabel}>
+            {copy.google}
+          </Text>
         </Pressable>
 
         <Pressable
@@ -204,7 +216,9 @@ export function SocialAuthButtons({ mode, onAuthenticated }: SocialAuthButtonsPr
           ) : (
             <Text style={styles.socialButtonPrimary}></Text>
           )}
-          <Text style={styles.socialButtonLabel}>{copy.apple}</Text>
+          <Text numberOfLines={1} adjustsFontSizeToFit minimumFontScale={0.78} style={styles.socialButtonLabel}>
+            {copy.apple}
+          </Text>
         </Pressable>
       </View>
 
@@ -266,6 +280,7 @@ const styles = StyleSheet.create({
     color: shellPalette.text,
     fontSize: 14,
     fontWeight: '800',
+    flexShrink: 1,
   },
   helperText: {
     color: shellPalette.textSoft,

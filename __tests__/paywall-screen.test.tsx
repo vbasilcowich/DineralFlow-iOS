@@ -183,6 +183,41 @@ describe('PaywallScreen', () => {
     });
   });
 
+  it('handles missing optional legal links without throwing', () => {
+    mockUseMonetization.mockReturnValue({
+      accessTier: 'free',
+      billingProvider: 'revenuecat',
+      billingStatus: 'requires_native_build',
+      billingStatusMessage: 'RevenueCat needs a native iOS build before real purchases can start.',
+      canStartPurchase: false,
+      requiresNativeBillingBuild: true,
+      entitlements: {
+        tier: 'free',
+        plan: null,
+        source: 'default',
+        updatedAt: '2026-03-30T08:00:00Z',
+      },
+      entitlementsSyncStatus: 'ready',
+      entitlementsContractState: 'backend_live',
+      entitlementsLastSyncAt: '2026-03-30T08:01:00Z',
+      entitlementsContractVersion: 'mobile-entitlements.v1',
+      lastAction: null,
+      errorMessage: null,
+      isProcessing: false,
+      syncEntitlements: jest.fn(),
+      purchasePremium: jest.fn(),
+      restorePurchases: jest.fn(),
+      resetToFree: jest.fn(),
+    });
+
+    render(<PaywallScreen />);
+
+    fireEvent.press(screen.getByText('Open sources'));
+
+    expect(screen.getByText('This legal link is not available in the current contract.')).toBeTruthy();
+    expect(Linking.openURL).not.toHaveBeenCalledWith(undefined);
+  });
+
   it('routes internal legal links inside the app when the paywall fallback is used', async () => {
     mockUseMonetization.mockReturnValue({
       accessTier: 'free',

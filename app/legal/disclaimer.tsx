@@ -5,6 +5,7 @@ import { APP_DOCK_SCREEN_SPACER } from '@/components/floating-app-dock';
 import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useLanguage } from '@/lib/language';
+import { backOrReplace } from '@/lib/router-safe';
 
 export default function DisclaimerScreen() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function DisclaimerScreen() {
     ? {
         eyebrow: 'Legal',
         title: 'Disclaimer financiero',
-        body: 'DineralFlow no es un broker ni un asesor financiero. Los porcentajes de confianza describen la conviccion del modelo sobre el snapshot publicado, no una probabilidad de beneficio.',
+        body: 'DineralFlow no es un broker ni un asesor financiero. Los porcentajes de confianza describen la conviccion del modelo sobre la lectura publicada, no una probabilidad de beneficio.',
         points: [
           'La app no ejecuta operaciones ni recomienda decisiones personalizadas.',
           'El contenido es informativo y puede llegar con retraso respecto a la publicacion original de la fuente.',
@@ -44,7 +45,7 @@ export default function DisclaimerScreen() {
             </Text>
           ))}
         </View>
-        <ActionButton label={copy.back} icon="arrow.right" onPress={() => router.back()} />
+        <ActionButton label={copy.back} icon="arrow.right" onPress={() => backOrReplace(router, '/paywall')} />
       </SectionCard>
     </ScrollView>
   );

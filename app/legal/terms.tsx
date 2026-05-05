@@ -5,6 +5,7 @@ import { APP_DOCK_SCREEN_SPACER } from '@/components/floating-app-dock';
 import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useLanguage } from '@/lib/language';
+import { backOrReplace } from '@/lib/router-safe';
 
 export default function TermsScreen() {
   const router = useRouter();
@@ -14,7 +15,7 @@ export default function TermsScreen() {
     ? {
         eyebrow: 'Legal',
         title: 'Terminos de uso',
-        body: 'DineralFlow es una herramienta informativa y analitica. No ofrece asesoramiento financiero personalizado ni ejecuta operaciones. El contenido puede cambiar con el tiempo y depende de snapshots guardados y de fuentes externas.',
+        body: 'DineralFlow es una herramienta informativa y analitica. No ofrece asesoramiento financiero personalizado ni ejecuta operaciones. El contenido puede cambiar con el tiempo y depende de lecturas guardadas y de fuentes externas.',
         points: [
           'No garantizamos disponibilidad continua, exactitud absoluta ni ausencia de retrasos.',
           'Las fuentes de datos pueden tener limitaciones, pausas o revisiones posteriores.',
@@ -44,7 +45,7 @@ export default function TermsScreen() {
             </Text>
           ))}
         </View>
-        <ActionButton label={copy.back} icon="arrow.right" onPress={() => router.back()} />
+        <ActionButton label={copy.back} icon="arrow.right" onPress={() => backOrReplace(router, '/paywall')} />
       </SectionCard>
     </ScrollView>
   );

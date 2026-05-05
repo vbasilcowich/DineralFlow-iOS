@@ -8,6 +8,8 @@ import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/lib/language';
+import { localizeErrorMessage } from '@/lib/localized-copy';
+import { backOrReplace } from '@/lib/router-safe';
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
@@ -28,13 +30,13 @@ export default function RegisterScreen() {
     ? {
         eyebrow: 'Cuenta nueva',
         title: 'Crear cuenta',
-        body: 'La cuenta autentica el acceso premium en servidor, permite restaurar compras y queda pendiente de verificacion por email antes de iniciar sesion.',
-        email: 'Email',
+        body: 'La cuenta autentica el acceso premium en servidor, permite restaurar compras y queda pendiente de verificacion por correo antes de iniciar sesion.',
+        email: 'Correo',
         password: 'Contrasena',
         confirmPassword: 'Confirmar contrasena',
         submit: 'Crear cuenta',
         back: 'Volver',
-        helper: 'Tras registrarte, te llevaremos a verificar el email si hace falta.',
+        helper: 'Tras registrarte, te llevaremos a verificar el correo si hace falta.',
         signIn: 'Ya tengo cuenta',
         mismatch: 'Las contrasenas no coinciden',
         error: 'Error al crear la cuenta',
@@ -153,7 +155,7 @@ export default function RegisterScreen() {
             label={copy.back}
             icon="arrow.right"
             variant="secondary"
-            onPress={() => router.back()}
+            onPress={() => backOrReplace(router, '/auth')}
           />
         </View>
 
@@ -168,7 +170,7 @@ export default function RegisterScreen() {
 
       {auth.lastError ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorText}>{copy.error}: {auth.lastError}</Text>
+          <Text style={styles.errorText}>{copy.error}: {localizeErrorMessage(auth.lastError, language)}</Text>
         </View>
       ) : null}
     </ScrollView>

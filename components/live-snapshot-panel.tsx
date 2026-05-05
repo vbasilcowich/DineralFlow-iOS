@@ -8,9 +8,11 @@ import {
   formatDriverKey,
   formatFlowScore,
   formatFreshnessLocalized,
+  formatFreshnessStatus,
   formatLocalizedDateTime,
   formatLocalizedTime,
   formatLoadErrorLocalized,
+  formatProviderIssueSeverity,
   formatProviderIssueMessageLocalized,
   formatRiskTextLocalized,
   formatSourceMode,
@@ -61,39 +63,39 @@ export function LiveSnapshotPanel({
     ? {
         eyebrow: 'Analisis de mercado',
         title: 'Lo mas importante ahora mismo',
-        body: 'Una lectura clara del mercado construida con el ultimo snapshot guardado. Resume que fuerza domina, cuanto convence y que frena la lectura.',
-        refresh: 'Actualizar snapshot',
-        unavailable: 'Snapshot no disponible',
+        body: 'Una lectura clara del mercado construida con la ultima lectura guardada. Resume que fuerza domina, cuanto convence y que frena la lectura.',
+        refresh: 'Actualizar lectura',
+        unavailable: 'Lectura no disponible',
         technicalDetail: 'Detalle tecnico',
-        phoneHint: 'Si usas Expo Go en un telefono, cambia `EXPO_PUBLIC_API_BASE_URL` desde localhost a la IP local del backend.',
-        cached: 'Snapshot en cache',
+        phoneHint: 'Revisa que `EXPO_PUBLIC_API_BASE_URL` apunte al backend activo y que el Worker responda en internet.',
+        cached: 'Lectura en memoria local',
         fresh: 'Lectura reciente',
         failed: 'Actualizacion fallida',
         refreshing: 'Actualizando',
         loaded: 'Cargado',
-        showingLast: 'Mostrando el ultimo snapshot guardado',
+        showingLast: 'Mostrando la ultima lectura guardada',
         lastFailed: 'Fallo la ultima actualizacion',
-        cacheBody: 'Esta pantalla esta leyendo el ultimo snapshot valido guardado en el dispositivo. No se han inventado valores durante este fallback.',
-        failedBody: 'La ultima actualizacion de red no termino bien, asi que la app mantiene visible el ultimo snapshot correcto.',
-        cachedAt: 'Guardado en cache',
+        cacheBody: 'Esta pantalla esta leyendo la ultima lectura valida guardada en el dispositivo. No se han inventado valores durante este respaldo.',
+        failedBody: 'La ultima actualizacion de red no termino bien, asi que la app mantiene visible la ultima lectura correcta.',
+        cachedAt: 'Guardado en memoria local',
         confidence: 'Confianza',
         updated: 'Actualizado',
         sources: 'Fuentes',
-        bulletHint: 'Premium muestra la lista completa de bullets publicada con este mismo snapshot.',
-        evidenceHint: 'Gratis muestra solo una parte de la evidencia. Premium desbloquea mas de la capa de prueba detras de este mismo brief.',
+        bulletHint: 'Premium muestra la lista completa de puntos publicada con esta misma lectura.',
+        evidenceHint: 'Gratis muestra solo una parte de la evidencia. Premium desbloquea mas de la capa de prueba detras de este mismo resumen.',
         unlock: 'Desbloquear detalle',
-        snapshotConfidence: 'Confianza del snapshot',
+        snapshotConfidence: 'Confianza de la lectura',
         coverage: 'Cobertura',
         freshness: 'Frescura',
         leadingBasket: 'Tema dominante',
         publicData: 'Postura de datos publicos',
-        publicDataBody: 'Este lanzamiento se esta orientando alrededor de snapshots programados y fuentes mas faciles de usar comercialmente, como FRED y EIA, en lugar de feeds de mercado de pago.',
+        publicDataBody: 'Este lanzamiento se esta orientando alrededor de lecturas programadas y fuentes mas faciles de usar comercialmente, como FRED y EIA, en lugar de canales de mercado de pago.',
         scoreboard: 'Temas que estan moviendo la lectura',
         noDrivers: 'No se publicaron etiquetas de impulsores en esta fila.',
         noFlows: 'El backend no devolvio filas de flujo para esta lectura.',
         flowsHint: 'Gratis se mantiene conciso y muestra solo la parte principal. Premium desbloquea mas temas, mas contexto y el desglose profundo planificado para la fase 1.',
         frictions: 'Fricciones y matices',
-        premiumRisks: 'Premium mantiene visible el resto de fricciones publicadas alrededor de este mismo snapshot.',
+        premiumRisks: 'Premium mantiene visible el resto de fricciones publicadas alrededor de esta misma lectura.',
         diagnostics: 'Diagnosticos del backend',
         diagnosticsPreview: 'Vista previa de diagnosticos',
         diagnosticsHint: 'Gratis muestra solo una vista previa de los diagnosticos del backend. Premium desbloquea la lista completa de incidencias de proveedor y la capa de evidencia mas profunda.',
@@ -101,7 +103,7 @@ export function LiveSnapshotPanel({
         secondaryFlow: 'Tendencia secundaria',
         flowStrength: 'Fuerza del flujo',
         explainConfidence: 'Como se calcula la confianza',
-        confidencePreviewHint: 'La explicacion de confianza abre una pantalla separada con metodologia, preview del analisis y acceso premium al detalle.',
+        confidencePreviewHint: 'La explicacion de confianza abre una pantalla separada con metodologia, vista previa del analisis y acceso premium al detalle.',
       }
     : {
         eyebrow: 'Market analysis',
@@ -110,7 +112,7 @@ export function LiveSnapshotPanel({
         refresh: 'Refresh snapshot',
         unavailable: 'Snapshot unavailable',
         technicalDetail: 'Technical detail',
-        phoneHint: 'If you are using Expo Go on a phone, switch `EXPO_PUBLIC_API_BASE_URL` from localhost to the backend LAN address.',
+        phoneHint: 'Check that `EXPO_PUBLIC_API_BASE_URL` points to the active backend and that the Worker responds on the internet.',
         cached: 'Cached snapshot',
         fresh: 'Fresh fetch',
         failed: 'Refresh failed',
@@ -176,7 +178,7 @@ export function LiveSnapshotPanel({
         <View style={styles.loadingCard}>
           <ActivityIndicator color={shellPalette.accent} />
           <Text style={styles.loadingTitle}>
-            {language === 'es' ? 'Conectando con el backend local...' : 'Connecting to the local backend...'}
+            {language === 'es' ? 'Conectando con el backend...' : 'Connecting to the backend...'}
           </Text>
           <Text style={styles.loadingBody}>
             {language === 'es'
@@ -353,7 +355,7 @@ export function LiveSnapshotPanel({
               value={formatConfidence(snapshot.global_confidence)}
               detail={
                 language === 'es'
-                  ? 'Confianza publicada en el ultimo snapshot guardado por el backend.'
+                  ? 'Confianza publicada en la ultima lectura guardada por el backend.'
                   : 'Confidence published in the latest stored backend snapshot.'
               }
               tone="contrast"
@@ -373,8 +375,8 @@ export function LiveSnapshotPanel({
               value={formatFreshnessLocalized(snapshot.data_freshness.seconds_since_refresh, language)}
               detail={
                 language === 'es'
-                  ? `Estado de frescura: ${snapshot.data_freshness.status}.`
-                  : `Freshness status: ${snapshot.data_freshness.status}.`
+                  ? `Estado de frescura: ${formatFreshnessStatus(snapshot.data_freshness.status, language)}.`
+                  : `Freshness status: ${formatFreshnessStatus(snapshot.data_freshness.status, language)}.`
               }
               tone="contrast"
             />
@@ -383,7 +385,7 @@ export function LiveSnapshotPanel({
               value={formatBucketLabel(snapshot.leading_bucket, language)}
               detail={
                 language === 'es'
-                  ? `Marca temporal del snapshot: ${formatLocalizedDateTime(snapshot.as_of, language)}.`
+                  ? `Marca temporal de la lectura: ${formatLocalizedDateTime(snapshot.as_of, language)}.`
                   : `Snapshot timestamp: ${formatLocalizedDateTime(snapshot.as_of, language)}.`
               }
               tone="contrast"
@@ -404,7 +406,7 @@ export function LiveSnapshotPanel({
                     <Text style={styles.listTitle}>{formatBucketLabel(flow.bucket_key, language)}</Text>
                     <Text style={styles.listBody}>
                       {flow.drivers.length > 0
-                        ? flow.drivers.map(formatDriverKey).join(' | ')
+                        ? flow.drivers.map((driver) => formatDriverKey(driver, language)).join(' | ')
                         : copy.noDrivers}
                     </Text>
                   </View>
@@ -453,7 +455,7 @@ export function LiveSnapshotPanel({
               </Text>
               {visibleProviderIssues.map((issue) => (
                 <View key={`${issue.provider_key}:${issue.message}`} style={styles.issueRow}>
-                  <Text style={styles.issueSeverity}>{issue.severity.toUpperCase()}</Text>
+                  <Text style={styles.issueSeverity}>{formatProviderIssueSeverity(issue.severity, language).toUpperCase()}</Text>
                   <Text style={styles.issueMessage}>{formatProviderIssueMessageLocalized(issue, language)}</Text>
                 </View>
               ))}
@@ -588,7 +590,7 @@ const styles = StyleSheet.create({
     fontSize: 22,
     lineHeight: 26,
     fontWeight: '900',
-    letterSpacing: -0.3,
+    letterSpacing: 0,
   },
   flowTitleSecondary: {
     color: shellPalette.contrastText,
@@ -625,7 +627,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     lineHeight: 31,
     fontWeight: '900',
-    letterSpacing: -0.45,
+    letterSpacing: 0,
   },
   briefSummary: {
     color: 'rgba(245,248,251,0.84)',

@@ -1,5 +1,6 @@
 import type { DashboardHealth, DashboardHistoryPoint, ProviderIssue } from '@/lib/dashboard-api';
 import type { AppLanguage } from '@/lib/language';
+import { localizeStaticText } from '@/lib/localized-copy';
 
 function getLocale(language: AppLanguage): string {
   return language === 'es' ? 'es-ES' : 'en-US';
@@ -35,9 +36,52 @@ const SOURCE_MODE_LABELS: Record<AppLanguage, Record<string, string>> = {
     unavailable: 'Unavailable',
   },
   es: {
-    live: 'Snapshot completo',
+    live: 'Lectura completa',
     partial_live: 'Cobertura parcial',
     unavailable: 'No disponible',
+  },
+};
+
+const FRESHNESS_STATUS_LABELS: Record<AppLanguage, Record<string, string>> = {
+  en: {
+    fresh: 'Fresh',
+    partial: 'Partial',
+    stale: 'Stale',
+    unavailable: 'Unavailable',
+  },
+  es: {
+    fresh: 'Reciente',
+    partial: 'Parcial',
+    stale: 'Obsoleto',
+    unavailable: 'No disponible',
+  },
+};
+
+const PROVIDER_SEVERITY_LABELS: Record<AppLanguage, Record<string, string>> = {
+  en: {
+    info: 'Info',
+    warning: 'Warning',
+    danger: 'Danger',
+    error: 'Error',
+  },
+  es: {
+    info: 'Info',
+    warning: 'Advertencia',
+    danger: 'Riesgo',
+    error: 'Error',
+  },
+};
+
+const DRIVER_LABELS: Record<AppLanguage, Record<string, string>> = {
+  en: {},
+  es: {
+    macro_growth: 'Crecimiento macro',
+    credit_spreads: 'Diferenciales de credito',
+    equity_momentum: 'Impulso de renta variable',
+    energy_inventory: 'Inventarios energeticos',
+    oil_momentum: 'Impulso del petroleo',
+    gold_momentum: 'Impulso del oro',
+    duration_pressure: 'Presion de duracion',
   },
 };
 
@@ -48,19 +92,19 @@ const BRIEF_TEXT_MAP: Record<AppLanguage, Record<string, string>> = {
   es: {
     'The public-data picture is mixed': 'La foto de datos publicos es mixta',
     'The latest public-data snapshot is not sending one clean regime signal, so the brief stays balanced rather than decisive.':
-      'El ultimo snapshot de datos publicos no envia una sola senal clara de regimen, asi que la lectura se mantiene equilibrada en lugar de ser tajante.',
+      'La ultima lectura de datos publicos no envia una sola senal clara de regimen, asi que se mantiene equilibrada en lugar de ser tajante.',
     'Defensive tone with persistent energy pressure': 'Tono defensivo con presion energetica persistente',
     'The latest public-data snapshot is leaning defensive while the energy signal remains tight.':
-      'El ultimo snapshot de datos publicos se inclina hacia un tono defensivo mientras la senal energetica sigue tensa.',
+      'La ultima lectura de datos publicos se inclina hacia un tono defensivo mientras la senal energetica sigue tensa.',
     'Defensive tone is building': 'El tono defensivo va ganando fuerza',
     'The latest public-data snapshot leans more cautious than supportive for risk assets.':
-      'El ultimo snapshot de datos publicos se inclina mas hacia la cautela que hacia el apoyo a los activos de riesgo.',
+      'La ultima lectura de datos publicos se inclina mas hacia la cautela que hacia el apoyo a los activos de riesgo.',
     'Conditions are stabilising': 'Las condiciones se estan estabilizando',
     'The latest public-data snapshot looks less defensive and more stable than the prior update.':
-      'El ultimo snapshot de datos publicos parece menos defensivo y mas estable que en la actualizacion anterior.',
+      'La ultima lectura de datos publicos parece menos defensiva y mas estable que en la actualizacion anterior.',
     'Inflation-linked pressure is still visible': 'La presion ligada a la inflacion sigue visible',
     'The latest public-data snapshot still shows inflation and energy pressure rather than a clean easing cycle.':
-      'El ultimo snapshot de datos publicos sigue mostrando presion de inflacion y energia, no un ciclo de alivio limpio.',
+      'La ultima lectura de datos publicos sigue mostrando presion de inflacion y energia, no un ciclo de alivio limpio.',
     'High-yield spreads widened, which adds defensive pressure.':
       'Los diferenciales high yield se ampliaron, lo que anade presion defensiva.',
     'US crude inventories rose, which eases some energy tightness.':
@@ -74,7 +118,7 @@ const BRIEF_TEXT_MAP: Record<AppLanguage, Record<string, string>> = {
     'The 10Y yield moved up, keeping rate pressure visible.':
       'El rendimiento del 10Y subio, manteniendo visible la presion de tipos.',
     'Informational analysis based on the latest stored public-data snapshot. Not investment advice.':
-      'Analisis informativo basado en el ultimo snapshot guardado de datos publicos. No es asesoramiento de inversion.',
+      'Analisis informativo basado en la ultima lectura guardada de datos publicos. No es asesoramiento de inversion.',
   },
 };
 
@@ -86,6 +130,16 @@ export function formatBucketLabel(bucketKey: string, language: AppLanguage = 'en
 export function formatSourceMode(sourceMode: string, language: AppLanguage = 'en'): string {
   return SOURCE_MODE_LABELS[language][sourceMode]
     ?? sourceMode.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+export function formatFreshnessStatus(status: string, language: AppLanguage = 'en'): string {
+  return FRESHNESS_STATUS_LABELS[language][status]
+    ?? status.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
+}
+
+export function formatProviderIssueSeverity(severity: string, language: AppLanguage = 'en'): string {
+  return PROVIDER_SEVERITY_LABELS[language][severity]
+    ?? severity.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
 export function getSourceModeTone(sourceMode: string): StatusTone {
@@ -123,7 +177,7 @@ export function formatHistorySummaryLocalized(
   language: AppLanguage = 'en',
 ): string {
   if (language === 'es') {
-    return `${formatBucketLabel(point.leading_bucket, 'es')} lidero este snapshot guardado con ${formatFlowScore(point.leading_score)} y ${formatConfidence(point.global_confidence)} de confianza.`;
+    return `${formatBucketLabel(point.leading_bucket, 'es')} lidero esta lectura guardada con ${formatFlowScore(point.leading_score)} y ${formatConfidence(point.global_confidence)} de confianza.`;
   }
 
   return formatHistorySummary(point);
@@ -179,8 +233,8 @@ export function formatProviderName(providerKey: string): string {
   return providerMap[providerKey] ?? providerKey.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase());
 }
 
-export function formatDriverKey(driverKey: string): string {
-  return driverKey
+export function formatDriverKey(driverKey: string, language: AppLanguage = 'en'): string {
+  return DRIVER_LABELS[language][driverKey] ?? driverKey
     .replace(/_(\d+)d$/i, ' $1d')
     .replace(/_/g, ' ')
     .replace(/\b\w/g, (letter) => letter.toUpperCase());
@@ -208,12 +262,12 @@ export function formatRiskTextLocalized(risk: string, language: AppLanguage = 'e
     return english;
   }
   const translated = {
-    'Coverage is partial for this stored snapshot.': 'La cobertura es parcial para este snapshot guardado.',
+    'Coverage is partial for this stored snapshot.': 'La cobertura es parcial para esta lectura guardada.',
     'Some leading signals are pulling in opposite directions.': 'Algunas senales principales tiran en direcciones opuestas.',
     'Internal dispersion is reducing conviction inside the leading theme.': 'La dispersion interna reduce la conviccion dentro del tema dominante.',
     'Crypto beta is improving, but it is not steering the overall reading yet.': 'La beta cripto mejora, pero todavia no dirige la lectura general.',
   } as const;
-  return translated[english as keyof typeof translated] ?? english;
+  return translated[english as keyof typeof translated] ?? localizeStaticText(english, language);
 }
 
 export function formatProviderIssueMessage(issue: ProviderIssue): string {
@@ -279,18 +333,18 @@ export function formatProviderIssueMessageLocalized(
 
   if (english.startsWith('Snapshot mode: ')) {
     const mode = issue.message.split(':')[1] ?? 'unavailable';
-    return `Modo del snapshot: ${formatSourceMode(mode, 'es')}.`;
+    return `Modo de lectura: ${formatSourceMode(mode, 'es')}.`;
   }
   if (english.startsWith('Active providers: ')) {
     const providers = issue.message.split(':')[1]?.split(',').filter(Boolean).map((providerKey) => formatProviderName(providerKey.trim())) ?? [];
     return `Proveedores activos: ${providers.join(', ') || 'ninguno'}.`;
   }
 
-  return translated[english as keyof typeof translated] ?? english;
+  return translated[english as keyof typeof translated] ?? localizeStaticText(english, language);
 }
 
 export function localizeBriefText(text: string, language: AppLanguage = 'en'): string {
-  return BRIEF_TEXT_MAP[language][text] ?? text;
+  return BRIEF_TEXT_MAP[language][text] ?? localizeStaticText(text, language);
 }
 
 export function formatLocalizedDateTime(
@@ -362,26 +416,26 @@ export function getConfiguredProviders(health: DashboardHealth | null): string[]
 
 export function formatLoadError(errorMessage: string | null): string {
   if (!errorMessage) {
-    return 'Unable to reach the local API.';
+    return 'Unable to reach the API.';
   }
 
   if (errorMessage === 'http_404') {
-    return 'The local API is reachable, but the expected endpoint was not found.';
+    return 'The API is reachable, but the expected endpoint was not found.';
   }
 
   if (errorMessage === 'http_500') {
-    return 'The local API responded with an internal error.';
+    return 'The API responded with an internal error.';
   }
 
   if (errorMessage === 'signal_aborted') {
-    return 'The local API did not respond before the request timeout.';
+    return 'The API did not respond before the request timeout.';
   }
 
   if (errorMessage === 'Failed to fetch' || errorMessage === 'Network request failed') {
-    return 'The browser could not complete the request to the local API.';
+    return 'The app could not complete the request to the API.';
   }
 
-  return 'The local API could not be reached from this app load.';
+  return 'The API could not be reached from this app load.';
 }
 
 export function formatLoadErrorLocalized(
@@ -393,24 +447,24 @@ export function formatLoadErrorLocalized(
   }
 
   if (!errorMessage) {
-    return 'No se pudo conectar con la API local.';
+    return 'No se pudo conectar con la API.';
   }
 
   if (errorMessage === 'http_404') {
-    return 'La API local responde, pero el endpoint esperado no existe.';
+    return 'La API responde, pero el endpoint esperado no existe.';
   }
 
   if (errorMessage === 'http_500') {
-    return 'La API local devolvio un error interno.';
+    return 'La API devolvio un error interno.';
   }
 
   if (errorMessage === 'signal_aborted') {
-    return 'La API local no respondio antes de que venciera el tiempo de espera.';
+    return 'La API no respondio antes de que venciera el tiempo de espera.';
   }
 
   if (errorMessage === 'Failed to fetch' || errorMessage === 'Network request failed') {
-    return 'El navegador no pudo completar la peticion a la API local.';
+    return 'La app no pudo completar la peticion a la API.';
   }
 
-  return 'No se pudo acceder a la API local desde esta carga de la app.';
+  return 'No se pudo acceder a la API desde esta carga de la app.';
 }

@@ -8,6 +8,8 @@ import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/lib/language';
+import { localizeErrorMessage } from '@/lib/localized-copy';
+import { backOrReplace } from '@/lib/router-safe';
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
@@ -26,9 +28,9 @@ export default function LoginScreen() {
   const copy = language === 'es'
     ? {
         eyebrow: 'Acceso',
-        title: 'Entrar con email y contrasena',
+        title: 'Entrar con correo y contrasena',
         body: 'Usa la misma cuenta para sincronizar acceso, restaurar compras y mantener el premium asociado al backend autenticado cuando este disponible.',
-        email: 'Email',
+        email: 'Correo',
         password: 'Contrasena',
         submit: 'Entrar',
         back: 'Volver',
@@ -140,7 +142,7 @@ export default function LoginScreen() {
             label={copy.back}
             icon="arrow.right"
             variant="secondary"
-            onPress={() => router.back()}
+            onPress={() => backOrReplace(router, '/auth')}
           />
         </View>
 
@@ -150,7 +152,7 @@ export default function LoginScreen() {
 
       {auth.lastError ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorText}>{copy.error}: {auth.lastError}</Text>
+          <Text style={styles.errorText}>{copy.error}: {localizeErrorMessage(auth.lastError, language)}</Text>
         </View>
       ) : null}
     </ScrollView>

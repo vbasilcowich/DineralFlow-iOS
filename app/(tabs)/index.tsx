@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/use-auth';
 import { useDashboardPreview } from '@/hooks/use-dashboard-preview';
 import { useMonetization } from '@/hooks/use-monetization';
 import { useLanguage } from '@/lib/language';
+import { localizeStaticText } from '@/lib/localized-copy';
 import {
   formatBucketLabel,
   formatConfidence,
@@ -41,7 +42,7 @@ export default function HomeScreen() {
         overallConfidence: 'Confianza global',
         premium: 'Premium',
         free: 'Gratis',
-        waiting: 'Esperando el snapshot del backend. La app mantiene la interfaz lista incluso cuando la API no esta disponible.',
+        waiting: 'Esperando la lectura del backend. La app mantiene la interfaz lista incluso cuando la API no esta disponible.',
         noLeader: 'Sin lider aun',
         primaryFlow: 'Tendencia primaria',
         secondaryFlow: 'Tendencia secundaria',
@@ -50,13 +51,13 @@ export default function HomeScreen() {
         confidence: 'Confianza',
         explainConfidence: 'Como se calcula la confianza',
         unavailable: 'No disponible',
-        snapshotMode: 'Modo snapshot',
+        snapshotMode: 'Modo de lectura',
         metricsLeadBasket: 'Tema dominante',
-        metricsLeadBasketDetail: 'El tema de mercado mas fuerte publicado por el ultimo snapshot guardado.',
+        metricsLeadBasketDetail: 'El tema de mercado mas fuerte publicado por la ultima lectura guardada.',
         coverage: 'Cobertura',
         coverageDetail: 'Cuanta evidencia esperada cubrio el backend en esta lectura.',
         freshness: 'Frescura',
-        freshnessDetail: 'Cuanto tiempo ha pasado desde la ultima actualizacion del snapshot en backend.',
+        freshnessDetail: 'Cuanto tiempo ha pasado desde la ultima actualizacion de la lectura en backend.',
         pending: 'Pendiente',
         premiumDepth: 'Profundidad premium',
         premiumDepthTitle: 'Gratis te orienta. Premium te deja profundizar de verdad.',
@@ -140,46 +141,6 @@ export default function HomeScreen() {
           detail: 'More history, more detail, better follow-through, and no ads.',
         },
       ];
-  const localizedFeatureCopy: Partial<
-    Record<
-      EntitlementFeature,
-      {
-        title: string;
-        freeValue: string;
-        freeDetail: string;
-        premiumValue: string;
-        premiumDetail: string;
-        ctaLabel: string;
-      }
-    >
-  > = language === 'es'
-    ? {
-        long_history: {
-          title: 'Mas historico',
-          freeValue: 'Vista previa de 7 dias',
-          freeDetail: 'La capa gratis se queda con el tramo reciente para contener costes y seguir siendo clara.',
-          premiumValue: 'Ventanas de 30 y 90 dias',
-          premiumDetail: 'Premium desbloquea arcos mas largos para poner el ultimo snapshot en contexto.',
-          ctaLabel: 'Desbloquear historico',
-        },
-        deeper_drilldowns: {
-          title: 'Desglose por temas',
-          freeValue: 'Solo vista previa',
-          freeDetail: 'Gratis puede mostrar que existe evidencia mas profunda, pero la capa diagnostica completa se queda en premium.',
-          premiumValue: 'Desglose completo',
-          premiumDetail: 'Premium desbloquea mas contexto de impulsores, fricciones y evidencia por tema.',
-          ctaLabel: 'Desbloquear detalle',
-        },
-        alerts: {
-          title: 'Alertas',
-          freeValue: 'Bloqueadas en gratis',
-          freeDetail: 'La capa gratis puede mostrar que las alertas existen, pero la configuracion debe quedarse en premium.',
-          premiumValue: 'Capa de alertas preparada',
-          premiumDetail: 'Premium es donde deben vivir las alertas programadas y las futuras acciones de watchlist.',
-          ctaLabel: 'Desbloquear alertas',
-        },
-      }
-    : {};
   const primaryFlow = snapshot?.top_flows[0] ?? null;
   const secondaryFlow = snapshot?.top_flows[1] ?? null;
   const openPaywallForFeature = (feature: EntitlementFeature) => {
@@ -389,26 +350,25 @@ export default function HomeScreen() {
           <View style={styles.grid}>
             {HOME_PREMIUM_FEATURES.map((feature) => {
               const descriptor = getFeatureDescriptor(feature);
-              const localizedDescriptor = localizedFeatureCopy[feature];
               const gateState = getFeatureGateState(monetization.entitlements, feature);
               const unlocked = gateState === 'unlocked';
 
               return (
                 <FeatureGateCard
                   key={feature}
-                  title={localizedDescriptor?.title ?? descriptor.title}
+                  title={localizeStaticText(descriptor.title, language)}
                   value={
                     unlocked
-                      ? localizedDescriptor?.premiumValue ?? descriptor.premiumValue
-                      : localizedDescriptor?.freeValue ?? descriptor.freeValue
+                      ? localizeStaticText(descriptor.premiumValue, language)
+                      : localizeStaticText(descriptor.freeValue, language)
                   }
                   detail={
                     unlocked
-                      ? localizedDescriptor?.premiumDetail ?? descriptor.premiumDetail
-                      : localizedDescriptor?.freeDetail ?? descriptor.freeDetail
+                      ? localizeStaticText(descriptor.premiumDetail, language)
+                      : localizeStaticText(descriptor.freeDetail, language)
                   }
                   status={gateState}
-                  actionLabel={unlocked ? copy.reviewPremium : localizedDescriptor?.ctaLabel ?? descriptor.ctaLabel}
+                  actionLabel={unlocked ? copy.reviewPremium : localizeStaticText(descriptor.ctaLabel, language)}
                   onPress={() => openPaywallForFeature(feature)}
                 />
               );

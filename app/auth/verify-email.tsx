@@ -7,6 +7,8 @@ import { ActionButton, SectionCard } from '@/components/shell';
 import { shellPalette } from '@/constants/shell';
 import { useAuth } from '@/hooks/use-auth';
 import { useLanguage } from '@/lib/language';
+import { localizeErrorMessage } from '@/lib/localized-copy';
+import { backOrReplace } from '@/lib/router-safe';
 
 function normalizeEmail(value: string): string {
   return value.trim().toLowerCase();
@@ -30,26 +32,26 @@ export default function VerifyEmailScreen() {
       language === 'es'
         ? {
             eyebrow: 'Verificacion',
-            title: 'Confirma tu email',
-            body: 'Introduce el token de verificacion emitido por el backend. En desarrollo puedes obtenerlo desde el outbox local del servidor.',
-            email: 'Email',
-            token: 'Token de verificacion',
+            title: 'Confirma tu correo',
+            body: 'Introduce el codigo de verificacion emitido por el backend. En desarrollo puedes obtenerlo desde los detalles de verificacion devueltos por la API.',
+            email: 'Correo',
+            token: 'Codigo de verificacion',
             submit: 'Verificar',
             back: 'Volver',
-            helper: 'Si no has recibido el token, vuelve a registro o login y revisa el outbox local del backend.',
-            done: 'Email verificado',
-            successBody: 'La cuenta ya puede pasar al login autenticado y usar la capa premium en servidor.',
-            continueToLogin: 'Ir al login',
+            helper: 'Si no has recibido el codigo, vuelve a registro o inicio de sesion y revisa los detalles de verificacion devueltos por el backend.',
+            done: 'Correo verificado',
+            successBody: 'La cuenta ya puede pasar al inicio de sesion autenticado y usar la capa premium en servidor.',
+            continueToLogin: 'Ir al inicio de sesion',
           }
         : {
             eyebrow: 'Verification',
             title: 'Confirm your email',
-            body: 'Enter the verification token issued by the backend. In development you can fetch it from the backend local outbox.',
+            body: 'Enter the verification token issued by the backend. In development you can use the verification details returned by the API.',
             email: 'Email',
             token: 'Verification token',
             submit: 'Verify',
             back: 'Back',
-            helper: 'If you did not receive the token, reopen register or sign in and check the backend local outbox.',
+            helper: 'If you did not receive the token, reopen register or sign in and check the verification details returned by the backend.',
             done: 'Email verified',
             successBody: 'The account can now move into the authenticated sign-in flow and the premium layer.',
             continueToLogin: 'Go to sign in',
@@ -121,7 +123,7 @@ export default function VerifyEmailScreen() {
             label={copy.back}
             icon="arrow.right"
             variant="secondary"
-            onPress={() => router.back()}
+            onPress={() => backOrReplace(router, '/auth')}
           />
         </View>
 
@@ -149,7 +151,7 @@ export default function VerifyEmailScreen() {
 
       {auth.lastError ? (
         <View style={styles.errorCard}>
-          <Text style={styles.errorText}>{auth.lastError}</Text>
+          <Text style={styles.errorText}>{localizeErrorMessage(auth.lastError, language)}</Text>
         </View>
       ) : null}
     </ScrollView>

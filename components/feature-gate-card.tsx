@@ -60,8 +60,12 @@ export function FeatureGateCard({
   return (
     <View style={[styles.card, statusStyle]}>
       <Pill label={localizedStatusLabel ?? statusCopy.label} tone={statusCopy.tone} />
-      <Text style={styles.title}>{title}</Text>
-      <Text style={styles.value}>{value}</Text>
+      <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.78} style={styles.title}>
+        {title}
+      </Text>
+      <Text numberOfLines={2} adjustsFontSizeToFit minimumFontScale={0.76} style={styles.value}>
+        {value}
+      </Text>
       <Text style={styles.detail}>{detail}</Text>
       <ActionButton
         label={actionLabel}

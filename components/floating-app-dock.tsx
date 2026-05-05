@@ -39,7 +39,7 @@ export function FloatingAppDock() {
           premium: 'Premium',
           homeHint: 'Volver al inicio',
           accountHint: 'Abrir cuenta y sesion',
-          premiumHint: 'Abrir premium y el paywall',
+          premiumHint: 'Abrir premium y la pantalla de acceso',
         }
       : {
           home: 'Home',

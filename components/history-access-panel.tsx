@@ -55,7 +55,7 @@ export function HistoryAccessPanel({
         refreshing: 'Actualizando',
         loading: 'Cargando la ventana historica real desde el backend...',
         points: 'Puntos',
-        pointsDetail: 'Numero de snapshots del backend devueltos para esta ventana.',
+        pointsDetail: 'Numero de lecturas del backend devueltas para esta ventana.',
         averageConfidence: 'Confianza media',
         confidenceDetail: 'Confianza media a lo largo de la ventana cargada.',
         latestLeader: 'Tema mas reciente',
@@ -102,7 +102,7 @@ export function HistoryAccessPanel({
               accessibilityHint={
                 locked
                   ? language === 'es'
-                    ? 'Abre el paywall premium'
+                    ? 'Abre la pantalla premium'
                     : 'Opens the premium paywall'
                   : language === 'es'
                     ? 'Carga esta ventana historica'
